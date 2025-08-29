@@ -56,7 +56,7 @@ const UserRegister: React.FC<UserRegisterProps> = ({ onClose, onSwitchToLogin })
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="text-center mb-6">
-          <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="bg-gradient-to-r from-red-600 to-red-400 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <User className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Kayıt Ol</h2>
@@ -104,7 +104,7 @@ const UserRegister: React.FC<UserRegisterProps> = ({ onClose, onSwitchToLogin })
               value={formData.email}
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
               placeholder="ornek@email.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
               required
             />
           </div>
@@ -160,7 +160,7 @@ const UserRegister: React.FC<UserRegisterProps> = ({ onClose, onSwitchToLogin })
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                 placeholder="Şifrenizi tekrar girin"
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
                 required
               />
               <button
@@ -179,7 +179,7 @@ const UserRegister: React.FC<UserRegisterProps> = ({ onClose, onSwitchToLogin })
                 type="checkbox"
                 checked={formData.acceptTerms}
                 onChange={(e) => setFormData(prev => ({ ...prev, acceptTerms: e.target.checked }))}
-                className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
+                className="w-4 h-4 text-red-600 focus:ring-red-500 border-gray-300 rounded mt-0.5"
                 required
               />
               <span className="text-sm text-gray-700">
@@ -192,7 +192,7 @@ const UserRegister: React.FC<UserRegisterProps> = ({ onClose, onSwitchToLogin })
                 type="checkbox"
                 checked={formData.acceptMarketing}
                 onChange={(e) => setFormData(prev => ({ ...prev, acceptMarketing: e.target.checked }))}
-                className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
+                className="w-4 h-4 text-red-600 focus:ring-red-500 border-gray-300 rounded mt-0.5"
               />
               <span className="text-sm text-gray-700">
                 Kampanya ve duyurulardan haberdar olmak istiyorum
@@ -203,7 +203,7 @@ const UserRegister: React.FC<UserRegisterProps> = ({ onClose, onSwitchToLogin })
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold"
+            className="w-full bg-gradient-to-r from-red-600 via-red-500 to-red-400 text-white py-3 rounded-xl hover:from-red-700 hover:to-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold"
           >
             {loading ? 'Kayıt oluşturuluyor...' : 'Kayıt Ol'}
           </button>
@@ -214,7 +214,7 @@ const UserRegister: React.FC<UserRegisterProps> = ({ onClose, onSwitchToLogin })
             Zaten hesabınız var mı?{' '}
             <button
               onClick={onSwitchToLogin}
-              className="text-blue-600 hover:text-blue-800 font-semibold transition-colors duration-200"
+              className="text-red-600 hover:text-red-800 font-semibold transition-colors duration-200"
             >
               Giriş Yap
             </button>

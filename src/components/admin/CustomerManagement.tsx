@@ -7,6 +7,7 @@ type UserType = Database['public']['Tables']['users']['Row'];
 
 const CustomerManagement: React.FC = () => {
   const { data: customers = [], loading, error, refetch } = useAdminData('users', {
+    select: '*, reservation_count:reservations(count)',
     orderBy: { column: 'created_at', ascending: false }
   });
 
@@ -89,98 +90,54 @@ const CustomerManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Customers Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {filteredCustomers.map((customer) => (
-          <div key={customer.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">
-                    {customer.name.charAt(0)}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900">{customer.name}</h3>
-                  <div className="flex items-center space-x-1">
-                    <Award className="w-4 h-4 text-yellow-400" />
-                    <span className="text-sm text-gray-600">{customer.loyalty_points} puan</span>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                {customer.is_email_verified && (
-                  <div className="w-2 h-2 bg-green-500 rounded-full" title="E-posta doğrulandı"></div>
-                )}
-                {customer.is_phone_verified && (
-                  <div className="w-2 h-2 bg-blue-500 rounded-full" title="Telefon doğrulandı"></div>
-                )}
-              </div>
-            </div>
-
-            {/* Contact Info */}
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center space-x-2 text-sm">
-                <Mail className="w-4 h-4 text-gray-400" />
-                <span className="truncate">{customer.email}</span>
-              </div>
-              <div className="flex items-center space-x-2 text-sm">
-                <Phone className="w-4 h-4 text-gray-400" />
-                <span>{customer.phone}</span>
-              </div>
-              {customer.address && (
-                <div className="flex items-center space-x-2 text-sm">
-                  <MapPin className="w-4 h-4 text-gray-400" />
-                  <span className="truncate">{customer.address}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Stats */}
-            <div className="bg-gray-50 rounded-lg p-3 mb-4">
-              <div className="grid grid-cols-2 gap-4 text-center">
-                <div>
-                  <p className="text-lg font-bold text-blue-600">{customer.total_reservations}</p>
-                  <p className="text-xs text-gray-600">Rezervasyon</p>
-                </div>
-                <div>
-                  <p className="text-lg font-bold text-green-600">{customer.loyalty_points}</p>
-                  <p className="text-xs text-gray-600">Sadakat Puanı</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Member Since */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-1 text-sm text-gray-500">
-                <Calendar className="w-4 h-4" />
-                <span>Üye: {formatDate(customer.created_at)}</span>
-              </div>
-              <div className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
-                {customer.preferred_language === 'tr' ? 'Türkçe' : 'English'}
-              </div>
-            </div>
-
-            {/* Last Login */}
-            {customer.last_login_at && (
-              <div className="text-xs text-gray-500 mb-4">
-                Son giriş: {formatDate(customer.last_login_at)}
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex space-x-2">
-              <button
-                onClick={() => viewCustomerDetails(customer)}
-                className="flex-1 bg-blue-100 text-blue-700 py-2 rounded-lg hover:bg-blue-200 transition-colors duration-200 flex items-center justify-center space-x-1"
-              >
-                <Eye className="w-4 h-4" />
-                <span>Detay</span>
-              </button>
-            </div>
-          </div>
-        ))}
+      {/* Customers Table */}
+      <div className="overflow-x-auto bg-white rounded-xl shadow-lg">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Ad Soyad</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">E-posta</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Telefon</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Adres</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">Rezervasyon</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">Puan</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">Dil</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">Kayıt</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">Son Giriş</th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">İşlem</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {filteredCustomers.map((customer) => (
+              <tr key={customer.id} className="hover:bg-blue-50 transition">
+                <td className="px-4 py-2 whitespace-nowrap font-medium text-gray-900 flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold">{customer.name.charAt(0)}</span>
+                  {customer.name}
+                  {customer.is_email_verified && <span className="ml-1 w-2 h-2 bg-green-500 rounded-full" title="E-posta doğrulandı"></span>}
+                  {customer.is_phone_verified && <span className="ml-1 w-2 h-2 bg-blue-500 rounded-full" title="Telefon doğrulandı"></span>}
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{customer.email}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{customer.phone}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 max-w-[180px] truncate">{customer.address || '-'}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-center text-blue-600 font-bold">{customer.reservation_count?.[0]?.count ?? 0}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-center text-green-600 font-bold">{customer.loyalty_points}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-center text-xs">
+                  {customer.preferred_language === 'tr' ? 'Türkçe' : 'English'}
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap text-center text-xs text-gray-500">{formatDate(customer.created_at)}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-center text-xs text-gray-500">{customer.last_login_at ? formatDate(customer.last_login_at) : '-'}</td>
+                <td className="px-4 py-2 whitespace-nowrap text-center">
+                  <button
+                    onClick={() => viewCustomerDetails(customer)}
+                    className="bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 text-xs font-semibold flex items-center gap-1 mx-auto"
+                  >
+                    <Eye className="w-4 h-4" /> Detay
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {filteredCustomers.length === 0 && !loading && (
@@ -260,7 +217,7 @@ const CustomerManagement: React.FC = () => {
               {/* Stats */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-blue-50 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">{selectedCustomer.total_reservations}</div>
+                  <div className="text-2xl font-bold text-blue-600">{selectedCustomer.reservation_count?.[0]?.count ?? 0}</div>
                   <div className="text-sm text-gray-600">Toplam Rezervasyon</div>
                 </div>
                 <div className="bg-green-50 rounded-lg p-4 text-center">

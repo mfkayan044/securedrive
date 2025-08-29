@@ -157,6 +157,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const formattedReservations: UserReservation[] = reservations?.map(r => ({
         id: r.id,
         userId: r.user_id,
+        reservationNumber: r.reservation_number,
         customerInfo: {
           name: r.customer_name,
           email: r.customer_email,
@@ -276,13 +277,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Create user profile in our users table
           const { error: profileError } = await supabase
             .from('users')
-            .insert({
+            .upsert({
               id: data.user.id,
               name: userData.name,
               email: userData.email,
               phone: userData.phone,
               preferred_language: 'tr'
-            });
+            }, { onConflict: 'id' });
 
           if (!profileError) {
             await loadUserProfile(data.user.id);
@@ -310,34 +311,41 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const updateProfile = async (profileData: Partial<User>): Promise<boolean> => {
     if (!currentUser) return false;
-
     try {
+      let errorMsg = '';
       if (isSupabaseConfigured()) {
+        // Alan eşleşmeleri ve date dönüşümü
+        const updateObj: any = {
+          name: profileData.name,
+          phone: profileData.phone,
+          address: profileData.address,
+          preferred_language: profileData.preferredLanguage,
+        };
+        if (profileData.email) updateObj.email = profileData.email;
+        if (profileData.dateOfBirth) {
+          // Eğer string ise ve boş değilse, date formatına çevir
+          updateObj.date_of_birth = profileData.dateOfBirth ? new Date(profileData.dateOfBirth).toISOString().slice(0,10) : null;
+        }
         const { error } = await supabase
           .from('users')
-          .update({
-            name: profileData.name,
-            phone: profileData.phone,
-            date_of_birth: profileData.dateOfBirth,
-            address: profileData.address,
-            preferred_language: profileData.preferredLanguage
-          })
+          .update(updateObj)
           .eq('id', currentUser.id);
-
         if (error) {
-          console.error('Error updating profile:', error);
+          errorMsg = error.message || 'Profil güncellenemedi.';
+          setProfileError(errorMsg);
           return false;
         }
       }
-
       const updatedUser = { ...currentUser, ...profileData };
       setCurrentUser(updatedUser);
+      setProfileError(null);
       return true;
-    } catch (error) {
-      console.error('Error updating profile:', error);
+    } catch (error: any) {
+      setProfileError(error?.message || 'Profil güncellenemedi.');
       return false;
     }
   };
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   const getUserReservations = () => {
     if (currentUser) {
@@ -405,7 +413,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login,
       register,
       logout,
-      updateProfile,
+  updateProfile,
+  profileError,
       getUserReservations,
       cancelReservation,
       rateReservation

@@ -121,6 +121,7 @@ const DriverReservations: React.FC = () => {
           <div key={reservation.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-2">
+                <span className="font-bold text-green-700">#{reservation.reservation_number || reservation.id.slice(0, 8)}</span>
                 <Calendar className="w-4 h-4 text-gray-400" />
                 <span className="font-semibold">
                   {new Date(reservation.tripDetails.departureDate).toLocaleDateString('tr-TR')}

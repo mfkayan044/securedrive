@@ -259,95 +259,73 @@ const DriverManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Drivers Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredDrivers.map((driver) => (
-          <div key={driver.id} className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-200">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">
-                    {driver.name.charAt(0)}
-                  </span>
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900">{driver.name}</h3>
-                  <div className="flex items-center space-x-1">
-                    <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                    <span className="text-sm text-gray-600">{driver.rating} ({driver.total_trips} transfer)</span>
-                  </div>
-                </div>
-              </div>
-              
-              <button
-                onClick={() => toggleStatus(driver.id)}
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  driver.is_active
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}
-              >
-                {driver.is_active ? 'Aktif' : 'Pasif'}
-              </button>
-            </div>
-
-            {/* Contact Info */}
-            <div className="space-y-2 mb-4">
-              <div className="flex items-center space-x-2 text-sm">
-                <Phone className="w-4 h-4 text-gray-400" />
-                <span>{driver.phone}</span>
-              </div>
-              <div className="flex items-center space-x-2 text-sm">
-                <Mail className="w-4 h-4 text-gray-400" />
-                <span>{driver.email}</span>
-              </div>
-            </div>
-
-            {/* Vehicle Info */}
-            <div className="bg-gray-50 rounded-lg p-3 mb-4">
-              <div className="flex items-center space-x-2 mb-2">
-                <Car className="w-4 h-4 text-blue-600" />
-                <span className="font-medium text-sm">{driver.vehicle_plate}</span>
-              </div>
-              <p className="text-sm text-gray-600">
-                {driver.vehicle_year} {driver.vehicle_model} - {driver.vehicle_color}
-              </p>
-            </div>
-
-            {/* Working Hours & Languages */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-1 text-sm">
-                <Clock className="w-4 h-4 text-gray-400" />
-                <span>{driver.working_hours_start} - {driver.working_hours_end}</span>
-              </div>
-              <div className="flex space-x-1">
-                {driver.languages.map(langId => (
-                  <span key={langId} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                    {langId.toUpperCase()}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex space-x-2">
-              <button
-                onClick={() => handleEdit(driver)}
-                className="flex-1 bg-blue-100 text-blue-700 py-2 rounded-lg hover:bg-blue-200 transition-colors duration-200 flex items-center justify-center space-x-1"
-              >
-                <Edit className="w-4 h-4" />
-                <span>Düzenle</span>
-              </button>
-              <button
-                onClick={() => handleDelete(driver.id)}
-                className="flex-1 bg-red-100 text-red-700 py-2 rounded-lg hover:bg-red-200 transition-colors duration-200 flex items-center justify-center space-x-1"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>Sil</span>
-              </button>
-            </div>
-          </div>
-        ))}
+      {/* Drivers Table */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ad Soyad</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefon</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-posta</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plaka</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Araç</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Puan</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Çalışma Saatleri</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Diller</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
+              <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredDrivers.map((driver) => (
+              <tr key={driver.id} className="hover:bg-gray-50">
+                <td className="px-4 py-2 font-medium text-gray-900">{driver.name}</td>
+                <td className="px-4 py-2 text-gray-700">{driver.phone}</td>
+                <td className="px-4 py-2 text-gray-700">{driver.email}</td>
+                <td className="px-4 py-2 text-gray-700">{driver.vehicle_plate}</td>
+                <td className="px-4 py-2 text-gray-700">{driver.vehicle_year} {driver.vehicle_model} - {driver.vehicle_color}</td>
+                <td className="px-4 py-2 text-gray-700 flex items-center space-x-1">
+                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <span>{driver.rating} ({driver.total_trips})</span>
+                </td>
+                <td className="px-4 py-2 text-gray-700">{driver.working_hours_start} - {driver.working_hours_end}</td>
+                <td className="px-4 py-2 text-gray-700">
+                  {driver.languages.map(langId => (
+                    <span key={langId} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded mr-1">
+                      {langId.toUpperCase()}
+                    </span>
+                  ))}
+                </td>
+                <td className="px-4 py-2">
+                  <button
+                    onClick={() => toggleStatus(driver.id)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      driver.is_active
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
+                    {driver.is_active ? 'Aktif' : 'Pasif'}
+                  </button>
+                </td>
+                <td className="px-4 py-2 flex space-x-2">
+                  <button
+                    onClick={() => handleEdit(driver)}
+                    className="bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 text-xs font-semibold"
+                  >
+                    <Edit className="w-4 h-4 inline" /> Düzenle
+                  </button>
+                  <button
+                    onClick={() => handleDelete(driver.id)}
+                    className="bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 text-xs font-semibold"
+                  >
+                    <Trash2 className="w-4 h-4 inline" /> Sil
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
       {/* Modal */}

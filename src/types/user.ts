@@ -40,6 +40,7 @@ export interface UserProfile {
 }
 
 export interface UserReservation extends Reservation {
+  reservationNumber?: number;
   driverInfo?: {
     name: string;
     phone: string;

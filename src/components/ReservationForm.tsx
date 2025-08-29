@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
+import PaymentModal from './user/PaymentModal';
 import { ArrowLeftRight, Calendar, Clock, Users, Phone, Mail, User } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useSupabaseData, usePrice } from '../hooks/useSupabaseData';
@@ -7,23 +9,64 @@ import VehicleSelector from './VehicleSelector';
 import ExtraServices from './ExtraServices';
 import { useUser } from '../contexts/UserContext';
 
+type TripType = 'one-way' | 'round-trip';
+
+interface FormData {
+  tripType: TripType;
+  fromLocation: string;
+  toLocation: string;
+  vehicleType: string;
+  departureDate: string;
+  departureTime: string;
+  returnDate: string;
+  returnTime: string;
+  passengers: number;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  notes: string;
+  departureFlightCode?: string;
+  returnFlightCode?: string;
+}
+
 const ReservationForm: React.FC = () => {
+  // Rezervasyon başarı modalı için state
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  // İş kuralı: Güzergahda havalimanı zorunluluğu için state
+  const [airportRequiredInRoute, setAirportRequiredInRoute] = useState<'yes' | 'no'>('yes');
+  // İş kuralı: Güzergahda havalimanı zorunluluğu değerini Supabase'den çek
+  useEffect(() => {
+    const fetchAirportRequired = async () => {
+      const { data, error } = await supabase
+        .from('business_rules')
+        .select('value')
+        .eq('key', 'airport_required_in_route')
+        .single();
+      if (!error && data && (data.value === 'yes' || data.value === 'no')) {
+        setAirportRequiredInRoute(data.value);
+      }
+    };
+    fetchAirportRequired();
+  }, []);
   const { currentUser, isAuthenticated } = useUser();
+
   const { data: locations, loading: locationsLoading, error: locationsError } = useSupabaseData('locations', {
     filter: { is_active: true },
     orderBy: { column: 'priority', ascending: true }
   });
+
   const { data: vehicleTypes, loading: vehicleTypesLoading, error: vehicleTypesError } = useSupabaseData('vehicle_types', {
     filter: { is_active: true },
     orderBy: { column: 'priority', ascending: true }
   });
+
   const { data: extraServices, loading: extraServicesLoading, error: extraServicesError } = useSupabaseData('extra_services', {
     filter: { is_active: true },
     orderBy: { column: 'priority', ascending: true }
   });
 
-  const [formData, setFormData] = useState({
-    tripType: 'one-way' as 'one-way' | 'round-trip',
+  const [formData, setFormData] = useState<FormData>({
+    tripType: 'one-way',
     fromLocation: '',
     toLocation: '',
     vehicleType: '',
@@ -35,56 +78,104 @@ const ReservationForm: React.FC = () => {
     customerName: currentUser?.name || '',
     customerEmail: currentUser?.email || '',
     customerPhone: currentUser?.phone || '',
-    notes: ''
+    notes: '',
+    departureFlightCode: '',
+    returnFlightCode: ''
   });
 
-  // Yolcu adları için state
+  // İş kuralları: Maksimum yolcu sayısı (ekonomi/bus)
+  const [maxPassengers, setMaxPassengers] = useState<{ economy: number; bus: number }>({ economy: 8, bus: 14 });
+
+  // İş kuralı: Maksimum yolcu sayısı değerlerini Supabase'den çek
+  useEffect(() => {
+    const fetchMaxPassengers = async () => {
+      const { data, error } = await supabase
+        .from('business_rules')
+        .select('key,value')
+        .in('key', ['max_passengers_economy', 'max_passengers_bus']);
+      if (!error && data && Array.isArray(data)) {
+        const eco = data.find((r: any) => r.key === 'max_passengers_economy');
+        const bus = data.find((r: any) => r.key === 'max_passengers_bus');
+        setMaxPassengers({
+          economy: eco ? parseInt(eco.value, 10) || 8 : 8,
+          bus: bus ? parseInt(bus.value, 10) || 14 : 14
+        });
+      }
+    };
+    fetchMaxPassengers();
+  }, []);
+
+  // Araç tipi veya yolcu sayısı değişince, limit aşımı varsa düzelt ve uyarı göster
+  useEffect(() => {
+    let max = 8;
+    if (formData.vehicleType) {
+      const selectedVehicle = vehicleTypes?.find((v: any) => v.id === formData.vehicleType);
+      const name = selectedVehicle?.name?.toLowerCase() || '';
+      if (name.includes('bus') || name.includes('otobüs') || name.includes('minibüs')) {
+        max = maxPassengers.bus;
+      } else {
+        max = maxPassengers.economy;
+      }
+    }
+    if (formData.passengers > max) {
+      setFormData(prev => ({ ...prev, passengers: max }));
+      showNotification(`Seçtiğiniz araç için maksimum yolcu sayısı ${max} olarak güncellendi.`, 'error');
+    }
+  }, [formData.vehicleType, maxPassengers]);
+
+
   const [passengerNames, setPassengerNames] = useState<string[]>(['']);
-
   const [selectedExtras, setSelectedExtras] = useState<string[]>([]);
+  const [showPayment, setShowPayment] = useState(false);
+  const [pendingReservation, setPendingReservation] = useState<any>(null);
+  const [notification, setNotification] = useState<string | null>(null);
+  const [notificationType, setNotificationType] = useState<'success' | 'error'>('error');
+  // Bildirim gösterme fonksiyonu
+  const showNotification = (msg: string, type: 'success' | 'error' = 'error') => {
+    setNotification(msg);
+    setNotificationType(type);
+    setTimeout(() => setNotification(null), 4000);
+  };
+
+  // Baz fiyat (lokasyon + araç tipine göre)
   const { price: basePrice } = usePrice(formData.fromLocation, formData.toLocation, formData.vehicleType);
+  const [currentPrice, setCurrentPrice] = useState<number>(0);
 
-  const [currentPrice, setCurrentPrice] = useState(0);
-
-  // Update form data when user logs in
-  React.useEffect(() => {
+  // Auth olunca formu doldur
+  useEffect(() => {
     if (isAuthenticated && currentUser) {
       setFormData(prev => ({
         ...prev,
-        customerName: currentUser.name,
-        customerEmail: currentUser.email,
-        customerPhone: currentUser.phone
+        customerName: currentUser.name || '',
+        customerEmail: currentUser.email || '',
+        customerPhone: currentUser.phone || ''
       }));
     }
   }, [isAuthenticated, currentUser]);
 
+  // Yolcu sayısı değişince isim alanlarını senkronize et
   useEffect(() => {
-    if (basePrice > 0) {
-      const extrasPrice = selectedExtras.reduce((total, extraId) => {
-        const extra = extraServices?.find(e => e.id === extraId);
-        return total + (extra ? extra.price : 0);
-      }, 0);
-      
-      const tripMultiplier = formData.tripType === 'round-trip' ? 2 : 1;
-      setCurrentPrice((basePrice * tripMultiplier) + extrasPrice);
-    } else {
-      setCurrentPrice(0);
-    }
+    setPassengerNames(prev => {
+      const next = [...prev];
+      if (formData.passengers > next.length) {
+        return next.concat(Array(formData.passengers - next.length).fill(''));
+      }
+      return next.slice(0, formData.passengers);
+    });
+  }, [formData.passengers]);
+
+  // Fiyatı hesapla (tek yön = 1x, gidiş-dönüş = 2x) + ekstra servisler
+  useEffect(() => {
+    const tripMultiplier = formData.tripType === 'round-trip' ? 2 : 1;
+    const extrasSum =
+      (extraServices || [])
+        .filter((e: any) => selectedExtras.includes(e.id))
+        .reduce((sum: number, e: any) => sum + (e.price || 0), 0);
+
+    setCurrentPrice((basePrice || 0) * tripMultiplier + extrasSum);
   }, [basePrice, formData.tripType, selectedExtras, extraServices]);
 
-  const toggleExtraService = (extraId: string) => {
-    setSelectedExtras(prev => 
-      prev.includes(extraId) 
-        ? prev.filter(id => id !== extraId)
-        : [...prev, extraId]
-    );
-  };
-
-  const getSelectedExtras = () => {
-    return extraServices?.filter(extra => selectedExtras.includes(extra.id)) || [];
-  };
-
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = <K extends keyof FormData>(field: K, value: FormData[K]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
@@ -96,161 +187,211 @@ const ReservationForm: React.FC = () => {
     }));
   };
 
-  // Yolcu sayısı değişince passengerNames dizisini güncelle
-  useEffect(() => {
-    const count = typeof formData.passengers === 'string' ? parseInt(formData.passengers) : formData.passengers;
-    setPassengerNames((prev) => {
-      if (prev.length < count) {
-        return [...prev, ...Array(count - prev.length).fill('')];
-      } else if (prev.length > count) {
-        return prev.slice(0, count);
-      }
-      return prev;
-    });
-  }, [formData.passengers]);
+  const toggleExtraService = (id: string) => {
+    setSelectedExtras(prev => (prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]));
+  };
 
-  // Yolcu adı değişikliği
   const handlePassengerNameChange = (idx: number, value: string) => {
-    setPassengerNames((prev) => {
-      const updated = [...prev];
-      updated[idx] = value;
-      return updated;
+    setPassengerNames(prev => {
+      const next = [...prev];
+      next[idx] = value;
+      return next;
     });
   };
 
-  // Handler for flight code change
   const handleFlightCodeChange = (field: 'departureFlightCode' | 'returnFlightCode', value: string) => {
-    handleInputChange(field, value);
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+
+  // İş kuralı: Uçuş kodu zorunluluğu kontrolü için state
+  const [flightCodeRequired, setFlightCodeRequired] = useState<'yes' | 'no'>('no');
+
+  // İş kuralı: Uçuş kodu zorunluluğu değerini Supabase'den çek
+  useEffect(() => {
+    const fetchFlightCodeRequired = async () => {
+      const { data, error } = await supabase
+        .from('business_rules')
+        .select('value')
+        .eq('key', 'flight_code_required')
+        .single();
+      if (!error && data && (data.value === 'yes' || data.value === 'no')) {
+        setFlightCodeRequired(data.value);
+      }
+    };
+    fetchFlightCodeRequired();
+  }, []);
+
+  // Form submit → sadece ödeme modalını açar
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Form validation
-    if (!formData.fromLocation || !formData.toLocation || !formData.vehicleType || 
-        !formData.departureDate || !formData.departureTime || 
+
+    if (!formData.fromLocation || !formData.toLocation || !formData.vehicleType ||
+        !formData.departureDate || !formData.departureTime ||
         !formData.customerName || !formData.customerEmail || !formData.customerPhone) {
-      alert('Lütfen tüm gerekli alanları doldurun.');
+      showNotification('Lütfen tüm gerekli alanları doldurun.');
       return;
     }
 
     if (formData.tripType === 'round-trip' && (!formData.returnDate || !formData.returnTime)) {
-      alert('Gidiş-dönüş seçimi için dönüş tarih ve saatini belirtin.');
+      showNotification('Gidiş-dönüş için dönüş tarih ve saatini belirtin.');
       return;
     }
 
+
+    // Güzergahda havalimanı zorunluluğu kontrolü
+    let isAirportTransfer = false;
+    const fromLoc = locations?.find((l: any) => l.id === formData.fromLocation);
+    const toLoc = locations?.find((l: any) => l.id === formData.toLocation);
+    if (fromLoc && toLoc) {
+      // Adında havaalanı, havalimanı, airport geçen bir lokasyon ise
+      const airportKeywords = ['havaalanı', 'havalimanı', 'airport'];
+      const fromIsAirport = airportKeywords.some(kw => fromLoc.name?.toLowerCase().includes(kw));
+      const toIsAirport = airportKeywords.some(kw => toLoc.name?.toLowerCase().includes(kw));
+      isAirportTransfer = fromIsAirport || toIsAirport;
+    }
+    if (airportRequiredInRoute === 'yes' && !isAirportTransfer) {
+      showNotification('İlçeler arası transfer yapılamaz. Nereden veya Nereye alanlarından en az biri havalimanı olmalı.');
+      return;
+    }
+    // Havaalanı transferinde uçuş kodu zorunlu mu?
+    if (flightCodeRequired === 'yes' && isAirportTransfer) {
+      if (!formData.departureFlightCode || formData.departureFlightCode.trim() === '') {
+        showNotification('Havaalanı transferlerinde uçuş kodu zorunludur. Lütfen uçuş kodunu girin.');
+        return;
+      }
+    }
+
+
+    // Minimum ve Maksimum rezervasyon süresi kuralı kontrolü
     try {
-      // Create reservation in Supabase
+      const { data, error } = await supabase
+        .from('business_rules')
+        .select('key,value')
+        .in('key', ['min_reservation_notice_hours', 'max_reservation_notice_days']);
+      if (!error && data && Array.isArray(data)) {
+        const minRule = data.find((r:any) => r.key === 'min_reservation_notice_hours');
+        const maxRule = data.find((r:any) => r.key === 'max_reservation_notice_days');
+        const minHours = minRule ? parseInt(minRule.value, 10) || 0 : 0;
+        const maxDays = maxRule ? parseInt(maxRule.value, 10) || 0 : 0;
+        if (!formData.departureDate || !formData.departureTime) {
+          showNotification('Lütfen gidiş tarihi ve saatini seçin.');
+          return;
+        }
+        const depDate = new Date(formData.departureDate + 'T' + formData.departureTime);
+        const now = new Date();
+        const diffMs = depDate.getTime() - now.getTime();
+        const diffHours = diffMs / (1000 * 60 * 60);
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        if (isNaN(depDate.getTime())) {
+          showNotification('Geçerli bir gidiş tarihi ve saati girin.');
+          return;
+        }
+        if (minHours > 0 && diffHours < minHours) {
+          showNotification(`Rezervasyonunuzu en az ${minHours} saat önceden yapmalısınız.`);
+          return;
+        }
+        if (maxDays > 0 && diffDays > maxDays) {
+          showNotification(`Rezervasyonunuzu en fazla ${maxDays} gün sonrasına yapabilirsiniz.`);
+          return;
+        }
+      }
+    } catch (err) {
+      // Kural okunamazsa rezervasyona izin ver, ama logla
+      console.error('Rezervasyon süresi kuralları okunamadı:', err);
+    }
+
+    // Tüm kontroller geçtiyse ödeme modalını aç
+    setShowPayment(true);
+    setPendingReservation({
+      ...formData,
+      passengerNames: [...passengerNames],
+      selectedExtras: [...selectedExtras],
+      currentPrice
+    });
+  };
+
+  // Ödeme başarılı → Supabase'e kayıt + extras + conversation
+  const handlePaymentSuccess = async () => {
+
+    if (!pendingReservation) return;
+
+    try {
+      // 1) reservation_approval iş kuralını çek
+      let reservationStatus = 'pending';
+      const { data: ruleData, error: ruleError } = await supabase
+        .from('business_rules')
+        .select('value')
+        .eq('key', 'reservation_approval')
+        .single();
+      if (!ruleError && ruleData && ruleData.value === 'auto') {
+        reservationStatus = 'confirmed';
+      }
+
+      // 2) Rezervasyon kaydı
+      const newReservation = {
+        user_id: currentUser?.id || null,
+        customer_name: pendingReservation.customerName,
+        customer_email: pendingReservation.customerEmail,
+        customer_phone: pendingReservation.customerPhone,
+        trip_type: pendingReservation.tripType,
+        from_location_id: pendingReservation.fromLocation,
+        to_location_id: pendingReservation.toLocation,
+        vehicle_type_id: pendingReservation.vehicleType,
+        departure_date: pendingReservation.departureDate,
+        departure_time: pendingReservation.departureTime,
+        return_date: pendingReservation.returnDate || null,
+        return_time: pendingReservation.returnTime || null,
+        passengers: pendingReservation.passengers,
+        passenger_names: pendingReservation.passengerNames,
+        departure_flight_code: pendingReservation.departureFlightCode || null,
+        return_flight_code: pendingReservation.returnFlightCode || null,
+        total_price: pendingReservation.currentPrice,
+        notes: pendingReservation.notes || null,
+        status: reservationStatus,
+        payment_status: 'paid'
+      };
+
       const { data: reservation, error } = await supabase
         .from('reservations')
         .insert({
           user_id: currentUser?.id || null,
-          customer_name: formData.customerName,
-          customer_email: formData.customerEmail,
-          customer_phone: formData.customerPhone,
-          trip_type: formData.tripType,
-          from_location_id: formData.fromLocation,
-          to_location_id: formData.toLocation,
-          vehicle_type_id: formData.vehicleType,
-          departure_date: formData.departureDate,
-          departure_time: formData.departureTime,
-          return_date: formData.returnDate || null,
-          return_time: formData.returnTime || null,
-          passengers: formData.passengers,
-          passenger_names: passengerNames,
-          departure_flight_code: formData.departureFlightCode || null,
-          return_flight_code: formData.returnFlightCode || null,
-          total_price: currentPrice,
-          notes: formData.notes || null,
-          status: 'pending',
-          payment_status: 'pending'
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating reservation:', error);
-        alert('Rezervasyon oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
-        return;
-      }
-
-      // Add extra services if any
-      if (selectedExtras.length > 0 && reservation && extraServices) {
-        const extraServiceInserts = selectedExtras.map(extraId => {
-          const extra = extraServices?.find(e => e.id === extraId);
-          return {
-            reservation_id: reservation.id,
-            extra_service_id: extraId,
-            quantity: 1,
-            price: extra?.price || 0
-          };
+          customer_name: pendingReservation.customerName,
+          customer_email: pendingReservation.customerEmail,
+          customer_phone: pendingReservation.customerPhone,
+          trip_type: pendingReservation.tripType,
+          from_location_id: pendingReservation.fromLocation,
+          to_location_id: pendingReservation.toLocation,
+          vehicle_type_id: pendingReservation.vehicleType,
+          departure_date: pendingReservation.departureDate,
+          departure_time: pendingReservation.departureTime,
+          return_date: pendingReservation.returnDate || null,
+          return_time: pendingReservation.returnTime || null,
+          passengers: pendingReservation.passengers,
+          passenger_names: pendingReservation.passengerNames,
+          departure_flight_code: pendingReservation.departureFlightCode || null,
+          return_flight_code: pendingReservation.returnFlightCode || null,
+          total_price: pendingReservation.currentPrice,
+          notes: pendingReservation.notes || null,
+          status: reservationStatus,
+          payment_status: 'paid'
         });
-
-        try {
-          const { error: extrasError } = await supabase
-            .from('reservation_extra_services')
-            .insert(extraServiceInserts);
-
-          if (extrasError) {
-            console.error('Error adding extra services:', extrasError);
-          }
-        } catch (extrasError) {
-          console.error('Error adding extra services:', extrasError);
-          // Don't fail the reservation if extra services fail
-        }
-      }
-
-      // Create conversation for messaging
-      if (reservation) {
-        try {
-          const { error: conversationError } = await supabase
-            .from('conversations')
-            .insert({
-              reservation_id: reservation.id,
-              user_id: currentUser?.id || null,
-              status: 'active'
-            });
-
-          if (conversationError) {
-            console.error('Error creating conversation:', conversationError);
-          }
-        } catch (conversationError) {
-          console.error('Error creating conversation:', conversationError);
-          // Don't fail the reservation if conversation creation fails
-        }
-      }
-
-      alert('Rezervasyonunuz başarıyla alındı! Size en kısa sürede dönüş yapacağız.');
-      
-      // Reset form
-      setFormData({
-        tripType: 'one-way',
-        fromLocation: '',
-        toLocation: '',
-        vehicleType: '',
-        departureDate: '',
-        departureTime: '',
-        returnDate: '',
-        returnTime: '',
-        passengers: 1,
-        departureFlightCode: '',
-        returnFlightCode: '',
-        customerName: currentUser?.name || '',
-        customerEmail: currentUser?.email || '',
-        customerPhone: currentUser?.phone || '',
-        notes: ''
-      });
-      setSelectedExtras([]);
-      setPassengerNames(['']);
-    } catch (error) {
-      console.error('Error creating reservation:', error);
-      alert('Rezervasyon oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
+  setPassengerNames(['']);
+  setSelectedExtras([]);
+  setPendingReservation(null);
+  setShowPayment(false);
+  setShowSuccessModal(true);
+    } catch (err) {
+      console.error('Error:', err);
+  showNotification('Bir hata oluştu. Lütfen tekrar deneyin.');
     }
   };
 
-  const fromLocationName = locations?.find(l => l.id === formData.fromLocation)?.name || '';
-  const toLocationName = locations?.find(l => l.id === formData.toLocation)?.name || '';
+  const fromLocationName = locations?.find((l: any) => l.id === formData.fromLocation)?.name || '';
+  const toLocationName = locations?.find((l: any) => l.id === formData.toLocation)?.name || '';
+  const vehicleName = vehicleTypes?.find((v: any) => v.id === formData.vehicleType)?.name || '';
 
-  // Show loading state
+  // Yükleme ekranı
   if (locationsLoading || vehicleTypesLoading || extraServicesLoading) {
     return (
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
@@ -262,7 +403,7 @@ const ReservationForm: React.FC = () => {
     );
   }
 
-  // Show error state
+  // Hata ekranı
   if (locationsError || vehicleTypesError || extraServicesError) {
     return (
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl p-8">
@@ -273,9 +414,7 @@ const ReservationForm: React.FC = () => {
             </svg>
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Veri Yükleme Hatası</h3>
-          <p className="text-gray-600 mb-4">
-            Veriler yüklenirken bir hata oluştu. Lütfen Supabase bağlantınızı kontrol edin.
-          </p>
+          <p className="text-gray-600 mb-4">Veriler yüklenirken bir hata oluştu. Lütfen Supabase bağlantınızı kontrol edin.</p>
           <button
             onClick={() => window.location.reload()}
             className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700"
@@ -305,7 +444,7 @@ const ReservationForm: React.FC = () => {
                 name="tripType"
                 value="one-way"
                 checked={formData.tripType === 'one-way'}
-                onChange={(e) => handleInputChange('tripType', e.target.value)}
+                onChange={(e) => handleInputChange('tripType', e.target.value as TripType)}
                 className="w-4 h-4 text-red-600 focus:ring-red-500 accent-red-500"
               />
               <span className="text-gray-700">Tek Yön</span>
@@ -316,7 +455,7 @@ const ReservationForm: React.FC = () => {
                 name="tripType"
                 value="round-trip"
                 checked={formData.tripType === 'round-trip'}
-                onChange={(e) => handleInputChange('tripType', e.target.value)}
+                onChange={(e) => handleInputChange('tripType', e.target.value as TripType)}
                 className="w-4 h-4 text-red-600 focus:ring-red-500 accent-red-500"
               />
               <span className="text-gray-700">Gidiş-Dönüş</span>
@@ -330,13 +469,13 @@ const ReservationForm: React.FC = () => {
             <label className="block text-sm font-semibold text-gray-700">Nereden</label>
             <LocationSelect
               value={formData.fromLocation}
-              onChange={(value) => handleInputChange('fromLocation', value)}
+              onChange={(value) => handleInputChange('fromLocation', value as any)}
               placeholder="Kalkış noktasını seçin"
               excludeId={formData.toLocation}
-             locations={locations || []}
+              locations={locations || []}
             />
           </div>
-          
+
           <div className="flex justify-center md:justify-start mb-3">
             <button
               type="button"
@@ -347,15 +486,15 @@ const ReservationForm: React.FC = () => {
               <ArrowLeftRight className="w-5 h-5 text-red-600" />
             </button>
           </div>
-          
+
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">Nereye</label>
             <LocationSelect
               value={formData.toLocation}
-              onChange={(value) => handleInputChange('toLocation', value)}
+              onChange={(value) => handleInputChange('toLocation', value as any)}
               placeholder="Varış noktasını seçin"
               excludeId={formData.fromLocation}
-             locations={locations || []}
+              locations={locations || []}
             />
           </div>
         </div>
@@ -375,7 +514,7 @@ const ReservationForm: React.FC = () => {
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
             />
           </div>
-          
+
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">
               <Clock className="w-4 h-4 inline mr-1" />
@@ -404,7 +543,7 @@ const ReservationForm: React.FC = () => {
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <label className="block text-sm font-semibold text-gray-700">
                   <Clock className="w-4 h-4 inline mr-1" />
@@ -421,7 +560,6 @@ const ReservationForm: React.FC = () => {
           )}
         </div>
 
-
         {/* Passengers */}
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-gray-700">
@@ -433,10 +571,24 @@ const ReservationForm: React.FC = () => {
             onChange={(e) => handleInputChange('passengers', Number(e.target.value))}
             className="w-full md:w-48 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
           >
-            {[1,2,3,4,5,6,7,8].map(num => (
-              <option key={num} value={num}>{num} Kişi</option>
-            ))}
+            {(() => {
+              let max = 8;
+              if (formData.vehicleType) {
+                const selectedVehicle = vehicleTypes?.find((v: any) => v.id === formData.vehicleType);
+                const name = selectedVehicle?.name?.toLowerCase() || '';
+                if (name.includes('bus') || name.includes('otobüs') || name.includes('minibüs')) {
+                  max = maxPassengers.bus;
+                } else {
+                  max = maxPassengers.economy;
+                }
+              }
+              // Araç seçilmemişse default 1-8 arası, seçilmişse max'a göre
+              return Array.from({ length: max }, (_, i) => i + 1).map(num => (
+                <option key={num} value={num}>{num} Kişi</option>
+              ));
+            })()}
           </select>
+
         </div>
 
         {/* Dynamic Passenger Names */}
@@ -456,6 +608,7 @@ const ReservationForm: React.FC = () => {
             ))}
           </div>
         </div>
+
         {/* Flight Codes */}
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-gray-700">Uçuş Kodu</label>
@@ -483,7 +636,7 @@ const ReservationForm: React.FC = () => {
         {formData.fromLocation && formData.toLocation && (
           <VehicleSelector
             selectedVehicleId={formData.vehicleType}
-            onSelect={(vehicleId) => handleInputChange('vehicleType', vehicleId)}
+            onSelect={(vehicleId) => handleInputChange('vehicleType', vehicleId as any)}
             vehicleTypes={vehicleTypes || []}
           />
         )}
@@ -524,7 +677,7 @@ const ReservationForm: React.FC = () => {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-700">
                 <Mail className="w-4 h-4 inline mr-1" />
@@ -540,7 +693,7 @@ const ReservationForm: React.FC = () => {
                 required
               />
             </div>
-            
+
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-700">
                 <Phone className="w-4 h-4 inline mr-1" />
@@ -576,56 +729,107 @@ const ReservationForm: React.FC = () => {
           <div className="bg-gradient-to-br from-red-100 via-red-50 to-white rounded-xl p-6 border border-red-200 shadow-sm">
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-gray-800">Rezervasyon Özeti</h3>
-              
+
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Güzergah:</span>
                   <span className="font-medium">{fromLocationName} → {toLocationName}</span>
                 </div>
-                
                 <div className="flex justify-between">
                   <span className="text-gray-600">Araç:</span>
-                  <span className="font-medium">
-                    {vehicleTypes?.find(v => v.id === formData.vehicleType)?.name}
-                  </span>
+                  <span className="font-medium">{vehicleName || '-'}</span>
                 </div>
-                
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Transfer Türü:</span>
+                  <span className="text-gray-600">Tarih/Saat:</span>
                   <span className="font-medium">
-                    {formData.tripType === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}
+                    {formData.departureDate} {formData.departureTime}
+                    {formData.tripType === 'round-trip' && ` • Dönüş: ${formData.returnDate} ${formData.returnTime}`}
                   </span>
                 </div>
-                
-                {getSelectedExtras().length > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Yolcu:</span>
+                  <span className="font-medium">{formData.passengers}</span>
+                </div>
+                {selectedExtras.length > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Ek Hizmetler:</span>
+                    <span className="text-gray-600">Ekstra Hizmetler:</span>
                     <span className="font-medium">
-                      {getSelectedExtras().map(e => e.name).join(', ')}
+                      {selectedExtras.map(id => extraServices?.find((e: any) => e.id === id)?.name).filter(Boolean).join(', ')}
                     </span>
                   </div>
                 )}
-              </div>
-              
-              <div className="border-t border-red-200 pt-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold text-gray-800">Toplam Tutar:</span>
-                  <span className="text-2xl font-bold text-red-600">{currentPrice} ₺</span>
+                <div className="flex justify-between text-base">
+                  <span className="text-gray-800 font-semibold">Toplam Fiyat:</span>
+                  <span className="text-gray-900 font-bold">{currentPrice.toLocaleString('tr-TR')} TL</span>
                 </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="w-full md:w-auto bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors"
+                >
+                  Ödeme ve Rezervasyonu Tamamla
+                </button>
               </div>
             </div>
           </div>
         )}
-
-        {/* Submit Button */}
-        <button
-          type="submit"
-          disabled={currentPrice === 0}
-          className="w-full bg-gradient-to-r from-red-600 via-red-500 to-slate-400 text-white py-4 rounded-xl hover:from-red-700 hover:to-slate-500 disabled:from-red-400 disabled:to-red-500 disabled:cursor-not-allowed transform hover:scale-[1.02] transition-all duration-200 font-semibold text-lg shadow-lg border-0"
-        >
-          {currentPrice > 0 ? `Rezervasyon Yap - ${currentPrice} ₺` : 'Rezervasyon Yap'}
-        </button>
       </form>
+
+      {/* Ödeme Modalı */}
+      {showPayment && (
+        <PaymentModal
+          isOpen={showPayment}
+          totalPrice={currentPrice}
+          onClose={() => setShowPayment(false)}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
+    {/* Bildirim Toast */}
+    {notification && (
+      <div
+        className={`fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 px-8 py-4 rounded-xl shadow-2xl border animate-fade-in font-semibold text-lg flex items-center justify-center min-w-[320px] max-w-[90vw] text-center transition-colors duration-300
+        ${notificationType === 'success' ? 'bg-green-600 text-white border-green-700' : 'bg-red-600 text-white border-red-700'}`}
+      >
+        {notification}
+      </div>
+    )}
+    {/* Rezervasyon Başarı Modalı */}
+    {showSuccessModal && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-white rounded-xl p-8 shadow-2xl max-w-md w-full relative">
+          <button onClick={() => setShowSuccessModal(false)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+          <h2 className="text-2xl font-bold mb-4 text-center text-green-700">Rezervasyon Başarılı!</h2>
+          <p className="text-center mb-6">Rezervasyonunuz başarıyla alındı! En kısa sürede sizinle iletişime geçeceğiz.</p>
+          {!isAuthenticated ? (
+            <button
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold text-lg mb-2"
+              onClick={() => {
+                setShowSuccessModal(false);
+                // Üye ol modalı açılacaksa burada tetikleyin
+                const event = new CustomEvent('openRegisterModal');
+                window.dispatchEvent(event);
+              }}
+            >
+              Üye Ol
+            </button>
+          ) : (
+            <button
+              className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold text-lg mb-2"
+              onClick={() => {
+                setShowSuccessModal(false);
+                // Profil modalı açılacaksa burada tetikleyin
+                const event = new CustomEvent('openProfileModal');
+                window.dispatchEvent(event);
+              }}
+            >
+              Profilimi Gör
+            </button>
+          )}
+        </div>
+      </div>
+    )}
     </div>
   );
 };

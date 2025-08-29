@@ -608,6 +608,74 @@ const ReservationManagement: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                  {/* Trip Details */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Seyahat Detayları
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-sm text-gray-600">Transfer Türü</label>
+                        <p className="font-medium">
+                          {selectedReservation.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm text-gray-600">Yolcu Sayısı</label>
+                        <p className="font-medium">{selectedReservation.passengers} kişi</p>
+                      </div>
+                      <div>
+                        <label className="text-sm text-gray-600">Yolcu İsimleri</label>
+                        <p className="font-medium">
+                          {Array.isArray(selectedReservation.passenger_names)
+                            ? selectedReservation.passenger_names.join(', ')
+                            : (selectedReservation.passenger_names || '-')}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm text-gray-600">Nereden</label>
+                        <p className="font-medium">{getLocationName(selectedReservation.from_location_id)}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm text-gray-600">Nereye</label>
+                        <p className="font-medium">{getLocationName(selectedReservation.to_location_id)}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm text-gray-600">Gidiş Tarihi</label>
+                        <p className="font-medium">
+                          {new Date(selectedReservation.departure_date).toLocaleDateString('tr-TR')} - {selectedReservation.departure_time}
+                        </p>
+                      </div>
+                      {selectedReservation.return_date && (
+                        <div>
+                          <label className="text-sm text-gray-600">Dönüş Tarihi</label>
+                          <p className="font-medium">
+                            {new Date(selectedReservation.return_date).toLocaleDateString('tr-TR')} - {selectedReservation.return_time}
+                          </p>
+                        </div>
+                      )}
+                      <div>
+                        <label className="text-sm text-gray-600">Gidiş Uçuş Kodu</label>
+                        <p className="font-medium">{selectedReservation.departure_flight_code || '-'}</p>
+                      </div>
+                      {selectedReservation.trip_type === 'round-trip' && (
+                        <div>
+                          <label className="text-sm text-gray-600">Dönüş Uçuş Kodu</label>
+                          <p className="font-medium">{selectedReservation.return_flight_code || '-'}</p>
+                        </div>
+                      )}
+                      <div>
+                        <label className="text-sm text-gray-600">Ekstra Hizmetler</label>
+                        <p className="font-medium">
+                          {Array.isArray(selectedReservation.extra_services)
+                            ? selectedReservation.extra_services.join(', ')
+                            : (selectedReservation.extra_services || '-')}
+                        </p>
+                      </div>
+                      {/* Havalimanı zorunluluğu kodu kaldırıldı, sadece uçuş kodu zorunluluğu aktif */}
+                    </div>
+                  </div>
                   {/* Status & Actions */}
                   <div className="flex items-center justify-between mt-6">
                     <div className={`px-3 py-2 rounded-full text-sm font-medium ${getStatusColor(selectedReservation.status)}`}>{getStatusLabel(selectedReservation.status)}

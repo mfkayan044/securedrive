@@ -81,20 +81,19 @@ const HomePage: React.FC = () => {
                 <Mail className="w-4 h-4" />
                 <span className="text-sm font-medium">{settings.contact_email || 'info@istanbultransfer.com'}</span>
               </div>
-              
               {/* User Authentication */}
               {isAuthenticated ? (
                 <div className="flex items-center space-x-4">
                   <button
                     onClick={() => setShowMessaging(true)}
-                    className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                    className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors duration-200"
                   >
                     <MessageCircle className="w-4 h-4" />
                     <span className="text-sm font-medium">Mesajlar</span>
                   </button>
                   <button
                     onClick={() => setShowProfile(true)}
-                    className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                    className="flex items-center space-x-2 text-gray-600 hover:text-red-600 transition-colors duration-200"
                   >
                     <User className="w-4 h-4" />
                     <span className="text-sm font-medium">{currentUser?.name}</span>
@@ -111,34 +110,19 @@ const HomePage: React.FC = () => {
                 <div className="flex items-center space-x-4">
                   <button
                     onClick={() => handleAuthClick('login')}
-                    className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors duration-200"
+                    className="text-sm font-medium text-gray-600 hover:text-red-600 transition-colors duration-200"
                   >
                     Giriş Yap
                   </button>
                   <button
                     onClick={() => handleAuthClick('register')}
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 text-sm font-medium"
+                    className="bg-gradient-to-r from-red-600 to-red-400 text-white px-4 py-2 rounded-lg hover:from-red-700 hover:to-red-500 transition-all duration-200 text-sm font-medium"
                   >
                     Kayıt Ol
                   </button>
                 </div>
               )}
-              
-              <Link
-                to="/admin"
-                className="flex items-center space-x-2 text-gray-600 hover:text-blue-600 transition-colors duration-200"
-              >
-                <Settings className="w-4 h-4" />
-                <span className="text-sm font-medium">Admin</span>
-              </Link>
-              
-              <Link
-                to="/driver"
-                className="flex items-center space-x-2 text-gray-600 hover:text-green-600 transition-colors duration-200"
-              >
-                <User className="w-4 h-4" />
-                <span className="text-sm font-medium">Sürücü</span>
-              </Link>
+              {/* Admin and Driver links removed from homepage UI */}
             </div>
             
             {/* Mobile Menu */}

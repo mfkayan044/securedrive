@@ -45,7 +45,7 @@ const UserLogin: React.FC<UserLoginProps> = ({ onClose, onSwitchToRegister }) =>
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl p-8 w-full max-w-md">
         <div className="text-center mb-6">
-          <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="bg-gradient-to-r from-red-600 to-red-400 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <User className="w-8 h-8 text-white" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Giriş Yap</h2>
@@ -78,7 +78,7 @@ const UserLogin: React.FC<UserLoginProps> = ({ onClose, onSwitchToRegister }) =>
               value={formData.email}
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
               placeholder="ornek@email.com"
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
               required
             />
           </div>
@@ -94,7 +94,7 @@ const UserLogin: React.FC<UserLoginProps> = ({ onClose, onSwitchToRegister }) =>
                 value={formData.password}
                 onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
                 required
               />
               <button
@@ -113,13 +113,13 @@ const UserLogin: React.FC<UserLoginProps> = ({ onClose, onSwitchToRegister }) =>
                 type="checkbox"
                 checked={formData.rememberMe}
                 onChange={(e) => setFormData(prev => ({ ...prev, rememberMe: e.target.checked }))}
-                className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="w-4 h-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
               />
               <span className="text-sm text-gray-700">Beni hatırla</span>
             </label>
             <button
               type="button"
-              className="text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200"
+              className="text-sm text-red-600 hover:text-red-800 transition-colors duration-200"
             >
               Şifremi unuttum
             </button>
@@ -128,7 +128,7 @@ const UserLogin: React.FC<UserLoginProps> = ({ onClose, onSwitchToRegister }) =>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 rounded-xl hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold"
+            className="w-full bg-gradient-to-r from-red-600 via-red-500 to-red-400 text-white py-3 rounded-xl hover:from-red-700 hover:to-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold"
           >
             {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
           </button>
@@ -139,7 +139,7 @@ const UserLogin: React.FC<UserLoginProps> = ({ onClose, onSwitchToRegister }) =>
             Hesabınız yok mu?{' '}
             <button
               onClick={onSwitchToRegister}
-              className="text-blue-600 hover:text-blue-800 font-semibold transition-colors duration-200"
+              className="text-red-600 hover:text-red-800 font-semibold transition-colors duration-200"
             >
               Kayıt Ol
             </button>
