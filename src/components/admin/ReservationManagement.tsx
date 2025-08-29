@@ -22,9 +22,39 @@ const ReservationManagement: React.FC = () => {
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Silme modalı için state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [reservationToDelete, setReservationToDelete] = useState<string | null>(null);
+
+  // Rezervasyon silme fonksiyonu (modal onaylı)
+  const handleDeleteClick = (reservationId: string) => {
+    setReservationToDelete(reservationId);
+    setDeleteModalOpen(true);
+  };
+
+  const confirmDeleteReservation = async () => {
+    if (!reservationToDelete) return;
+    if (!isSupabaseConfigured()) return;
+    const { error } = await supabase.from('reservations').delete().eq('id', reservationToDelete);
+    if (!error) {
+      setReservations(prev => prev.filter(r => r.id !== reservationToDelete));
+      setNotification('Rezervasyon başarıyla silindi.');
+    } else {
+      setNotification('Rezervasyon silinirken hata oluştu.');
+    }
+    setDeleteModalOpen(false);
+    setReservationToDelete(null);
+  };
+
+  const cancelDeleteReservation = () => {
+    setDeleteModalOpen(false);
+    setReservationToDelete(null);
+  };
 
   const fetchData = async () => {
     try {
@@ -43,7 +73,7 @@ const ReservationManagement: React.FC = () => {
 
       // Fetch all data
       const [reservationsRes, locationsRes, vehicleTypesRes, driversRes] = await Promise.allSettled([
-        supabase.from('reservations').select('*').order('created_at', { ascending: false }),
+        supabase.from('reservations').select('*, reservation_number').order('created_at', { ascending: false }),
         supabase.from('locations').select('*'),
         supabase.from('vehicle_types').select('*'),
         supabase.from('drivers').select('*')
@@ -251,7 +281,7 @@ const ReservationManagement: React.FC = () => {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-3xl font-bold text-gray-900">Rezervasyon Yönetimi</h1>
-            <div className="text-sm text-gray-600">
+            <div>
               Toplam: {reservations.length} rezervasyon
             </div>
           </div>
@@ -317,8 +347,8 @@ const ReservationManagement: React.FC = () => {
                     <tr key={reservation.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            #{reservation.id.slice(0, 8)}
+                          <div className="text-sm font-medium text-red-600">
+                            #{reservation.reservation_number ? reservation.reservation_number : reservation.id.slice(0, 8)}
                           </div>
                           <div className="text-sm text-gray-500">
                             {reservation.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}
@@ -333,6 +363,13 @@ const ReservationManagement: React.FC = () => {
                                Dönüş Uçuş Kodu: <span className="font-semibold">{reservation.return_flight_code}</span>
                              </div>
                            )}
+                          <button
+                            onClick={() => handleDeleteClick(reservation.id)}
+                            className="text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs font-semibold transition-colors"
+                            title="Rezervasyonu Sil"
+                          >
+                            Rezervasyonu Sil
+                          </button>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -446,7 +483,7 @@ const ReservationManagement: React.FC = () => {
               <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-gray-900">
-                    Rezervasyon Detayları - #{selectedReservation.id.slice(0, 8)}
+                    Rezervasyon Detayları - #{selectedReservation.reservation_number ? selectedReservation.reservation_number : selectedReservation.id.slice(0, 8)}
                   </h2>
                   <button
                     onClick={() => setShowDetailModal(false)}
@@ -735,7 +772,26 @@ const ReservationManagement: React.FC = () => {
           )}
         </div>
       )}
-    </div>
+    {/* Silme Onay Modali */}
+    {deleteModalOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full">
+          <h2 className="text-lg font-bold mb-4 text-red-600">Rezervasyonu Sil</h2>
+          <p className="mb-6">Bu rezervasyonu silmek istediğinize emin misiniz?</p>
+          <div className="flex justify-end space-x-3">
+            <button
+              onClick={cancelDeleteReservation}
+              className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+            >Vazgeç</button>
+            <button
+              onClick={confirmDeleteReservation}
+              className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+            >Evet, Sil</button>
+          </div>
+        </div>
+      </div>
+    )}
+  </div>
   );
 }
 

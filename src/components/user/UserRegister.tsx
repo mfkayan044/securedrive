@@ -29,6 +29,13 @@ const UserRegister: React.FC<UserRegisterProps> = ({ onClose, onSwitchToLogin })
     setLoading(true);
     setMessage(null);
 
+
+    if (!formData.phone || formData.phone.trim() === '') {
+      setMessage({ type: 'error', text: 'Telefon numarası zorunludur.' });
+      setLoading(false);
+      return;
+    }
+
     if (!formData.acceptTerms) {
       setMessage({ type: 'error', text: 'Kullanım koşullarını kabul etmelisiniz.' });
       setLoading(false);
@@ -36,7 +43,8 @@ const UserRegister: React.FC<UserRegisterProps> = ({ onClose, onSwitchToLogin })
     }
 
     try {
-      const result = await register(formData);
+  console.log('Supabase gönderilen telefon:', formData.phone);
+  const result = await register(formData);
       if (result.success) {
         setMessage({ type: 'success', text: result.message });
         setTimeout(() => {
@@ -54,7 +62,7 @@ const UserRegister: React.FC<UserRegisterProps> = ({ onClose, onSwitchToLogin })
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto">
+  <div className="bg-white rounded-2xl p-8 w-full max-w-md max-h-[90vh] overflow-y-auto relative">
         <div className="text-center mb-6">
           <div className="bg-gradient-to-r from-red-600 to-red-400 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <User className="w-8 h-8 text-white" />
@@ -223,9 +231,10 @@ const UserRegister: React.FC<UserRegisterProps> = ({ onClose, onSwitchToLogin })
 
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200"
+          className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl z-10"
+          aria-label="Kapat"
         >
-          ✕
+          &times;
         </button>
       </div>
     </div>

@@ -15,6 +15,19 @@ import DatabaseStatus from './components/DatabaseStatus';
 import { supabase } from './lib/supabase';
 
 const HomePage: React.FC = () => {
+  useEffect(() => {
+    const handleOpenRegister = () => {
+      setAuthMode('register');
+      setShowAuthModal(true);
+    };
+    const handleOpenProfile = () => setShowProfile(true);
+    window.addEventListener('openRegisterModal', handleOpenRegister);
+    window.addEventListener('openProfileModal', handleOpenProfile);
+    return () => {
+      window.removeEventListener('openRegisterModal', handleOpenRegister);
+      window.removeEventListener('openProfileModal', handleOpenProfile);
+    };
+  }, []);
   const { currentUser, isAuthenticated, logout } = useUser();
   const { logout: adminLogout } = useAdmin();
   const [showAuthModal, setShowAuthModal] = React.useState(false);
@@ -152,7 +165,7 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Database Status */}
           <div className="mb-8">
-            <DatabaseStatus />
+            {/* <DatabaseStatus /> */}
           </div>
           
           <div className="text-center mb-12">

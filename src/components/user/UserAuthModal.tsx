@@ -15,22 +15,29 @@ const UserAuthModal: React.FC<UserAuthModalProps> = ({
 }) => {
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
 
+  React.useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode, isOpen]);
+
   if (!isOpen) return null;
 
+  if (!isOpen) return null;
   return (
-    <>
-      {mode === 'login' ? (
-        <UserLogin
-          onClose={onClose}
-          onSwitchToRegister={() => setMode('register')}
-        />
-      ) : (
-        <UserRegister
-          onClose={onClose}
-          onSwitchToLogin={() => setMode('login')}
-        />
-      )}
-    </>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl p-8 w-full max-w-md relative">
+        {mode === 'login' ? (
+          <UserLogin
+            onClose={onClose}
+            onSwitchToRegister={() => setMode('register')}
+          />
+        ) : (
+          <UserRegister
+            onClose={onClose}
+            onSwitchToLogin={() => setMode('login')}
+          />
+        )}
+      </div>
+    </div>
   );
 };
 

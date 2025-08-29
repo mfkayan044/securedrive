@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Mail, Phone, Calendar, MapPin, Globe, Star, Award, Clock, CreditCard } from 'lucide-react';
 import { useUser } from '../../contexts/UserContext';
 
@@ -7,7 +7,12 @@ interface UserProfileProps {
 }
 
 const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
-  const { currentUser, userReservations, updateProfile, logout, profileError } = useUser();
+  const { currentUser, userReservations, updateProfile, logout, getUserReservations } = useUser();
+  // Refetch reservations when modal is opened
+  useEffect(() => {
+    getUserReservations && getUserReservations();
+    // eslint-disable-next-line
+  }, []);
   const [activeTab, setActiveTab] = useState<'profile' | 'reservations' | 'loyalty'>('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -61,8 +66,8 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-  {/* Header */}
-  <div className="bg-gradient-to-r from-red-600 to-red-400 p-6 text-white">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-red-600 to-red-600 p-6 text-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
@@ -129,11 +134,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                   {isEditing ? 'Kaydet' : 'Düzenle'}
                 </button>
               </div>
-              {profileError && (
-                <div className="bg-red-100 text-red-700 px-4 py-2 rounded mb-2 text-sm font-medium">
-                  {profileError}
-                </div>
-              )}
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -145,12 +146,13 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                       type="text"
                       value={formData.name}
                       onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     />
                   ) : (
                     <p className="text-gray-900 font-medium">{currentUser.name}</p>
                   )}
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <Mail className="w-4 h-4 inline mr-2" />
@@ -161,12 +163,13 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                       type="email"
                       value={formData.email}
                       onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     />
                   ) : (
                     <p className="text-gray-900 font-medium">{currentUser.email}</p>
                   )}
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <Phone className="w-4 h-4 inline mr-2" />
@@ -177,12 +180,13 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     />
                   ) : (
                     <p className="text-gray-900 font-medium">{currentUser.phone}</p>
                   )}
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <Globe className="w-4 h-4 inline mr-2" />
@@ -192,7 +196,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                     <select
                       value={formData.preferredLanguage}
                       onChange={(e) => setFormData(prev => ({ ...prev, preferredLanguage: e.target.value as 'tr' | 'en' }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                     >
                       <option value="tr">Türkçe</option>
                       <option value="en">English</option>
@@ -204,6 +208,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                   )}
                 </div>
               </div>
+
               <div className="pt-6 border-t border-gray-200">
                 <button
                   onClick={logout}
@@ -230,20 +235,16 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
                     <div key={reservation.id} className="bg-gray-50 rounded-lg p-6">
                       <div className="flex items-center justify-between mb-4">
                         <div>
-                          <h4 className="font-semibold text-gray-900">#{reservation.reservationNumber}</h4>
+                          <h4 className="font-semibold text-red-600">#
+                            {reservation.reservationNumber
+                              ? reservation.reservationNumber
+                              : (reservation.id && reservation.id.length > 6
+                                  ? reservation.id.slice(-6).toUpperCase()
+                                  : reservation.id)}
+                          </h4>
                           <p className="text-sm text-gray-600">
                             {new Date(reservation.createdAt).toLocaleDateString('tr-TR')}
                           </p>
-                           {reservation.departureFlightCode && (
-                             <div className="text-xs text-red-600 mt-1">
-                               Gidiş Uçuş Kodu: <span className="font-semibold">{reservation.departureFlightCode}</span>
-                             </div>
-                           )}
-                           {reservation.tripType === 'round-trip' && reservation.returnFlightCode && (
-                             <div className="text-xs text-green-600 mt-1">
-                               Dönüş Uçuş Kodu: <span className="font-semibold">{reservation.returnFlightCode}</span>
-                             </div>
-                           )}
                         </div>
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(reservation.status)}`}>
                           {getStatusLabel(reservation.status)}
@@ -324,7 +325,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ onClose }) => {
             <div className="space-y-6">
               <h3 className="text-xl font-bold text-gray-900">Sadakat Programı</h3>
               
-              <div className="bg-gradient-to-r from-red-600 to-red-400 rounded-lg p-6 text-white">
+              <div className="bg-gradient-to-r from-red-600 to-red-600 rounded-lg p-6 text-white">
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-2xl font-bold">{currentUser.loyaltyPoints} Puan</h4>
