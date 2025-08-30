@@ -15,6 +15,21 @@ import DatabaseStatus from './components/DatabaseStatus';
 import { supabase } from './lib/supabase';
 
 const HomePage: React.FC = () => {
+  const { currentUser, isAuthenticated, logout } = useUser();
+  const { logout: adminLogout } = useAdmin();
+  const [showAuthModal, setShowAuthModal] = React.useState(false);
+  const [authMode, setAuthMode] = React.useState<'login' | 'register'>('login');
+  const [showProfile, setShowProfile] = React.useState(false);
+  const [showMessaging, setShowMessaging] = React.useState(false);
+
+  useEffect(() => {
+    // Admin olarak müşteri arayüzüne erişim engelleniyor
+    if (currentUser && currentUser.email === "admin@istanbultransfer.com") {
+      logout();
+      window.location.href = "/admin-login";
+    }
+  }, [currentUser, logout]);
+
   useEffect(() => {
     const handleOpenRegister = () => {
       setAuthMode('register');
@@ -28,12 +43,6 @@ const HomePage: React.FC = () => {
       window.removeEventListener('openProfileModal', handleOpenProfile);
     };
   }, []);
-  const { currentUser, isAuthenticated, logout } = useUser();
-  const { logout: adminLogout } = useAdmin();
-  const [showAuthModal, setShowAuthModal] = React.useState(false);
-  const [authMode, setAuthMode] = React.useState<'login' | 'register'>('login');
-  const [showProfile, setShowProfile] = React.useState(false);
-  const [showMessaging, setShowMessaging] = React.useState(false);
 
   // Dinamik ayarlar
   const [settings, setSettings] = useState<{ [key: string]: string } | null>(null);
@@ -516,6 +525,7 @@ function App() {
                 <Route path="/" element={<HomePage />} />
               </Routes>
             </Router>
+            // ...eski admin kontrolü kaldırıldı...
           </MessagingProvider>
         </AdminProvider>
       </DriverProvider>

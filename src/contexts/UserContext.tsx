@@ -96,14 +96,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!isSupabaseConfigured()) {
         return;
       }
-      
       const { data: user, error } = await supabase
         .from('users')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
-      if (error) {
+      if (error && error.code !== 'PGRST116') { // PGRST116: 0 satır döndü
         console.error('Error loading user profile:', error);
         return;
       }
@@ -125,6 +124,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           lastLoginAt: user.last_login_at
         });
         await loadUserReservations(userId);
+      } else {
+        setCurrentUser(null); // Kullanıcı bulunamadıysa null yap
       }
     } catch (error) {
       console.error('Error loading user profile:', error);

@@ -7,7 +7,6 @@ type UserType = Database['public']['Tables']['users']['Row'];
 
 const CustomerManagement: React.FC = () => {
   const { data: customers = [], loading, error, refetch } = useAdminData('users', {
-    select: '*, reservation_count:reservations(count)',
     orderBy: { column: 'created_at', ascending: false }
   });
 
@@ -15,11 +14,18 @@ const CustomerManagement: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<UserType | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.phone.includes(searchTerm)
-  );
+  const [showAdmins, setShowAdmins] = useState(true);
+  const [showUsers, setShowUsers] = useState(true);
+
+  const filteredCustomers = customers.filter(customer => {
+    const matchesSearch =
+      customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.phone.includes(searchTerm);
+    const isAdmin = customer.role === 'admin' || customer.role === 'super_admin';
+    const isUser = !isAdmin;
+    return matchesSearch && ((showAdmins && isAdmin) || (showUsers && isUser));
+  });
 
   const viewCustomerDetails = (customer: UserType) => {
     setSelectedCustomer(customer);
@@ -76,63 +82,87 @@ const CustomerManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="bg-white rounded-xl shadow-lg p-6">
-        <div className="relative">
+      {/* Search & Filter & Add Admin */}
+      <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="relative flex-1">
           <Search className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Müşteri ara (isim, email, telefon)..."
+            placeholder="Müşteri/admın ara (isim, email, telefon)..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
         </div>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-1 text-sm">
+            <input type="checkbox" checked={showUsers} onChange={() => setShowUsers(v => !v)} /> Kullanıcılar
+          </label>
+          <label className="flex items-center gap-1 text-sm">
+            <input type="checkbox" checked={showAdmins} onChange={() => setShowAdmins(v => !v)} /> Adminler
+          </label>
+        </div>
+        <button
+          onClick={() => {
+            setSelectedCustomer({
+              id: '', name: '', email: '', phone: '', role: 'admin',
+              created_at: new Date().toISOString(), loyalty_points: 0, total_reservations: 0, preferred_language: 'tr', is_email_verified: false, is_phone_verified: false
+            } as any);
+            setShowDetailModal(true);
+          }}
+          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm font-medium"
+        >+ Admin Ekle</button>
       </div>
 
       {/* Customers Table */}
-      <div className="overflow-x-auto bg-white rounded-xl shadow-lg">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Ad Soyad</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">E-posta</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Telefon</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600">Adres</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">Rezervasyon</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">Puan</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">Dil</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">Kayıt</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">Son Giriş</th>
-              <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600">İşlem</th>
+      <div className="overflow-x-auto">
+        <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+          <thead>
+            <tr className="bg-gray-100 text-gray-700 text-sm">
+              <th className="py-2 px-3 border-b">Ad Soyad</th>
+              <th className="py-2 px-3 border-b">E-posta</th>
+              <th className="py-2 px-3 border-b">Telefon</th>
+              <th className="py-2 px-3 border-b">Rol</th>
+              <th className="py-2 px-3 border-b">Kayıt Tarihi</th>
+              <th className="py-2 px-3 border-b">Son Giriş</th>
+              <th className="py-2 px-3 border-b">Rezervasyon</th>
+              <th className="py-2 px-3 border-b">Sadakat Puanı</th>
+              <th className="py-2 px-3 border-b">İşlemler</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody>
             {filteredCustomers.map((customer) => (
-              <tr key={customer.id} className="hover:bg-blue-50 transition">
-                <td className="px-4 py-2 whitespace-nowrap font-medium text-gray-900 flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-bold">{customer.name.charAt(0)}</span>
-                  {customer.name}
-                  {customer.is_email_verified && <span className="ml-1 w-2 h-2 bg-green-500 rounded-full" title="E-posta doğrulandı"></span>}
-                  {customer.is_phone_verified && <span className="ml-1 w-2 h-2 bg-blue-500 rounded-full" title="Telefon doğrulandı"></span>}
-                </td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{customer.email}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700">{customer.phone}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-700 max-w-[180px] truncate">{customer.address || '-'}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-center text-blue-600 font-bold">{customer.reservation_count?.[0]?.count ?? 0}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-center text-green-600 font-bold">{customer.loyalty_points}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-center text-xs">
-                  {customer.preferred_language === 'tr' ? 'Türkçe' : 'English'}
-                </td>
-                <td className="px-4 py-2 whitespace-nowrap text-center text-xs text-gray-500">{formatDate(customer.created_at)}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-center text-xs text-gray-500">{customer.last_login_at ? formatDate(customer.last_login_at) : '-'}</td>
-                <td className="px-4 py-2 whitespace-nowrap text-center">
-                  <button
-                    onClick={() => viewCustomerDetails(customer)}
-                    className="bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 text-xs font-semibold flex items-center gap-1 mx-auto"
-                  >
-                    <Eye className="w-4 h-4" /> Detay
-                  </button>
+              <tr key={customer.id} className="border-b hover:bg-gray-50">
+                <td className="py-2 px-3">{customer.name}</td>
+                <td className="py-2 px-3">{customer.email}</td>
+                <td className="py-2 px-3">{customer.phone}</td>
+                <td className="py-2 px-3 capitalize">{customer.role}</td>
+                <td className="py-2 px-3">{formatDate(customer.created_at)}</td>
+                <td className="py-2 px-3">{customer.last_login_at ? formatDate(customer.last_login_at) : '-'}</td>
+                <td className="py-2 px-3 text-center">{customer.total_reservations}</td>
+                <td className="py-2 px-3 text-center">{customer.loyalty_points}</td>
+                <td className="py-2 px-3">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => viewCustomerDetails(customer)}
+                      className="bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200 flex items-center gap-1 text-xs"
+                    >
+                      <Eye className="w-4 h-4" /> Detay
+                    </button>
+                    {(customer.role === 'admin' || customer.role === 'super_admin') && (
+                      <button
+                        onClick={async () => {
+                          if (window.confirm('Bu admini silmek istediğinize emin misiniz?')) {
+                            await fetch(`/api/deleteUser?id=${customer.id}`);
+                            refetch();
+                          }
+                        }}
+                        className="bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 flex items-center gap-1 text-xs"
+                      >
+                        <Trash2 className="w-4 h-4" /> Sil
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -152,7 +182,7 @@ const CustomerManagement: React.FC = () => {
       )}
 
       {/* Detail Modal */}
-      {showDetailModal && selectedCustomer && (
+  {showDetailModal && selectedCustomer && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
@@ -168,6 +198,69 @@ const CustomerManagement: React.FC = () => {
             </div>
 
             <div className="space-y-6">
+              {/* Admin ekleme formu */}
+              {selectedCustomer.id === '' && (
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    // Supabase ile yeni admin ekle
+                    const form = e.target as HTMLFormElement;
+                    const name = (form.elements.namedItem('name') as HTMLInputElement).value;
+                    const email = (form.elements.namedItem('email') as HTMLInputElement).value;
+                    const phone = (form.elements.namedItem('phone') as HTMLInputElement).value;
+                    const role = (form.elements.namedItem('role') as HTMLInputElement).value;
+                    // Varsayılan şifre: 123456 (güvenlik için daha sonra değiştirilmeli)
+                    await fetch(`/api/addAdmin`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ name, email, phone, role, password: '123456' })
+                    });
+                    setShowDetailModal(false);
+                    refetch();
+                  }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="block text-sm font-medium">Ad Soyad</label>
+                    <input name="name" required className="w-full border rounded px-2 py-1" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">E-posta</label>
+                    <input name="email" type="email" required className="w-full border rounded px-2 py-1" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">Telefon</label>
+                    <input name="phone" required className="w-full border rounded px-2 py-1" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">Rol</label>
+                    <select name="role" className="w-full border rounded px-2 py-1">
+                      <option value="admin">Admin</option>
+                      <option value="super_admin">Süper Admin</option>
+                    </select>
+                  </div>
+                  <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Admini Kaydet</button>
+                </form>
+              )}
+              {/* Admin Rolü Değiştir */}
+              <div className="flex items-center gap-4">
+                <span className="font-semibold">Rol:</span>
+                <select
+                  value={selectedCustomer.role || 'user'}
+                  onChange={async (e) => {
+                    const newRole = e.target.value;
+                    // Supabase ile güncelle
+                    await fetch(`/api/updateUserRole?id=${selectedCustomer.id}&role=${newRole}`);
+                    refetch();
+                    setSelectedCustomer({ ...selectedCustomer, role: newRole });
+                  }}
+                  className="border rounded px-2 py-1"
+                >
+                  <option value="user">Kullanıcı</option>
+                  <option value="admin">Admin</option>
+                  <option value="super_admin">Süper Admin</option>
+                </select>
+              </div>
               {/* Customer Info */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
@@ -217,7 +310,7 @@ const CustomerManagement: React.FC = () => {
               {/* Stats */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="bg-blue-50 rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">{selectedCustomer.reservation_count?.[0]?.count ?? 0}</div>
+                  <div className="text-2xl font-bold text-blue-600">{selectedCustomer.total_reservations}</div>
                   <div className="text-sm text-gray-600">Toplam Rezervasyon</div>
                 </div>
                 <div className="bg-green-50 rounded-lg p-4 text-center">

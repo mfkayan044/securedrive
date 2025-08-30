@@ -24,6 +24,13 @@ const UserLogin: React.FC<UserLoginProps> = ({ onClose, onSwitchToRegister }) =>
     setLoading(true);
     setMessage(null);
 
+    // Admin e-posta ile müşteri girişini engelle
+    if (formData.email.trim().toLowerCase() === 'admin@istanbultransfer.com') {
+      setMessage({ type: 'error', text: 'Bu e-posta ile sadece admin panelinden giriş yapılabilir.' });
+      setLoading(false);
+      return;
+    }
+
     try {
       const result = await login(formData);
       if (result.success) {
