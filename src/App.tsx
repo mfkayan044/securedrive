@@ -26,7 +26,7 @@ const HomePage: React.FC = () => {
     // Admin olarak müşteri arayüzüne erişim engelleniyor
     if (currentUser && currentUser.email === "admin@istanbultransfer.com") {
       logout();
-      window.location.href = "/admin-login";
+      window.location.href = "/admin";
     }
   }, [currentUser, logout]);
 
