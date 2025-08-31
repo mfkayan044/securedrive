@@ -1,45 +1,73 @@
-// api/addadmin.js
+// addadmin.js
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+// Supabase client'ını oluşturuyoruz
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 export default async function handler(req, res) {
   try {
-    console.log('Request Method:', req.method);
-    console.log('Request Body:', req.body);
-
+    // Yalnızca POST isteği alacağımızı kontrol ediyoruz
     if (req.method !== 'POST') {
-      return res.status(405).json({ error: 'Method not allowed' });
+      res.status(405).json({ error: 'Method not allowed' });
+      return;
     }
 
     const { name, email, phone, role, password } = req.body;
+
+    // Gerekli verilerin olup olmadığını kontrol ediyoruz
     if (!name || !email || !phone || !role || !password) {
       console.error('Eksik bilgi:', { name, email, phone, role, password });
-      return res.status(400).json({ error: 'Eksik bilgi' });
+      res.status(400).json({ error: 'Eksik bilgi' });
+      return;
     }
 
+    console.log('Kullanıcı ekleme işlemi başlatıldı:', email);
+
+    // Supabase Auth ile kullanıcı oluşturuyoruz
     const { data, error } = await supabase.auth.admin.createUser({
-      email, password, email_confirm: true
+      email,
+      password,
+      email_confirm: true,
     });
-    if (error) throw new Error('Auth Error: ' + error.message);
-    console.log('Supabase Auth Data:', data);
+
+    if (error) {
+      console.error('Supabase auth error:', error);
+      throw new Error('Supabase auth error: ' + error.message);
+    }
+
+    console.log('Kullanıcı oluşturuldu:', data.user.id);
 
     const userId = data.user.id;
+
+    // Kullanıcıyı veritabanına ekliyoruz
     const { error: dbError } = await supabase.from('users').upsert([{
       id: userId,
-      name, email, phone, role,
+      name,
+      email,
+      phone,
+      role,
       is_email_verified: true,
       is_phone_verified: false,
       created_at: new Date().toISOString(),
       loyalty_points: 0,
       total_reservations: 0,
-      preferred_language: 'tr'
+      preferred_language: 'tr',
     }]);
-    if (dbError) throw new Error('DB Error: ' + dbError.message);
 
-    return res.status(200).json({ success: true });
+    if (dbError) {
+      console.error('Supabase DB error:', dbError);
+      throw new Error('Supabase DB error: ' + dbError.message);
+    }
+
+    // İşlem başarılı ise response gönderiyoruz
+    res.status(200).json({ success: true });
+
   } catch (err) {
-    console.error('Handler Error:', err);
-    return res.status(500).json({ error: err.message || 'Internal Server Error' });
+    // Eğer bir hata meydana gelirse burada yakalıyoruz
+    console.error('Handler error:', err);
+    res.status(500).json({ error: err.message || 'Internal Server Error' });
   }
 }
