@@ -210,7 +210,7 @@ const CustomerManagement: React.FC = () => {
                     const phone = (form.elements.namedItem('phone') as HTMLInputElement).value;
                     const role = (form.elements.namedItem('role') as HTMLInputElement).value;
                     // Varsayılan şifre: 123456 (güvenlik için daha sonra değiştirilmeli)
-                    await fetch(`/api/addAdmin`, {
+                    await fetch(`/api/addadmin`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify({ name, email, phone, role, password: '123456' })
