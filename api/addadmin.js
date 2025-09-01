@@ -42,24 +42,22 @@ export default async function handler(req, res) {
 
     const userId = data.user.id;
 
-    // Kullanıcıyı veritabanına ekliyoruz
-    const { error: dbError } = await supabase.from('users').upsert([{
+
+    // Sadece admin_users tablosuna ekle
+    const { error: adminDbError } = await supabase.from('admin_users').upsert([{
       id: userId,
       name,
       email,
-      phone,
       role,
-      is_email_verified: true,
-      is_phone_verified: false,
+      permissions: [], // Varsayılan boş, isterseniz frontend'den alabilirsiniz
+      is_active: true,
       created_at: new Date().toISOString(),
-      loyalty_points: 0,
-      total_reservations: 0,
-      preferred_language: 'tr',
+      last_login_at: null,
+      updated_at: new Date().toISOString(),
     }]);
-
-    if (dbError) {
-      console.error('Supabase DB error:', dbError);
-      throw new Error('Supabase DB error: ' + dbError.message);
+    if (adminDbError) {
+      console.error('Supabase admin_users DB error:', adminDbError);
+      throw new Error('Supabase admin_users DB error: ' + adminDbError.message);
     }
 
     // İşlem başarılı ise response gönderiyoruz
