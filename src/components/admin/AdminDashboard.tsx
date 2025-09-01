@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import ManualReservationModal from './ManualReservationModal';
+import AdminSimpleReservationModal from './AdminSimpleReservationModal';
 import { 
   Users, 
   Car, 
@@ -103,7 +103,7 @@ const AdminDashboard: React.FC = () => {
   ];
 
 
-  const [showManualModal, setShowManualModal] = useState(false);
+  const [showSimpleModal, setShowSimpleModal] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -112,7 +112,7 @@ const AdminDashboard: React.FC = () => {
         <div className="flex items-center gap-4">
           <button
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow"
-            onClick={() => setShowManualModal(true)}
+            onClick={() => setShowSimpleModal(true)}
           >
             Rezervasyon Ekle
           </button>
@@ -121,7 +121,7 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-  <ManualReservationModal open={showManualModal} onClose={() => setShowManualModal(false)} />
+  <AdminSimpleReservationModal open={showSimpleModal} onClose={() => setShowSimpleModal(false)} />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
