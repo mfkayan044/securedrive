@@ -148,6 +148,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
 
   // Auth olunca formu doldur
   useEffect(() => {
+    if (forceEmptyCustomer) return;
     if (isAuthenticated && currentUser) {
       setFormData(prev => ({
         ...prev,
@@ -156,7 +157,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
         customerPhone: currentUser.phone || ''
       }));
     }
-  }, [isAuthenticated, currentUser]);
+  }, [isAuthenticated, currentUser, forceEmptyCustomer]);
 
   // Yolcu sayısı değişince isim alanlarını senkronize et
   useEffect(() => {
