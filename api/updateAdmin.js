@@ -14,6 +14,7 @@ export default async function handler(req, res) {
     const { id } = req.query;
     const { name, email, phone, role, password } = req.body;
     if (!id || !name || !email || !phone || !role) {
+      console.error('Eksik bilgi:', { id, name, email, phone, role });
       res.status(400).json({ error: 'Eksik bilgi' });
       return;
     }
@@ -21,7 +22,8 @@ export default async function handler(req, res) {
     if (password) {
       const { error: passError } = await supabase.auth.admin.updateUserById(id, { password });
       if (passError) {
-        res.status(500).json({ error: passError.message });
+        console.error('Şifre güncelleme hatası:', passError);
+        res.status(500).json({ error: passError.message, details: passError });
         return;
       }
     }
@@ -34,11 +36,13 @@ export default async function handler(req, res) {
       updated_at: new Date().toISOString()
     }).eq('id', id);
     if (dbError) {
-      res.status(500).json({ error: dbError.message });
+      console.error('admin_users güncelleme hatası:', dbError);
+      res.status(500).json({ error: dbError.message, details: dbError });
       return;
     }
     res.status(200).json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message || 'Internal Server Error' });
+    console.error('Genel handler hatası:', err);
+    res.status(500).json({ error: err.message || 'Internal Server Error', details: err });
   }
 }
