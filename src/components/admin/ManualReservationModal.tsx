@@ -13,7 +13,7 @@ const ManualReservationModal: React.FC<{ open: boolean; onClose: () => void }> =
           ×
         </button>
         <h2 className="text-xl font-bold mb-4 text-center">Manuel Rezervasyon Ekle</h2>
-        <ReservationForm onSuccess={onClose} forceEmptyCustomer />
+  <ReservationForm onSuccess={onClose} forceEmptyCustomer noPaymentMode />
       </div>
     </div>
   );
