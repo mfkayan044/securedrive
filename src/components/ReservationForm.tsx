@@ -31,9 +31,10 @@ interface FormData {
 
 interface ReservationFormProps {
   onSuccess?: () => void;
+  forceEmptyCustomer?: boolean;
 }
 
-const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess }) => {
+const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmptyCustomer }) => {
   // Rezervasyon başarı modalı için state
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   // İş kuralı: Güzergahda havalimanı zorunluluğu için state
@@ -79,12 +80,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess }) => {
     returnDate: '',
     returnTime: '',
     passengers: 1,
-    customerName: currentUser?.name || '',
-    customerEmail: currentUser?.email || '',
-    customerPhone: currentUser?.phone || '',
+    customerName: forceEmptyCustomer ? '' : (currentUser?.name || ''),
+    customerEmail: forceEmptyCustomer ? '' : (currentUser?.email || ''),
+    customerPhone: forceEmptyCustomer ? '' : (currentUser?.phone || ''),
     notes: '',
     departureFlightCode: '',
-    returnFlightCode: ''
+    returnFlightCode: '',
   });
 
   // İş kuralları: Maksimum yolcu sayısı (ekonomi/bus)
