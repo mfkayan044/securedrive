@@ -699,7 +699,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
                 onChange={(e) => handleInputChange('customerName', e.target.value)}
                 placeholder="Adınız ve soyadınız"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
-                disabled={isAuthenticated}
+                disabled={isAuthenticated && !forceEmptyCustomer}
                 required
               />
             </div>
@@ -715,7 +715,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
                 onChange={(e) => handleInputChange('customerEmail', e.target.value)}
                 placeholder="ornek@email.com"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
-                disabled={isAuthenticated}
+                disabled={isAuthenticated && !forceEmptyCustomer}
                 required
               />
             </div>
@@ -731,7 +731,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
                 onChange={(e) => handleInputChange('customerPhone', e.target.value)}
                 placeholder="+90 5XX XXX XX XX"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                disabled={isAuthenticated}
+                disabled={isAuthenticated && !forceEmptyCustomer}
                 required
               />
             </div>
