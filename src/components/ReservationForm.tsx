@@ -29,7 +29,11 @@ interface FormData {
   returnFlightCode?: string;
 }
 
-const ReservationForm: React.FC = () => {
+interface ReservationFormProps {
+  onSuccess?: () => void;
+}
+
+const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess }) => {
   // Rezervasyon başarı modalı için state
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   // İş kuralı: Güzergahda havalimanı zorunluluğu için state
@@ -819,7 +823,10 @@ const ReservationForm: React.FC = () => {
     {showSuccessModal && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div className="bg-white rounded-xl p-8 shadow-2xl max-w-md w-full relative">
-          <button onClick={() => setShowSuccessModal(false)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
+          <button onClick={() => {
+            setShowSuccessModal(false);
+            if (onSuccess) onSuccess();
+          }} className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl">&times;</button>
           <h2 className="text-2xl font-bold mb-4 text-center text-green-700">Rezervasyon Başarılı!</h2>
           <p className="text-center mb-6">Rezervasyonunuz başarıyla alındı! En kısa sürede sizinle iletişime geçeceğiz.</p>
           {!isAuthenticated ? (

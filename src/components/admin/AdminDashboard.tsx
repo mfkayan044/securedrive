@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ManualReservationModal from './ManualReservationModal';
 import { 
   Users, 
   Car, 
@@ -101,14 +102,26 @@ const AdminDashboard: React.FC = () => {
     }
   ];
 
+
+  const [showManualModal, setShowManualModal] = useState(false);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <div className="text-sm text-gray-600">
-          Son güncelleme: {new Date().toLocaleString('tr-TR')}
+        <div className="flex items-center gap-4">
+          <button
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow"
+            onClick={() => setShowManualModal(true)}
+          >
+            Rezervasyon Ekle
+          </button>
+          <div className="text-sm text-gray-600">
+            Son güncelleme: {new Date().toLocaleString('tr-TR')}
+          </div>
         </div>
       </div>
+  <ManualReservationModal open={showManualModal} onClose={() => setShowManualModal(false)} />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
