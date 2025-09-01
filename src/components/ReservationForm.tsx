@@ -32,10 +32,9 @@ interface FormData {
 interface ReservationFormProps {
   onSuccess?: () => void;
   forceEmptyCustomer?: boolean;
-  noPaymentMode?: boolean;
 }
 
-const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmptyCustomer, noPaymentMode }) => {
+const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmptyCustomer }) => {
   // Rezervasyon başarı modalı için state
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   // İş kuralı: Güzergahda havalimanı zorunluluğu için state
@@ -229,7 +228,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
     fetchFlightCodeRequired();
   }, []);
 
-  // Form submit → ödeme modalı veya direkt kayıt
+  // Form submit → sadece ödeme modalını açar
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -250,6 +249,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
     const fromLoc = locations?.find((l: any) => l.id === formData.fromLocation);
     const toLoc = locations?.find((l: any) => l.id === formData.toLocation);
     if (fromLoc && toLoc) {
+      // Adında havaalanı, havalimanı, airport geçen bir lokasyon ise
       const airportKeywords = ['havaalanı', 'havalimanı', 'airport'];
       const fromIsAirport = airportKeywords.some(kw => fromLoc.name?.toLowerCase().includes(kw));
       const toIsAirport = airportKeywords.some(kw => toLoc.name?.toLowerCase().includes(kw));
@@ -259,6 +259,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
       showNotification('İlçeler arası transfer yapılamaz. Nereden veya Nereye alanlarından en az biri havalimanı olmalı.');
       return;
     }
+    // Havaalanı transferinde uçuş kodu zorunlu mu?
     if (flightCodeRequired === 'yes' && isAirportTransfer) {
       if (!formData.departureFlightCode || formData.departureFlightCode.trim() === '') {
         showNotification('Havaalanı transferlerinde uçuş kodu zorunludur. Lütfen uçuş kodunu girin.');
@@ -300,19 +301,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
         }
       }
     } catch (err) {
+      // Kural okunamazsa rezervasyona izin ver, ama logla
       console.error('Rezervasyon süresi kuralları okunamadı:', err);
-    }
-
-    // noPaymentMode ise doğrudan rezervasyon kaydı
-    if (noPaymentMode) {
-      setPendingReservation({
-        ...formData,
-        passengerNames: [...passengerNames],
-        selectedExtras: [...selectedExtras],
-        currentPrice
-      });
-      await handlePaymentSuccess();
-      return;
     }
 
     // Tüm kontroller geçtiyse ödeme modalını aç
@@ -364,12 +354,33 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
         total_price: pendingReservation.currentPrice,
         notes: pendingReservation.notes || null,
         status: reservationStatus,
-        payment_status: noPaymentMode ? 'unpaid' : 'paid'
+        payment_status: 'paid'
       };
 
       const { data: reservation, error } = await supabase
         .from('reservations')
-        .insert(newReservation);
+        .insert({
+          user_id: currentUser?.id || null,
+          customer_name: pendingReservation.customerName,
+          customer_email: pendingReservation.customerEmail,
+          customer_phone: pendingReservation.customerPhone,
+          trip_type: pendingReservation.tripType,
+          from_location_id: pendingReservation.fromLocation,
+          to_location_id: pendingReservation.toLocation,
+          vehicle_type_id: pendingReservation.vehicleType,
+          departure_date: pendingReservation.departureDate,
+          departure_time: pendingReservation.departureTime,
+          return_date: pendingReservation.returnDate || null,
+          return_time: pendingReservation.returnTime || null,
+          passengers: pendingReservation.passengers,
+          passenger_names: pendingReservation.passengerNames,
+          departure_flight_code: pendingReservation.departureFlightCode || null,
+          return_flight_code: pendingReservation.returnFlightCode || null,
+          total_price: pendingReservation.currentPrice,
+          notes: pendingReservation.notes || null,
+          status: reservationStatus,
+          payment_status: 'paid'
+        });
   setPassengerNames(['']);
   setSelectedExtras([]);
   setPendingReservation(null);
