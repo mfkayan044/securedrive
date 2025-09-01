@@ -315,14 +315,26 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
       return;
     }
 
-    // Tüm kontroller geçtiyse ödeme modalını aç
-    setShowPayment(true);
-    setPendingReservation({
-      ...formData,
-      passengerNames: [...passengerNames],
-      selectedExtras: [...selectedExtras],
-      currentPrice
-    });
+    // Anasayfa için: ödeme modalını açma, direkt kayıt
+    if (typeof noPaymentMode === 'undefined' || noPaymentMode === false) {
+      setPendingReservation({
+        ...formData,
+        passengerNames: [...passengerNames],
+        selectedExtras: [...selectedExtras],
+        currentPrice
+      });
+      await handlePaymentSuccess();
+      return;
+    }
+
+    // (Gizli bırakılan) ödeme modalı kodu
+    // setShowPayment(true);
+    // setPendingReservation({
+    //   ...formData,
+    //   passengerNames: [...passengerNames],
+    //   selectedExtras: [...selectedExtras],
+    //   currentPrice
+    // });
   };
 
   // Ödeme başarılı → Supabase'e kayıt + extras + conversation
@@ -395,7 +407,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
   setSelectedExtras([]);
   setPendingReservation(null);
   setShowPayment(false);
-  setShowSuccessModal(true);
+  if (typeof noPaymentMode === 'undefined' || noPaymentMode === false) {
+    showNotification('Rezervasyonunuz alındı! En kısa sürede sizinle iletişime geçeceğiz.', 'success');
+  } else {
+    setShowSuccessModal(true);
+  }
     } catch (err) {
       console.error('Error:', err);
   showNotification('Bir hata oluştu. Lütfen tekrar deneyin.');
@@ -813,6 +829,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
       </form>
 
       {/* Ödeme Modalı */}
+      {/*
       {showPayment && !noPaymentMode && (
         <PaymentModal
           isOpen={showPayment}
@@ -821,6 +838,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
           onPaymentSuccess={handlePaymentSuccess}
         />
       )}
+      */}
     {/* Bildirim Toast */}
     {notification && (
       <div
