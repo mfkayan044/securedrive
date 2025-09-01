@@ -364,7 +364,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
         total_price: pendingReservation.currentPrice,
         notes: pendingReservation.notes || null,
         status: reservationStatus,
-        payment_status: noPaymentMode ? 'unpaid' : 'paid'
+        payment_status: noPaymentMode ? 'pending' : 'paid'
       };
 
       const { data: reservation, error } = await supabase
@@ -389,7 +389,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
           total_price: pendingReservation.currentPrice,
           notes: pendingReservation.notes || null,
           status: reservationStatus,
-          payment_status: noPaymentMode ? 'unpaid' : 'paid'
+          payment_status: noPaymentMode ? 'pending' : 'paid'
         });
   setPassengerNames(['']);
   setSelectedExtras([]);
