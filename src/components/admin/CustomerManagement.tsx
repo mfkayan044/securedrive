@@ -6,10 +6,24 @@ import type { Database } from '../../lib/supabase';
 type UserType = Database['public']['Tables']['users']['Row'];
 
 const CustomerManagement: React.FC = () => {
-  // Admin panelinde admin_users tablosunu kullan
-  const { data: customers = [], loading, error, refetch } = useAdminData('admin_users', {
+  // Hem users hem admin_users tablosunu çek
+  const { data: users = [], loading: loadingUsers, error: errorUsers, refetch: refetchUsers } = useAdminData('users', {
     orderBy: { column: 'created_at', ascending: false }
   });
+  const { data: admins = [], loading: loadingAdmins, error: errorAdmins, refetch: refetchAdmins } = useAdminData('admin_users', {
+    orderBy: { column: 'created_at', ascending: false }
+  });
+
+  // Adminleri ve kullanıcıları birleştir, id ile çakışma varsa admin öncelikli olsun
+  const adminIds = new Set(admins.map((a: any) => a.id));
+  const mergedCustomers = [
+    ...admins,
+    ...users.filter((u: any) => !adminIds.has(u.id))
+  ];
+  const loading = loadingUsers || loadingAdmins;
+  const error = errorUsers || errorAdmins;
+  const refetch = () => { refetchUsers(); refetchAdmins(); };
+  const customers = mergedCustomers;
 
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<UserType | null>(null);
