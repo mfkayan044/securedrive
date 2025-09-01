@@ -6,7 +6,8 @@ import type { Database } from '../../lib/supabase';
 type UserType = Database['public']['Tables']['users']['Row'];
 
 const CustomerManagement: React.FC = () => {
-  const { data: customers = [], loading, error, refetch } = useAdminData('users', {
+  // Admin panelinde admin_users tablosunu kullan
+  const { data: customers = [], loading, error, refetch } = useAdminData('admin_users', {
     orderBy: { column: 'created_at', ascending: false }
   });
 
@@ -153,7 +154,7 @@ const CustomerManagement: React.FC = () => {
                       <button
                         onClick={async () => {
                           if (window.confirm('Bu admini silmek istediğinize emin misiniz?')) {
-                            await fetch(`/api/deleteUser?id=${customer.id}`);
+                            await fetch(`/api/deleteadmin?id=${customer.id}`);
                             refetch();
                           }
                         }}
@@ -209,11 +210,11 @@ const CustomerManagement: React.FC = () => {
                     const email = (form.elements.namedItem('email') as HTMLInputElement).value;
                     const phone = (form.elements.namedItem('phone') as HTMLInputElement).value;
                     const role = (form.elements.namedItem('role') as HTMLInputElement).value;
-                    // Varsayılan şifre: 123456 (güvenlik için daha sonra değiştirilmeli)
+                    const password = (form.elements.namedItem('password') as HTMLInputElement).value;
                     await fetch(`/api/addadmin`, {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ name, email, phone, role, password: '123456' })
+                      body: JSON.stringify({ name, email, phone, role, password })
                     });
                     setShowDetailModal(false);
                     refetch();
@@ -238,6 +239,10 @@ const CustomerManagement: React.FC = () => {
                       <option value="admin">Admin</option>
                       <option value="super_admin">Süper Admin</option>
                     </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium">Şifre</label>
+                    <input name="password" type="password" required className="w-full border rounded px-2 py-1" />
                   </div>
                   <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Admini Kaydet</button>
                 </form>
