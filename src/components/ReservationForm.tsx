@@ -32,9 +32,10 @@ interface FormData {
 interface ReservationFormProps {
   onSuccess?: () => void;
   forceEmptyCustomer?: boolean;
+  noPaymentMode?: boolean;
 }
 
-const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmptyCustomer }) => {
+const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmptyCustomer, noPaymentMode }) => {
   // Rezervasyon başarı modalı için state
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   // İş kuralı: Güzergahda havalimanı zorunluluğu için state
@@ -228,7 +229,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
     fetchFlightCodeRequired();
   }, []);
 
-  // Form submit → sadece ödeme modalını açar
+  // Form submit → ödeme modalı veya direkt kayıt
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -249,7 +250,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
     const fromLoc = locations?.find((l: any) => l.id === formData.fromLocation);
     const toLoc = locations?.find((l: any) => l.id === formData.toLocation);
     if (fromLoc && toLoc) {
-      // Adında havaalanı, havalimanı, airport geçen bir lokasyon ise
       const airportKeywords = ['havaalanı', 'havalimanı', 'airport'];
       const fromIsAirport = airportKeywords.some(kw => fromLoc.name?.toLowerCase().includes(kw));
       const toIsAirport = airportKeywords.some(kw => toLoc.name?.toLowerCase().includes(kw));
@@ -259,7 +259,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
       showNotification('İlçeler arası transfer yapılamaz. Nereden veya Nereye alanlarından en az biri havalimanı olmalı.');
       return;
     }
-    // Havaalanı transferinde uçuş kodu zorunlu mu?
     if (flightCodeRequired === 'yes' && isAirportTransfer) {
       if (!formData.departureFlightCode || formData.departureFlightCode.trim() === '') {
         showNotification('Havaalanı transferlerinde uçuş kodu zorunludur. Lütfen uçuş kodunu girin.');
@@ -301,8 +300,19 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
         }
       }
     } catch (err) {
-      // Kural okunamazsa rezervasyona izin ver, ama logla
       console.error('Rezervasyon süresi kuralları okunamadı:', err);
+    }
+
+    // noPaymentMode ise doğrudan rezervasyon kaydı
+    if (noPaymentMode) {
+      setPendingReservation({
+        ...formData,
+        passengerNames: [...passengerNames],
+        selectedExtras: [...selectedExtras],
+        currentPrice
+      });
+      await handlePaymentSuccess();
+      return;
     }
 
     // Tüm kontroller geçtiyse ödeme modalını aç
@@ -354,7 +364,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
         total_price: pendingReservation.currentPrice,
         notes: pendingReservation.notes || null,
         status: reservationStatus,
-        payment_status: 'paid'
+        payment_status: noPaymentMode ? 'unpaid' : 'paid'
       };
 
       const { data: reservation, error } = await supabase
@@ -379,7 +389,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
           total_price: pendingReservation.currentPrice,
           notes: pendingReservation.notes || null,
           status: reservationStatus,
-          payment_status: 'paid'
+          payment_status: noPaymentMode ? 'unpaid' : 'paid'
         });
   setPassengerNames(['']);
   setSelectedExtras([]);
@@ -803,7 +813,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
       </form>
 
       {/* Ödeme Modalı */}
-      {showPayment && (
+      {showPayment && !noPaymentMode && (
         <PaymentModal
           isOpen={showPayment}
           totalPrice={currentPrice}
