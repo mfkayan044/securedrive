@@ -428,7 +428,18 @@ const ReservationManagement: React.FC = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          
+                          {/* Ödeme Linki Gönder butonu */}
+                          {reservation.payment_status === 'pending' && (
+                            <a
+                              href={`/payment/${reservation.id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs font-semibold transition-colors"
+                              title="Ödeme Linki Gönder"
+                            >
+                              Ödeme Linki Gönder
+                            </a>
+                          )}
                           {reservation.status === 'pending' && (
                             <>
                               <button
@@ -447,7 +458,6 @@ const ReservationManagement: React.FC = () => {
                               </button>
                             </>
                           )}
-                          
                           {reservation.status === 'confirmed' && (
                             <button
                               onClick={() => updateReservationStatus(reservation.id, 'completed')}

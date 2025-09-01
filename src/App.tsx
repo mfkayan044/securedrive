@@ -4,6 +4,7 @@ import { Plane, Phone, Mail, MapPin, Clock, Shield, Award, Star, Settings, User,
 import ReservationForm from './components/ReservationForm';
 import AdminPanel from './components/admin/AdminPanel';
 import DriverPanel from './components/driver/DriverPanel';
+import PaymentPage from './components/PaymentPage';
 import { AdminProvider, useAdmin } from './contexts/AdminContext';
 import { DriverProvider } from './contexts/DriverContext';
 import { UserProvider, useUser } from './contexts/UserContext';
@@ -523,6 +524,7 @@ function App() {
                 <Route path="/admin/*" element={<AdminPanel />} />
                 <Route path="/driver" element={<DriverPanel />} />
                 <Route path="/" element={<HomePage />} />
+                <Route path="/payment/:reservationId" element={<PaymentPage />} />
               </Routes>
             </Router>
             // ...eski admin kontrolü kaldırıldı...
