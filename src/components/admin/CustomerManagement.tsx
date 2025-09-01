@@ -150,8 +150,8 @@ const CustomerManagement: React.FC = () => {
               <tr key={customer.id} className="border-b hover:bg-gray-50">
                 <td className="py-2 px-3">{customer.name}</td>
                 <td className="py-2 px-3">{customer.email}</td>
-                <td className="py-2 px-3">{customer.phone}</td>
-                <td className="py-2 px-3 capitalize">{customer.role}</td>
+                <td className="py-2 px-3">{customer.phone || '-'}</td>
+                <td className="py-2 px-3 capitalize">{customer.role || (customer.permissions ? 'admin' : 'user')}</td>
                 <td className="py-2 px-3">{formatDate(customer.created_at)}</td>
                 <td className="py-2 px-3">{customer.last_login_at ? formatDate(customer.last_login_at) : '-'}</td>
                 <td className="py-2 px-3 text-center">{customer.total_reservations}</td>
@@ -164,19 +164,21 @@ const CustomerManagement: React.FC = () => {
                     >
                       <Eye className="w-4 h-4" /> Detay
                     </button>
-                    {(customer.role === 'admin' || customer.role === 'super_admin') && (
-                      <button
-                        onClick={async () => {
-                          if (window.confirm('Bu admini silmek istediğinize emin misiniz?')) {
+                    <button
+                      onClick={async () => {
+                        if (window.confirm('Bu kaydı silmek istediğinize emin misiniz?')) {
+                          if (customer.permissions) {
                             await fetch(`/api/deleteadmin?id=${customer.id}`);
-                            refetch();
+                          } else {
+                            await fetch(`/api/deleteUser?id=${customer.id}`);
                           }
-                        }}
-                        className="bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 flex items-center gap-1 text-xs"
-                      >
-                        <Trash2 className="w-4 h-4" /> Sil
-                      </button>
-                    )}
+                          refetch();
+                        }
+                      }}
+                      className="bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 flex items-center gap-1 text-xs"
+                    >
+                      <Trash2 className="w-4 h-4" /> Sil
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -213,23 +215,42 @@ const CustomerManagement: React.FC = () => {
             </div>
 
             <div className="space-y-6">
-              {/* Admin ekleme formu */}
-              {selectedCustomer.id === '' && (
+              {/* Admin/Müşteri ekleme ve düzenleme formu */}
+              {(selectedCustomer.id === '' || selectedCustomer) && (
                 <form
                   onSubmit={async (e) => {
                     e.preventDefault();
-                    // Supabase ile yeni admin ekle
                     const form = e.target as HTMLFormElement;
                     const name = (form.elements.namedItem('name') as HTMLInputElement).value;
                     const email = (form.elements.namedItem('email') as HTMLInputElement).value;
                     const phone = (form.elements.namedItem('phone') as HTMLInputElement).value;
                     const role = (form.elements.namedItem('role') as HTMLInputElement).value;
                     const password = (form.elements.namedItem('password') as HTMLInputElement).value;
-                    await fetch(`/api/addadmin`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ name, email, phone, role, password })
-                    });
+                    if (selectedCustomer.id === '') {
+                      // Yeni admin ekle
+                      await fetch(`/api/addadmin`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, phone, role, password })
+                      });
+                    } else {
+                      // Düzenleme: admin mi müşteri mi kontrol et
+                      if (selectedCustomer.permissions) {
+                        // admin_users tablosu
+                        await fetch(`/api/updateAdmin?id=${selectedCustomer.id}`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ name, email, phone, role, password })
+                        });
+                      } else {
+                        // users tablosu
+                        await fetch(`/api/updateUser?id=${selectedCustomer.id}`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ name, email, phone, role, password })
+                        });
+                      }
+                    }
                     setShowDetailModal(false);
                     refetch();
                   }}
@@ -237,28 +258,29 @@ const CustomerManagement: React.FC = () => {
                 >
                   <div>
                     <label className="block text-sm font-medium">Ad Soyad</label>
-                    <input name="name" required className="w-full border rounded px-2 py-1" />
+                    <input name="name" required className="w-full border rounded px-2 py-1" defaultValue={selectedCustomer.name} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium">E-posta</label>
-                    <input name="email" type="email" required className="w-full border rounded px-2 py-1" />
+                    <input name="email" type="email" required className="w-full border rounded px-2 py-1" defaultValue={selectedCustomer.email} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium">Telefon</label>
-                    <input name="phone" required className="w-full border rounded px-2 py-1" />
+                    <input name="phone" required className="w-full border rounded px-2 py-1" defaultValue={selectedCustomer.phone} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium">Rol</label>
-                    <select name="role" className="w-full border rounded px-2 py-1">
+                    <select name="role" className="w-full border rounded px-2 py-1" defaultValue={selectedCustomer.role}>
                       <option value="admin">Admin</option>
                       <option value="super_admin">Süper Admin</option>
+                      <option value="user">Kullanıcı</option>
                     </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium">Şifre</label>
-                    <input name="password" type="password" required className="w-full border rounded px-2 py-1" />
+                    <input name="password" type="password" className="w-full border rounded px-2 py-1" placeholder="Yeni şifre (değiştirmek için doldurun)" />
                   </div>
-                  <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Admini Kaydet</button>
+                  <button type="submit" className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">Kaydet</button>
                 </form>
               )}
               {/* Admin Rolü Değiştir */}
