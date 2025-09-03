@@ -2,27 +2,29 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import nodemailer from 'nodemailer';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const { to, name, voucherCode, reservationDetails } = req.body;
-  if (!to || !voucherCode) {
-    return res.status(400).json({ error: 'Eksik parametre' });
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.zoho.com',
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.ZOHO_USER,
-      pass: process.env.ZOHO_PASS,
-    },
-  });
-
   try {
-    await transporter.sendMail({
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    const { to, name, voucherCode, reservationDetails } = req.body;
+    if (!to || !voucherCode) {
+      return res.status(400).json({ error: 'Eksik parametre' });
+    }
+
+    console.log('Gönderilecek mail bilgileri:', { to, name, voucherCode });
+
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.zoho.com',
+      port: 465,
+      secure: true,
+      auth: {
+        user: process.env.ZOHO_USER,
+        pass: process.env.ZOHO_PASS,
+      },
+    });
+
+    const info = await transporter.sendMail({
       from: process.env.ZOHO_USER,
       to,
       subject: 'Voucher Bilgilendirmesi',
@@ -34,9 +36,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         <p>İyi yolculuklar dileriz.</p>
       `,
     });
-    res.status(200).json({ success: true });
+
+    console.log('Mail gönderildi:', info);
+    return res.status(200).json({ success: true });
   } catch (error: any) {
     console.error('Mail gönderilemedi:', error);
-    res.status(500).json({ error: 'Mail gönderilemedi', detail: error.message });
+    return res.status(500).json({ error: 'Mail gönderilemedi', detail: error.message });
   }
 }
