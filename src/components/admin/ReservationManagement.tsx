@@ -32,7 +32,7 @@ try {
   console.error('Fetch hatası:', err);
   alert('Voucher e-posta gönderilirken beklenmedik bir hata oluştu.');
 }
-
+    };
   // Bildirim için state
   const [notification, setNotification] = useState<string | null>(null);
   useEffect(() => {
