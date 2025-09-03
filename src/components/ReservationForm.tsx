@@ -124,7 +124,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
     }
     if (formData.passengers > max) {
       setFormData(prev => ({ ...prev, passengers: max }));
-      showNotification(Seçtiğiniz araç için maksimum yolcu sayısı ${max} olarak güncellendi., 'error');
+      showNotification(`Seçtiğiniz araç için maksimum yolcu sayısı ${max} olarak güncellendi.`, 'error');
     }
   }, [formData.vehicleType, maxPassengers]);
 
