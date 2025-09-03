@@ -7,32 +7,39 @@ const ReservationManagement: React.FC = () => {
 
     // Voucher Gönder API çağrısı
     const sendVoucherEmail = async (reservation: any) => {
-      setVoucherSendingId(reservation.id);
-try {
-  const response = await fetch('/api/sendVoucherEmail', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      to: selectedReservation.customer_email,
-      name: selectedReservation.customer_name,
-      voucherCode: selectedReservation.voucher_code,
-      reservationDetails: JSON.stringify(selectedReservation, null, 2),
-    }),
-  });
-  const data = await response.json();
-
-  if (!response.ok) {
-    console.error('API Hatası:', data);
-    alert('Voucher e-posta gönderilirken hata oluştu: ' + data.detail);
+  if (!reservation || !reservation.customer_email) {
+    alert('Rezervasyon e-posta adresi bulunamadı!');
+    console.log('Eksik rezervasyon:', reservation);
     return;
   }
 
-  alert('Voucher e-posta başarıyla gönderildi!');
-} catch (err) {
-  console.error('Fetch hatası:', err);
-  alert('Voucher e-posta gönderilirken beklenmedik bir hata oluştu.');
-}
-    };
+  try {
+    const response = await fetch('/api/sendVoucherEmail', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: reservation.customer_email,
+        name: reservation.customer_name || '',
+        voucherCode: reservation.voucher_code || '',
+        reservationDetails: JSON.stringify(reservation, null, 2),
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('API Hatası:', data);
+      alert('Voucher e-posta gönderilirken hata oluştu: ' + data.detail);
+      return;
+    }
+
+    alert('Voucher e-posta başarıyla gönderildi!');
+  } catch (err) {
+    console.error('Fetch hatası:', err);
+    alert('Voucher e-posta gönderilirken beklenmedik bir hata oluştu.');
+  }
+};
+
   // Bildirim için state
   const [notification, setNotification] = useState<string | null>(null);
   useEffect(() => {
