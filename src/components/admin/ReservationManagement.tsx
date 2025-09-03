@@ -503,20 +503,25 @@ const sendVoucherEmail = async (reservation: any) => {
                           )}
                           {/* Voucher Gönder butonu: her rezervasyon için */}
                           <button
-                            onClick={() => sendVoucherEmail(reservation)}
-                            className={`text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-xs font-semibold transition-colors flex items-center space-x-1 ${voucherSendingId === reservation.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            title="Voucher Gönder"
-                            disabled={voucherSendingId === reservation.id}
-                          >
-                            {voucherSendingId === reservation.id ? (
-                              <span>Gönderiliyor...</span>
-                            ) : (
-                              <>
-                                <Mail className="w-4 h-4 mr-1" />
-                                Voucher Gönder
-                              </>
-                            )}
-                          </button>
+  onClick={() => {
+    // reservation.customer_email null ise modal input'tan al
+    const toEmail = reservation.customer_email || modalEmailInput; // modalEmailInput: modal input state'si
+    sendVoucherEmail({ ...reservation, customer_email: toEmail });
+  }}
+  className={`text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-xs font-semibold transition-colors flex items-center space-x-1 ${voucherSendingId === reservation.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+  title="Voucher Gönder"
+  disabled={voucherSendingId === reservation.id}
+>
+  {voucherSendingId === reservation.id ? (
+    <span>Gönderiliyor...</span>
+  ) : (
+    <>
+      <Mail className="w-4 h-4 mr-1" />
+      Voucher Gönder
+    </>
+  )}
+</button>
+
                           {reservation.status === 'confirmed' && (
                             <button
                               onClick={() => updateReservationStatus(reservation.id, 'completed')}
