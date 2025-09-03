@@ -10,15 +10,15 @@ const ReservationManagement: React.FC = () => {
       setVoucherSendingId(reservation.id);
       try {
         const response = await fetch('/api/sendVoucherEmail', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: reservation.customer_email,
-            name: reservation.customer_name,
-            voucherCode: reservation.voucher_code || reservation.reservation_number || reservation.id,
-            reservationDetails: `Tarih: ${reservation.departure_date} ${reservation.departure_time}\nGüzergah: ${getLocationName(reservation.from_location_id)} → ${getLocationName(reservation.to_location_id)}\nTutar: ${reservation.total_price} ₺`,
-          }),
-        });
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    to: selectedReservation.customer_email,
+    name: selectedReservation.customer_name,
+    voucherCode: selectedReservation.voucher_code,
+    reservationDetails: JSON.stringify(selectedReservation, null, 2),
+  }),
+});
         if (response.ok) {
           setNotification('Voucher e-posta ile başarıyla gönderildi.');
         } else {
