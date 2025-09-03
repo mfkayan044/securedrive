@@ -854,17 +854,32 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
           <h2 className="text-2xl font-bold mb-4 text-center text-green-700">Rezervasyon Başarılı!</h2>
           <p className="text-center mb-6">Rezervasyonunuz başarıyla alındı! En kısa sürede sizinle iletişime geçeceğiz.</p>
           {!isAuthenticated ? (
-            <button
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold text-lg mb-2"
-              onClick={() => {
-                setShowSuccessModal(false);
-                // Üye ol modalı açılacaksa burada tetikleyin
-                const event = new CustomEvent('openRegisterModal');
-                window.dispatchEvent(event);
-              }}
-            >
-              Üye Ol
-            </button>
+            <>
+              <button
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold text-lg mb-2"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  // Üye ol modalı açılacaksa burada tetikleyin
+                  const event = new CustomEvent('openRegisterModal');
+                  window.dispatchEvent(event);
+                }}
+              >
+                Üye Ol
+              </button>
+              <a
+                href="https://wa.me/905348517444"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center bg-[#25D366] hover:bg-[#1ebe57] text-white py-3 rounded-lg font-semibold text-lg mb-2 transition-colors"
+                style={{ textDecoration: 'none' }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 mr-2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 14.487c-.263-.132-1.558-.77-1.799-.858-.241-.088-.417-.132-.593.132-.175.263-.68.858-.833 1.033-.153.175-.307.197-.57.066-.263-.132-1.11-.409-2.115-1.304-.782-.696-1.31-1.556-1.464-1.819-.153-.263-.016-.405.116-.537.12-.12.263-.307.395-.461.132-.153.175-.263.263-.438.088-.175.044-.329-.022-.461-.066-.132-.593-1.433-.813-1.963-.214-.514-.432-.444-.593-.453l-.504-.009c-.175 0-.461.066-.701.329-.24.263-.92.899-.92 2.192 0 1.293.942 2.544 1.073 2.719.132.175 1.853 2.832 4.492 3.858.629.271 1.12.433 1.503.554.631.201 1.206.173 1.661.105.507-.075 1.558-.637 1.779-1.253.22-.616.22-1.143.153-1.253-.066-.11-.24-.175-.504-.307z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12c0 1.708.438 3.312 1.204 4.704L2.25 21.75l5.16-1.356A9.708 9.708 0 0012 21.75c5.385 0 9.75-4.365 9.75-9.75z" />
+                </svg>
+                WhatsApp'dan iletişime geçin
+              </a>
+            </>
           ) : (
             <button
               className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold text-lg mb-2"
