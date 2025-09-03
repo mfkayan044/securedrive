@@ -37,12 +37,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     `,
   };
 
-  try {
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Mail gönderildi:', info);
-    return res.status(200).json({ success: true });
-  } catch (error: any) {
-    console.error('Mail gönderme hatası:', error);
-    return res.status(500).json({ error: 'Mail gönderilemedi', detail: error.message });
-  }
+try {
+  const info = await transporter.sendMail(mailOptions);
+  console.log('Mail gönderildi:', info);
+  return res.status(200).json({ success: true });
+} catch (error: any) {
+  console.error('Mail gönderme hatası:', error); // bu satır logda hata detayını gösterir
+  return res.status(500).json({ error: 'Mail gönderilemedi', detail: error.message });
+}
+
 }
