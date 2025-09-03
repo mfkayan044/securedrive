@@ -8,28 +8,31 @@ const ReservationManagement: React.FC = () => {
     // Voucher Gönder API çağrısı
     const sendVoucherEmail = async (reservation: any) => {
       setVoucherSendingId(reservation.id);
-      try {
-        const response = await fetch('/api/sendVoucherEmail', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    to: selectedReservation.customer_email,
-    name: selectedReservation.customer_name,
-    voucherCode: selectedReservation.voucher_code,
-    reservationDetails: JSON.stringify(selectedReservation, null, 2),
-  }),
-});
-        if (response.ok) {
-          setNotification('Voucher e-posta ile başarıyla gönderildi.');
-        } else {
-          setNotification('Voucher e-posta gönderilemedi.');
-        }
-      } catch (err) {
-        setNotification('Voucher e-posta gönderilirken hata oluştu.');
-      } finally {
-        setVoucherSendingId(null);
-      }
-    };
+try {
+  const response = await fetch('/api/sendVoucherEmail', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      to: selectedReservation.customer_email,
+      name: selectedReservation.customer_name,
+      voucherCode: selectedReservation.voucher_code,
+      reservationDetails: JSON.stringify(selectedReservation, null, 2),
+    }),
+  });
+  const data = await response.json();
+
+  if (!response.ok) {
+    console.error('API Hatası:', data);
+    alert('Voucher e-posta gönderilirken hata oluştu: ' + data.detail);
+    return;
+  }
+
+  alert('Voucher e-posta başarıyla gönderildi!');
+} catch (err) {
+  console.error('Fetch hatası:', err);
+  alert('Voucher e-posta gönderilirken beklenmedik bir hata oluştu.');
+}
+
   // Bildirim için state
   const [notification, setNotification] = useState<string | null>(null);
   useEffect(() => {
