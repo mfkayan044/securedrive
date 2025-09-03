@@ -36,6 +36,24 @@ interface ReservationFormProps {
 }
 
 const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmptyCustomer, noPaymentMode }) => {
+  const { currentUser, isAuthenticated } = useUser();
+  const [formData, setFormData] = useState<FormData>({
+    tripType: 'one-way',
+    fromLocation: '',
+    toLocation: '',
+    vehicleType: '',
+    departureDate: '',
+    departureTime: '',
+    returnDate: '',
+    returnTime: '',
+    passengers: 1,
+    customerName: forceEmptyCustomer ? '' : (currentUser?.name || ''),
+    customerEmail: forceEmptyCustomer ? '' : (currentUser?.email || ''),
+    customerPhone: forceEmptyCustomer ? '' : (currentUser?.phone || ''),
+    notes: '',
+    departureFlightCode: '',
+    returnFlightCode: '',
+  });
   // Rezervasyon başarı modalı için state
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   // İş kuralı: Güzergahda havalimanı zorunluluğu için state
@@ -51,18 +69,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
     };
     fetchAirportRequired();
   }, []);
-    departureDate: '',
-    departureTime: '',
-    returnDate: '',
-    returnTime: '',
-    passengers: 1,
-    customerName: forceEmptyCustomer ? '' : (currentUser?.name || ''),
-    customerEmail: forceEmptyCustomer ? '' : (currentUser?.email || ''),
-    customerPhone: forceEmptyCustomer ? '' : (currentUser?.phone || ''),
-    notes: '',
-    departureFlightCode: '',
-    returnFlightCode: '',
-  });
 
   // İş kuralları: Maksimum yolcu sayısı (ekonomi/bus)
   const [maxPassengers, setMaxPassengers] = useState<{ economy: number; bus: number }>({ economy: 8, bus: 14 });
@@ -643,7 +649,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
               type="text"
               value={formData.departureFlightCode || ''}
               onChange={e => handleFlightCodeChange('departureFlightCode', e.target.value)}
-              placeholder="Gidiş Uçuş Kodu (varsa)"
+              placeholder="Gidiş Uçuş Kodu "
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
             />
             {formData.tripType === 'round-trip' && (
@@ -651,7 +657,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
                 type="text"
                 value={formData.returnFlightCode || ''}
                 onChange={e => handleFlightCodeChange('returnFlightCode', e.target.value)}
-                placeholder="Dönüş Uçuş Kodu (varsa)"
+                placeholder="Dönüş Uçuş Kodu"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
               />
             )}
