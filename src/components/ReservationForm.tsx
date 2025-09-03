@@ -406,11 +406,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
   setSelectedExtras([]);
   setPendingReservation(null);
   setShowPayment(false);
-  if (typeof noPaymentMode === 'undefined' || noPaymentMode === false) {
-    showNotification('Rezervasyonunuz alındı! En kısa sürede sizinle iletişime geçeceğiz.', 'success');
-  } else {
-    setShowSuccessModal(true);
-  }
+  setShowSuccessModal(true);
     } catch (err) {
       console.error('Error:', err);
   showNotification('Bir hata oluştu. Lütfen tekrar deneyin.');
