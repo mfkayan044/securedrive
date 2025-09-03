@@ -124,7 +124,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
     }
     if (formData.passengers > max) {
       setFormData(prev => ({ ...prev, passengers: max }));
-      showNotification(`Seçtiğiniz araç için maksimum yolcu sayısı ${max} olarak güncellendi.`, 'error');
+  showNotification(`Seçtiğiniz araç için maksimum yolcu sayısı ${max} olarak güncellendi.`, 'error');
     }
   }, [formData.vehicleType, maxPassengers]);
 
@@ -290,11 +290,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
           return;
         }
         if (minHours > 0 && diffHours < minHours) {
-          showNotification(Rezervasyonunuzu en az ${minHours} saat önceden yapmalısınız.);
+          showNotification(`Rezervasyonunuzu en az ${minHours} saat önceden yapmalısınız.`);
           return;
         }
         if (maxDays > 0 && diffDays > maxDays) {
-          showNotification(Rezervasyonunuzu en fazla ${maxDays} gün sonrasına yapabilirsiniz.);
+          showNotification(`Rezervasyonunuzu en fazla ${maxDays} gün sonrasına yapabilirsiniz.`);
           return;
         }
       }
@@ -651,7 +651,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
                 type="text"
                 value={name}
                 onChange={e => handlePassengerNameChange(idx, e.target.value)}
-                placeholder={Yolcu ${idx + 1} Ad Soyad}
+                placeholder={`Yolcu ${idx + 1} Ad Soyad`}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
                 required
               />
