@@ -1,4 +1,3 @@
-// api/sendVoucherEmail.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import nodemailer from 'nodemailer';
 
@@ -22,23 +21,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     },
   });
 
-  const mailOptions = {
-    from: process.env.ZOHO_USER,
-    to,
-    subject: 'Voucher Bilgilendirmesi',
-    html: `
-      <h2>Sayın ${name || ''},</h2>
-      <p>Rezervasyonunuz için voucher kodunuz: <b>${voucherCode}</b></p>
-      <p>Rezervasyon Detayları:</p>
-      <pre>${reservationDetails || ''}</pre>
-      <p>İyi yolculuklar dileriz.</p>
-    `,
-  };
-
   try {
-    await transporter.sendMail(mailOptions);
-    return res.status(200).json({ success: true });
+    await transporter.sendMail({
+      from: process.env.ZOHO_USER,
+      to,
+      subject: 'Voucher Bilgilendirmesi',
+      html: `
+        <h2>Sayın ${name || ''},</h2>
+        <p>Rezervasyonunuz için voucher kodunuz: <b>${voucherCode}</b></p>
+        <p>Rezervasyon Detayları:</p>
+        <pre>${reservationDetails || ''}</pre>
+        <p>İyi yolculuklar dileriz.</p>
+      `,
+    });
+    res.status(200).json({ success: true });
   } catch (error: any) {
-    return res.status(500).json({ error: 'Mail gönderilemedi', detail: error.message });
+    console.error('Mail gönderilemedi:', error);
+    res.status(500).json({ error: 'Mail gönderilemedi', detail: error.message });
   }
 }
