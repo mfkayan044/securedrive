@@ -1,32 +1,34 @@
-  // Voucher gönderme işlemi için loading state
-  const [voucherSendingId, setVoucherSendingId] = useState<string | null>(null);
+  import React, { useState, useEffect } from 'react';
 
-  // Voucher Gönder API çağrısı
-  const sendVoucherEmail = async (reservation: any) => {
-    setVoucherSendingId(reservation.id);
-    try {
-      const response = await fetch('/api/sendVoucherEmail', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: reservation.customer_email,
-          name: reservation.customer_name,
-          voucherCode: reservation.voucher_code || reservation.reservation_number || reservation.id,
-          reservationDetails: `Tarih: ${reservation.departure_date} ${reservation.departure_time}\nGüzergah: ${getLocationName(reservation.from_location_id)} → ${getLocationName(reservation.to_location_id)}\nTutar: ${reservation.total_price} ₺`,
-        }),
-      });
-      if (response.ok) {
-        setNotification('Voucher e-posta ile başarıyla gönderildi.');
-      } else {
-        setNotification('Voucher e-posta gönderilemedi.');
+  // Voucher gönderme işlemi için loading state
+  const ReservationManagement: React.FC = () => {
+    const [voucherSendingId, setVoucherSendingId] = useState<string | null>(null);
+
+    // Voucher Gönder API çağrısı
+    const sendVoucherEmail = async (reservation: any) => {
+      setVoucherSendingId(reservation.id);
+      try {
+        const response = await fetch('/api/sendVoucherEmail', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: reservation.customer_email,
+            name: reservation.customer_name,
+            voucherCode: reservation.voucher_code || reservation.reservation_number || reservation.id,
+            reservationDetails: `Tarih: ${reservation.departure_date} ${reservation.departure_time}\nGüzergah: ${getLocationName(reservation.from_location_id)} → ${getLocationName(reservation.to_location_id)}\nTutar: ${reservation.total_price} ₺`,
+          }),
+        });
+        if (response.ok) {
+          setNotification('Voucher e-posta ile başarıyla gönderildi.');
+        } else {
+          setNotification('Voucher e-posta gönderilemedi.');
+        }
+      } catch (err) {
+        setNotification('Voucher e-posta gönderilirken hata oluştu.');
+      } finally {
+        setVoucherSendingId(null);
       }
-    } catch (err) {
-      setNotification('Voucher e-posta gönderilirken hata oluştu.');
-    } finally {
-      setVoucherSendingId(null);
-    }
-  };
-import React, { useState, useEffect } from 'react';
+    };
 import { Calendar, Clock, User, MapPin, Car, Phone, Mail, Eye, Edit, Check, X, Search, Users } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
@@ -847,6 +849,6 @@ const ReservationManagement: React.FC = () => {
     )}
   </div>
   );
-}
+};
 
 export default ReservationManagement;
