@@ -2,9 +2,8 @@
   import { Calendar, Clock, User, MapPin, Car, Phone, Mail, Eye, Edit, Check, X, Search, Users } from 'lucide-react';
   import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
-  // Voucher gönderme işlemi için loading state
-  const ReservationManagement: React.FC = () => {
-    const [voucherSendingId, setVoucherSendingId] = useState<string | null>(null);
+const ReservationManagement: React.FC = () => {
+  const [voucherSendingId, setVoucherSendingId] = useState<string | null>(null);
 
     // Voucher Gönder API çağrısı
     const sendVoucherEmail = async (reservation: any) => {
@@ -31,8 +30,6 @@
         setVoucherSendingId(null);
       }
     };
-
-const ReservationManagement: React.FC = () => {
   // Bildirim için state
   const [notification, setNotification] = useState<string | null>(null);
   useEffect(() => {
