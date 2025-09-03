@@ -6,12 +6,13 @@ const ReservationManagement: React.FC = () => {
   const [voucherSendingId, setVoucherSendingId] = useState<string | null>(null);
 
     // Voucher Gönder API çağrısı
-    const sendVoucherEmail = async (reservation: any) => {
-  if (!reservation || !reservation.customer_email) {
-    alert('Rezervasyon e-posta adresi bulunamadı!');
-    console.log('Eksik rezervasyon:', reservation);
+const sendVoucherEmail = async (reservation: any) => {
+  if (!reservation.customer_email) {
+    alert('Müşteri e-posta adresi bulunamadı!');
     return;
   }
+
+  setVoucherSendingId(reservation.id);
 
   try {
     const response = await fetch('/api/sendVoucherEmail', {
@@ -19,26 +20,31 @@ const ReservationManagement: React.FC = () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         to: reservation.customer_email,
-        name: reservation.customer_name || '',
-        voucherCode: reservation.voucher_code || '',
+        name: reservation.customer_name,
+        voucherCode: reservation.voucher_code,
         reservationDetails: JSON.stringify(reservation, null, 2),
       }),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('API Hatası:', data);
-      alert('Voucher e-posta gönderilirken hata oluştu: ' + data.detail);
-      return;
+    // Buraya ekle
+    const data = await response.text(); // önce text al
+    try {
+      const json = JSON.parse(data); // sonra JSON'a çevir
+      if (!response.ok) throw new Error(json.detail || 'Bilinmeyen hata');
+      alert('Voucher başarıyla gönderildi!');
+    } catch (err) {
+      console.error('API JSON parse hatası:', err, data);
+      alert('Voucher e-posta gönderilirken hata oluştu.');
     }
 
-    alert('Voucher e-posta başarıyla gönderildi!');
-  } catch (err) {
-    console.error('Fetch hatası:', err);
-    alert('Voucher e-posta gönderilirken beklenmedik bir hata oluştu.');
+  } catch (error) {
+    console.error('Fetch hatası:', error);
+    alert('Voucher e-posta gönderilirken hata oluştu.');
+  } finally {
+    setVoucherSendingId(null);
   }
 };
+
 
   // Bildirim için state
   const [notification, setNotification] = useState<string | null>(null);
