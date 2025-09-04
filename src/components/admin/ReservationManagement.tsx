@@ -411,17 +411,8 @@ const sendVoucherEmail = async (reservation: any) => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm text-gray-900">
-                            {reservation.customer_email}
-                          </div>
-                        </div>
-                      </td>
-                            {reservation.customer_name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {reservation.customer_phone}
-                          </div>
+                        <div className="text-sm text-gray-900">
+                          {reservation.customer_email}
                         </div>
                       </td>
                       <td className="px-6 py-4">
@@ -502,11 +493,8 @@ const sendVoucherEmail = async (reservation: any) => {
                           )}
                           {/* Voucher Gönder butonu: her rezervasyon için */}
                           <button
-  onClick={() => {
-    // reservation.customer_email null ise modal input'tan al
-    const toEmail = reservation.customer_email || modalEmailInput; // modalEmailInput: modal input state'si
-    sendVoucherEmail({ ...reservation, customer_email: toEmail });
-  }}
+  // E-posta yoksa buton çalışmaz, sadece reservation.customer_email ile gönder
+  onClick={() => sendVoucherEmail(reservation)}
   className={`text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-xs font-semibold transition-colors flex items-center space-x-1 ${voucherSendingId === reservation.id ? 'opacity-50 cursor-not-allowed' : ''}`}
   title="Voucher Gönder"
   disabled={voucherSendingId === reservation.id}
