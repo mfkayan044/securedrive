@@ -3,18 +3,23 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import nodemailer from 'nodemailer';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  console.log('sendVoucherEmail fonksiyonu çağrıldı');
   try {
     if (req.method !== 'POST') {
+      console.log('Geçersiz method:', req.method);
       return res.status(405).json({ error: 'Sadece POST isteği destekleniyor.' });
     }
 
     const { to, name, voucherCode, reservationDetails } = req.body;
+    console.log('Gelen body:', req.body);
 
     if (!to || !voucherCode) {
+      console.log('Eksik parametre:', { to, voucherCode });
       return res.status(400).json({ error: 'Eksik parametre: "to" ve "voucherCode" zorunludur.' });
     }
 
     if (!process.env.ZOHO_USER || !process.env.ZOHO_PASS) {
+      console.log('Environment değişkenleri eksik');
       return res.status(500).json({ error: 'Mail gönderim ayarları eksik. Lütfen yöneticinize başvurun.' });
     }
 
@@ -50,5 +55,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Her durumda JSON dön
     return res.status(500).json({ error: 'Mail gönderilemedi', detail: error?.message || String(error) });
   }
-
 }
