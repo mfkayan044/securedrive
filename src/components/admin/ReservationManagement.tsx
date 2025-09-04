@@ -403,10 +403,11 @@ const sendVoucherEmail = async (reservation: any) => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {reservation.customer_name}
-                          </div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {reservation.customer_name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {reservation.customer_phone}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
