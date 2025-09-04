@@ -362,27 +362,14 @@ const sendVoucherEmail = async (reservation: any) => {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rezervasyon
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Müşteri
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Güzergah
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tarih & Saat
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tutar
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Durum
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      İşlemler
-                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rezervasyon</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Müşteri</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-posta</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Güzergah</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarih & Saat</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tutar</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -396,16 +383,16 @@ const sendVoucherEmail = async (reservation: any) => {
                           <div className="text-sm text-gray-500">
                             {reservation.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}
                           </div>
-                           {reservation.departure_flight_code && (
-                             <div className="text-xs text-blue-600 mt-1">
-                               Gidiş Uçuş Kodu: <span className="font-semibold">{reservation.departure_flight_code}</span>
-                             </div>
-                           )}
-                           {reservation.trip_type === 'round-trip' && reservation.return_flight_code && (
-                             <div className="text-xs text-green-600 mt-1">
-                               Dönüş Uçuş Kodu: <span className="font-semibold">{reservation.return_flight_code}</span>
-                             </div>
-                           )}
+                          {reservation.departure_flight_code && (
+                            <div className="text-xs text-blue-600 mt-1">
+                              Gidiş Uçuş Kodu: <span className="font-semibold">{reservation.departure_flight_code}</span>
+                            </div>
+                          )}
+                          {reservation.trip_type === 'round-trip' && reservation.return_flight_code && (
+                            <div className="text-xs text-green-600 mt-1">
+                              Dönüş Uçuş Kodu: <span className="font-semibold">{reservation.return_flight_code}</span>
+                            </div>
+                          )}
                           <button
                             onClick={() => handleDeleteClick(reservation.id)}
                             className="text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs font-semibold transition-colors"
@@ -418,6 +405,17 @@ const sendVoucherEmail = async (reservation: any) => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <div className="text-sm font-medium text-gray-900">
+                            {reservation.customer_name}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm text-gray-900">
+                            {reservation.customer_email}
+                          </div>
+                        </div>
+                      </td>
                             {reservation.customer_name}
                           </div>
                           <div className="text-sm text-gray-500">
