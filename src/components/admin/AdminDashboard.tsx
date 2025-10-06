@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import ManualReservationModal from './ManualReservationModal';
+import ReservationForm from '../ReservationForm';
 import { 
   Users, 
   Car, 
@@ -121,7 +121,20 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-  <ManualReservationModal open={showManualModal} onClose={() => setShowManualModal(false)} />
+  {showManualModal && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 py-12">
+      <div className="bg-white rounded-lg shadow-lg p-8 max-w-3xl w-full relative mx-auto max-h-[90vh] overflow-y-auto">
+        <button
+          onClick={() => setShowManualModal(false)}
+          className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-2xl"
+        >
+          ×
+        </button>
+        <h2 className="text-xl font-bold mb-4 text-center">Manuel Rezervasyon Ekle</h2>
+        <ReservationForm onSuccess={() => setShowManualModal(false)} forceEmptyCustomer noPaymentMode />
+      </div>
+    </div>
+  )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -195,7 +208,7 @@ const AdminDashboard: React.FC = () => {
               }, {} as Record<string, number>);
               
               const sortedRoutes = Object.entries(routeCounts)
-                .sort(([,a], [,b]) => b - a)
+                .sort(([,a], [,b]) => (Number(b) - Number(a)))
                 .slice(0, 4)
                 .map(([route, count], index) => ({
                   route,
@@ -213,7 +226,7 @@ const AdminDashboard: React.FC = () => {
               <div key={index} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-medium text-gray-900">{route.route}</p>
-                  <span className="text-sm text-gray-600">{route.count} transfer</span>
+                  <span className="text-sm text-gray-600">{String(route.count)} transfer</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 

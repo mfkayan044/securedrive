@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import PaymentModal from './user/PaymentModal';
 import { ArrowLeftRight, Calendar, Clock, Users, Phone, Mail, User } from 'lucide-react';
@@ -32,9 +31,10 @@ interface FormData {
 interface ReservationFormProps {
   onSuccess?: () => void;
   forceEmptyCustomer?: boolean;
+  noPaymentMode?: boolean;
 }
 
-const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmptyCustomer }) => {
+const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmptyCustomer, noPaymentMode }) => {
   // Rezervasyon başarı modalı için state
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   // İş kuralı: Güzergahda havalimanı zorunluluğu için state
@@ -124,7 +124,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
     }
     if (formData.passengers > max) {
       setFormData(prev => ({ ...prev, passengers: max }));
-      showNotification(`Seçtiğiniz araç için maksimum yolcu sayısı ${max} olarak güncellendi.`, 'error');
+  showNotification(`Seçtiğiniz araç için maksimum yolcu sayısı ${max} olarak güncellendi.`, 'error');
     }
   }, [formData.vehicleType, maxPassengers]);
 
@@ -148,7 +148,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
 
   // Auth olunca formu doldur
   useEffect(() => {
-    if (!forceEmptyCustomer && isAuthenticated && currentUser) {
+    if (forceEmptyCustomer) return;
+    if (isAuthenticated && currentUser) {
       setFormData(prev => ({
         ...prev,
         customerName: currentUser.name || '',
@@ -227,7 +228,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
     fetchFlightCodeRequired();
   }, []);
 
-  // Form submit → sadece ödeme modalını açar
+  // Form submit → ödeme modalı veya direkt kayıt
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -243,13 +244,11 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
       return;
     }
 
-
     // Güzergahda havalimanı zorunluluğu kontrolü
     let isAirportTransfer = false;
     const fromLoc = locations?.find((l: any) => l.id === formData.fromLocation);
     const toLoc = locations?.find((l: any) => l.id === formData.toLocation);
     if (fromLoc && toLoc) {
-      // Adında havaalanı, havalimanı, airport geçen bir lokasyon ise
       const airportKeywords = ['havaalanı', 'havalimanı', 'airport'];
       const fromIsAirport = airportKeywords.some(kw => fromLoc.name?.toLowerCase().includes(kw));
       const toIsAirport = airportKeywords.some(kw => toLoc.name?.toLowerCase().includes(kw));
@@ -259,14 +258,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
       showNotification('İlçeler arası transfer yapılamaz. Nereden veya Nereye alanlarından en az biri havalimanı olmalı.');
       return;
     }
-    // Havaalanı transferinde uçuş kodu zorunlu mu?
     if (flightCodeRequired === 'yes' && isAirportTransfer) {
       if (!formData.departureFlightCode || formData.departureFlightCode.trim() === '') {
         showNotification('Havaalanı transferlerinde uçuş kodu zorunludur. Lütfen uçuş kodunu girin.');
         return;
       }
     }
-
 
     // Minimum ve Maksimum rezervasyon süresi kuralı kontrolü
     try {
@@ -302,18 +299,41 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
         }
       }
     } catch (err) {
-      // Kural okunamazsa rezervasyona izin ver, ama logla
       console.error('Rezervasyon süresi kuralları okunamadı:', err);
     }
 
-    // Tüm kontroller geçtiyse ödeme modalını aç
-    setShowPayment(true);
-    setPendingReservation({
-      ...formData,
-      passengerNames: [...passengerNames],
-      selectedExtras: [...selectedExtras],
-      currentPrice
-    });
+    // noPaymentMode ise doğrudan rezervasyon kaydı
+    if (noPaymentMode) {
+      setPendingReservation({
+        ...formData,
+        passengerNames: [...passengerNames],
+        selectedExtras: [...selectedExtras],
+        currentPrice
+      });
+      await handlePaymentSuccess();
+      return;
+    }
+
+    // Anasayfa için: ödeme modalını açma, direkt kayıt
+    if (typeof noPaymentMode === 'undefined' || noPaymentMode === false) {
+      setPendingReservation({
+        ...formData,
+        passengerNames: [...passengerNames],
+        selectedExtras: [...selectedExtras],
+        currentPrice
+      });
+      await handlePaymentSuccess();
+      return;
+    }
+
+    // (Gizli bırakılan) ödeme modalı kodu
+    // setShowPayment(true);
+    // setPendingReservation({
+    //   ...formData,
+    //   passengerNames: [...passengerNames],
+    //   selectedExtras: [...selectedExtras],
+    //   currentPrice
+    // });
   };
 
   // Ödeme başarılı → Supabase'e kayıt + extras + conversation
@@ -334,6 +354,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
       }
 
       // 2) Rezervasyon kaydı
+
       const newReservation = {
         user_id: currentUser?.id || null,
         customer_name: pendingReservation.customerName,
@@ -354,7 +375,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
         total_price: pendingReservation.currentPrice,
         notes: pendingReservation.notes || null,
         status: reservationStatus,
-        payment_status: 'paid'
+        payment_status: noPaymentMode ? 'pending' : 'paid'
       };
 
       const { data: reservation, error } = await supabase
@@ -379,7 +400,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
           total_price: pendingReservation.currentPrice,
           notes: pendingReservation.notes || null,
           status: reservationStatus,
-          payment_status: 'paid'
+          payment_status: noPaymentMode ? 'pending' : 'paid'
         });
   setPassengerNames(['']);
   setSelectedExtras([]);
@@ -642,7 +663,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
               type="text"
               value={formData.departureFlightCode || ''}
               onChange={e => handleFlightCodeChange('departureFlightCode', e.target.value)}
-              placeholder="Gidiş Uçuş Kodu (varsa)"
+              placeholder="Gidiş Uçuş Kodu"
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
             />
             {formData.tripType === 'round-trip' && (
@@ -650,7 +671,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
                 type="text"
                 value={formData.returnFlightCode || ''}
                 onChange={e => handleFlightCodeChange('returnFlightCode', e.target.value)}
-                placeholder="Dönüş Uçuş Kodu (varsa)"
+                placeholder="Dönüş Uçuş Kodu"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
               />
             )}
@@ -698,7 +719,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
                 onChange={(e) => handleInputChange('customerName', e.target.value)}
                 placeholder="Adınız ve soyadınız"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
-                disabled={isAuthenticated}
+                disabled={isAuthenticated && !forceEmptyCustomer}
                 required
               />
             </div>
@@ -714,7 +735,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
                 onChange={(e) => handleInputChange('customerEmail', e.target.value)}
                 placeholder="ornek@email.com"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-all duration-200"
-                disabled={isAuthenticated}
+                disabled={isAuthenticated && !forceEmptyCustomer}
                 required
               />
             </div>
@@ -730,7 +751,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
                 onChange={(e) => handleInputChange('customerPhone', e.target.value)}
                 placeholder="+90 5XX XXX XX XX"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-                disabled={isAuthenticated}
+                disabled={isAuthenticated && !forceEmptyCustomer}
                 required
               />
             </div>
@@ -803,7 +824,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
       </form>
 
       {/* Ödeme Modalı */}
-      {showPayment && (
+      {/*
+      {showPayment && !noPaymentMode && (
         <PaymentModal
           isOpen={showPayment}
           totalPrice={currentPrice}
@@ -811,6 +833,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
           onPaymentSuccess={handlePaymentSuccess}
         />
       )}
+      */}
     {/* Bildirim Toast */}
     {notification && (
       <div
@@ -831,17 +854,32 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
           <h2 className="text-2xl font-bold mb-4 text-center text-green-700">Rezervasyon Başarılı!</h2>
           <p className="text-center mb-6">Rezervasyonunuz başarıyla alındı! En kısa sürede sizinle iletişime geçeceğiz.</p>
           {!isAuthenticated ? (
-            <button
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold text-lg mb-2"
-              onClick={() => {
-                setShowSuccessModal(false);
-                // Üye ol modalı açılacaksa burada tetikleyin
-                const event = new CustomEvent('openRegisterModal');
-                window.dispatchEvent(event);
-              }}
-            >
-              Üye Ol
-            </button>
+            <>
+              <button
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold text-lg mb-2"
+                onClick={() => {
+                  setShowSuccessModal(false);
+                  // Üye ol modalı açılacaksa burada tetikleyin
+                  const event = new CustomEvent('openRegisterModal');
+                  window.dispatchEvent(event);
+                }}
+              >
+                Üye Ol
+              </button>
+              <a
+                href="https://wa.me/905348517444"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center justify-center bg-[#25D366] hover:bg-[#1ebe57] text-white py-3 rounded-lg font-semibold text-lg mb-2 transition-colors"
+                style={{ textDecoration: 'none' }}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6 mr-2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 14.487c-.263-.132-1.558-.77-1.799-.858-.241-.088-.417-.132-.593.132-.175.263-.68.858-.833 1.033-.153.175-.307.197-.57.066-.263-.132-1.11-.409-2.115-1.304-.782-.696-1.31-1.556-1.464-1.819-.153-.263-.016-.405.116-.537.12-.12.263-.307.395-.461.132-.153.175-.263.263-.438.088-.175.044-.329-.022-.461-.066-.132-.593-1.433-.813-1.963-.214-.514-.432-.444-.593-.453l-.504-.009c-.175 0-.461.066-.701.329-.24.263-.92.899-.92 2.192 0 1.293.942 2.544 1.073 2.719.132.175 1.853 2.832 4.492 3.858.629.271 1.12.433 1.503.554.631.201 1.206.173 1.661.105.507-.075 1.558-.637 1.779-1.253.22-.616.22-1.143.153-1.253-.066-.11-.24-.175-.504-.307z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 12c0-5.385-4.365-9.75-9.75-9.75S2.25 6.615 2.25 12c0 1.708.438 3.312 1.204 4.704L2.25 21.75l5.16-1.356A9.708 9.708 0 0012 21.75c5.385 0 9.75-4.365 9.75-9.75z" />
+                </svg>
+                WhatsApp'dan iletişime geçin
+              </a>
+            </>
           ) : (
             <button
               className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-semibold text-lg mb-2"

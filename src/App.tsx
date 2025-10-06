@@ -527,7 +527,6 @@ function App() {
                 <Route path="/payment/:reservationId" element={<PaymentPage />} />
               </Routes>
             </Router>
-            // ...eski admin kontrolü kaldırıldı...
           </MessagingProvider>
         </AdminProvider>
       </DriverProvider>
