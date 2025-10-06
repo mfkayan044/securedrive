@@ -11,6 +11,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const { to, name, voucherCode, reservationDetails } = req.body;
 
+    // reservationDetails string gelirse parse et
+    let details = reservationDetails;
+    if (typeof details === 'string') {
+      try {
+        details = JSON.parse(details);
+      } catch {}
+    }
+
     if (!to || !voucherCode) {
       return res.status(400).json({ error: 'Eksik parametre: "to" ve "voucherCode" zorunludur.' });
     }
@@ -36,8 +44,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       html: `
         <h2>Sayın ${name || ''},</h2>
         <p>Rezervasyonunuz için voucher kodunuz: <b>${voucherCode}</b></p>
-        <p>Rezervasyon Detayları:</p>
-        <pre>${reservationDetails || ''}</pre>
+        <h3>Rezervasyon Detayları:</h3>
+        <ul>
+          <li><b>Transfer Türü:</b> ${details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}</li>
+          <li><b>Alış Tarihi:</b> ${details?.departure_date || '-'} - ${details?.departure_time || '-'}</li>
+          <li><b>Dönüş Tarihi:</b> ${details?.return_date || '-'} - ${details?.return_time || '-'}</li>
+          <li><b>Yolcu Adı:</b> ${details?.customer_name || '-'}</li>
+          <li><b>Telefon:</b> ${details?.customer_phone || '-'}</li>
+          <li><b>Yolcu Sayısı:</b> ${details?.passengers || '-'}</li>
+          <li><b>Toplam Tutar:</b> ${details?.total_price || '-'} ₺</li>
+          <li><b>Gidiş Uçuş Kodu:</b> ${details?.departure_flight_code || '-'}</li>
+          <li><b>Dönüş Uçuş Kodu:</b> ${details?.return_flight_code || '-'}</li>
+        </ul>
         <p>İyi yolculuklar dileriz.</p>
       `,
     };
