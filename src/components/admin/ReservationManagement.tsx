@@ -12,6 +12,9 @@ const sendVoucherEmail = async (reservation: any) => {
     return;
   }
 
+  // voucherCode fallback: reservation.voucher_code || reservation.voucherCode || reservation.id?.slice(0,8) || 'VOUCHER'
+  const voucherCode = reservation.voucher_code || reservation.voucherCode || (reservation.id ? reservation.id.slice(0,8) : 'VOUCHER');
+
   setVoucherSendingId(reservation.id);
 
   try {
@@ -21,7 +24,7 @@ const sendVoucherEmail = async (reservation: any) => {
       body: JSON.stringify({
         to: reservation.customer_email,
         name: reservation.customer_name,
-        voucherCode: reservation.voucher_code,
+        voucherCode,
         reservationDetails: JSON.stringify(reservation, null, 2),
       }),
     });
