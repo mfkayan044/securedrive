@@ -401,7 +401,23 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
           notes: pendingReservation.notes || null,
           status: reservationStatus,
           payment_status: noPaymentMode ? 'pending' : 'paid'
+        }).select();
+      // Admin'e mail gönder
+      if (reservation && reservation[0]) {
+        const fromLocationName = locations?.find((l: any) => l.id === reservation[0].from_location_id)?.name || '';
+        const toLocationName = locations?.find((l: any) => l.id === reservation[0].to_location_id)?.name || '';
+        await fetch('/api/notifyAdminOnReservation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reservation: {
+              ...reservation[0],
+              from_location_name: fromLocationName,
+              to_location_name: toLocationName,
+            }
+          }),
         });
+      }
   setPassengerNames(['']);
   setSelectedExtras([]);
   setPendingReservation(null);
