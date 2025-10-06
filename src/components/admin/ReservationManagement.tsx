@@ -417,14 +417,7 @@ const sendVoucherEmail = async (reservation: any) => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
-                          <div className="flex items-center space-x-1">
-                            voucherCode: reservation.voucher_code || reservation.voucherCode || reservation.id?.slice(0,8) || 'VOUCHER',
-                            <span>{getLocationName(reservation.from_location_id)}</span>
-                          </div>
-                          <div className="flex items-center space-x-1 mt-1">
-                            <MapPin className="w-3 h-3 text-gray-400" />
-                            <span>{getLocationName(reservation.to_location_id)}</span>
-                          </div>
+                          <span>{getLocationName(reservation.from_location_id)} 192 {getLocationName(reservation.to_location_id)}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
