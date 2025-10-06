@@ -3,21 +3,25 @@ import nodemailer from 'nodemailer';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
+    console.log('YANIT: Sadece POST isteği destekleniyor.');
     return res.status(405).json({ error: 'Sadece POST isteği destekleniyor.' });
   }
 
   const { reservation } = req.body;
   if (!reservation) {
+    console.log('YANIT: Rezervasyon bilgisi eksik.');
     return res.status(400).json({ error: 'Rezervasyon bilgisi eksik.' });
   }
 
   // Admin e-posta adresi
   const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL;
   if (!adminEmail) {
+    console.log('YANIT: Admin e-posta adresi tanımlı değil.', process.env.ADMIN_NOTIFICATION_EMAIL);
     return res.status(500).json({ error: 'Admin e-posta adresi tanımlı değil.' });
   }
 
   // SMTP ayarları (Sendinblue/Brevo)
+  console.log('SMTP Ayarları:', process.env.SIB_USER, !!process.env.SIB_PASS);
   const transporter = nodemailer.createTransport({
     host: 'smtp-relay.brevo.com',
     port: 587,
@@ -46,9 +50,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    const info = await transporter.sendMail(mailOptions);
+    console.log('YANIT: Mail gönderildi:', info);
     return res.status(200).json({ success: true });
   } catch (error: any) {
+    console.error('YANIT: Admin maili gönderilemedi', error);
     return res.status(500).json({ error: 'Admin maili gönderilemedi', detail: error?.message || String(error) });
   }
 }
