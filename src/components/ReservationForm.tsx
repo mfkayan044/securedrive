@@ -148,8 +148,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
 
   // Auth olunca formu doldur
   useEffect(() => {
+<<<<<<< HEAD
     if (forceEmptyCustomer) return;
     if (isAuthenticated && currentUser) {
+=======
+    if (!forceEmptyCustomer && isAuthenticated && currentUser) {
+>>>>>>> aaaa2f4 (Admin paneli manuel rezervasyon: müşteri bilgileri otomatik dolmaz, forceEmptyCustomer düzeltildi.)
       setFormData(prev => ({
         ...prev,
         customerName: currentUser.name || '',
