@@ -417,7 +417,7 @@ const sendVoucherEmail = async (reservation: any) => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
-                          <span>{getLocationName(reservation.from_location_id)} 192 {getLocationName(reservation.to_location_id)}</span>
+                          <span>{getLocationName(reservation.from_location_id)} a {getLocationName(reservation.to_location_id)}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
