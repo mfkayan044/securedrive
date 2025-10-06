@@ -43,7 +43,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         <li><b>E-posta:</b> ${reservation.customer_email || '-'}</li>
         <li><b>Telefon:</b> ${reservation.customer_phone || '-'}</li>
         <li><b>Güzergah:</b> ${reservation.from_location_name || '-'} → ${reservation.to_location_name || '-'}</li>
-        <li><b>Tarih:</b> ${reservation.departure_date || '-'} - ${reservation.departure_time || '-'}</li>
+        <li><b>Transfer Türü:</b> ${reservation.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}</li>
+        <li><b>Gidiş Tarihi:</b> ${reservation.departure_date || '-'} - ${reservation.departure_time || '-'}</li>
+        <li><b>Dönüş Tarihi:</b> ${reservation.return_date || '-'} - ${reservation.return_time || '-'}</li>
+        <li><b>Gidiş Uçuş Kodu:</b> ${reservation.departure_flight_code || '-'}</li>
+        <li><b>Dönüş Uçuş Kodu:</b> ${reservation.return_flight_code || '-'}</li>
+        <li><b>Yolcu Sayısı:</b> ${reservation.passengers || '-'}</li>
+        <li><b>Yolcu İsimleri:</b> ${Array.isArray(reservation.passenger_names) ? reservation.passenger_names.join(', ') : (reservation.passenger_names || '-')}</li>
+        <li><b>Araç Seçimi:</b> ${reservation.vehicle_type_name || '-'}</li>
+        <li><b>Ek Hizmetler:</b> ${Array.isArray(reservation.extra_services) ? reservation.extra_services.join(', ') : (reservation.extra_services || '-')}</li>
+        <li><b>Ödeme Durumu:</b> ${reservation.payment_status || '-'}</li>
         <li><b>Notlar:</b> ${reservation.notes || '-'}</li>
       </ul>
     `,
