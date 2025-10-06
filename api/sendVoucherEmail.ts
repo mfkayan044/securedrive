@@ -1,3 +1,4 @@
+  console.log('SIB_USER:', process.env.SIB_USER, 'SIB_PASS:', !!process.env.SIB_PASS);
 // /api/sendVoucherEmail.ts
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import nodemailer from 'nodemailer';
@@ -29,7 +30,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
 
     const mailOptions = {
-      from: process.env.SIB_USER,
+      from: 'operasyon@securedrive.org',
       to,
       subject: 'Voucher Bilgilendirmesi',
       html: `
