@@ -1,8 +1,51 @@
-import React, { useState, useEffect } from 'react';
-import { Calendar, Clock, User, MapPin, Car, Phone, Mail, Eye, Edit, Check, X, Search, Users } from 'lucide-react';
-import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+  import React, { useState, useEffect } from 'react';
+  import { Calendar, Clock, User, MapPin, Car, Phone, Mail, Eye, Edit, Check, X, Search, Users } from 'lucide-react';
+  import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 const ReservationManagement: React.FC = () => {
+  const [voucherSendingId, setVoucherSendingId] = useState<string | null>(null);
+
+    // Voucher Gönder API çağrısı
+const sendVoucherEmail = async (reservation: any) => {
+  if (!reservation.customer_email) {
+    alert('Müşteri e-posta adresi bulunamadı!');
+    return;
+  }
+
+  setVoucherSendingId(reservation.id);
+
+  try {
+    const response = await fetch('/api/sendVoucherEmail', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: reservation.customer_email,
+        name: reservation.customer_name,
+        voucherCode: reservation.voucher_code,
+        reservationDetails: JSON.stringify(reservation, null, 2),
+      }),
+    });
+
+    // Buraya ekle
+    const data = await response.text(); // önce text al
+    try {
+      const json = JSON.parse(data); // sonra JSON'a çevir
+      if (!response.ok) throw new Error(json.detail || 'Bilinmeyen hata');
+      alert('Voucher başarıyla gönderildi!');
+    } catch (err) {
+      console.error('API JSON parse hatası:', err, data);
+      alert('Voucher e-posta gönderilirken hata oluştu.');
+    }
+
+  } catch (error) {
+    console.error('Fetch hatası:', error);
+    alert('Voucher e-posta gönderilirken hata oluştu.');
+  } finally {
+    setVoucherSendingId(null);
+  }
+};
+
+
   // Bildirim için state
   const [notification, setNotification] = useState<string | null>(null);
   useEffect(() => {
@@ -73,7 +116,7 @@ const ReservationManagement: React.FC = () => {
 
       // Fetch all data
       const [reservationsRes, locationsRes, vehicleTypesRes, driversRes] = await Promise.allSettled([
-        supabase.from('reservations').select('*, reservation_number').order('created_at', { ascending: false }),
+    supabase.from('reservations').select('*, reservation_number, voucher_code').order('created_at', { ascending: false }),
         supabase.from('locations').select('*'),
         supabase.from('vehicle_types').select('*'),
         supabase.from('drivers').select('*')
@@ -319,27 +362,14 @@ const ReservationManagement: React.FC = () => {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Rezervasyon
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Müşteri
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Güzergah
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tarih & Saat
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tutar
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Durum
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      İşlemler
-                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rezervasyon</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Müşteri</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">E-posta</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Güzergah</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarih & Saat</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tutar</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -353,16 +383,16 @@ const ReservationManagement: React.FC = () => {
                           <div className="text-sm text-gray-500">
                             {reservation.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}
                           </div>
-                           {reservation.departure_flight_code && (
-                             <div className="text-xs text-blue-600 mt-1">
-                               Gidiş Uçuş Kodu: <span className="font-semibold">{reservation.departure_flight_code}</span>
-                             </div>
-                           )}
-                           {reservation.trip_type === 'round-trip' && reservation.return_flight_code && (
-                             <div className="text-xs text-green-600 mt-1">
-                               Dönüş Uçuş Kodu: <span className="font-semibold">{reservation.return_flight_code}</span>
-                             </div>
-                           )}
+                          {reservation.departure_flight_code && (
+                            <div className="text-xs text-blue-600 mt-1">
+                              Gidiş Uçuş Kodu: <span className="font-semibold">{reservation.departure_flight_code}</span>
+                            </div>
+                          )}
+                          {reservation.trip_type === 'round-trip' && reservation.return_flight_code && (
+                            <div className="text-xs text-green-600 mt-1">
+                              Dönüş Uçuş Kodu: <span className="font-semibold">{reservation.return_flight_code}</span>
+                            </div>
+                          )}
                           <button
                             onClick={() => handleDeleteClick(reservation.id)}
                             className="text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-xs font-semibold transition-colors"
@@ -373,19 +403,22 @@ const ReservationManagement: React.FC = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {reservation.customer_name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {reservation.customer_phone}
-                          </div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {reservation.customer_name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {reservation.customer_phone}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {reservation.customer_email}
                         </div>
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-900">
                           <div className="flex items-center space-x-1">
-                            <MapPin className="w-3 h-3 text-gray-400" />
+                            voucherCode: reservation.voucher_code || reservation.voucherCode || reservation.id?.slice(0,8) || 'VOUCHER',
                             <span>{getLocationName(reservation.from_location_id)}</span>
                           </div>
                           <div className="flex items-center space-x-1 mt-1">
@@ -458,6 +491,24 @@ const ReservationManagement: React.FC = () => {
                               </button>
                             </>
                           )}
+                          {/* Voucher Gönder butonu: her rezervasyon için */}
+                          <button
+  // E-posta yoksa buton çalışmaz, sadece reservation.customer_email ile gönder
+  onClick={() => sendVoucherEmail(reservation)}
+  className={`text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-xs font-semibold transition-colors flex items-center space-x-1 ${voucherSendingId === reservation.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+  title="Voucher Gönder"
+  disabled={voucherSendingId === reservation.id}
+>
+  {voucherSendingId === reservation.id ? (
+    <span>Gönderiliyor...</span>
+  ) : (
+    <>
+      <Mail className="w-4 h-4 mr-1" />
+      Voucher Gönder
+    </>
+  )}
+</button>
+
                           {reservation.status === 'confirmed' && (
                             <button
                               onClick={() => updateReservationStatus(reservation.id, 'completed')}
@@ -803,6 +854,6 @@ const ReservationManagement: React.FC = () => {
     )}
   </div>
   );
-}
+};
 
 export default ReservationManagement;
