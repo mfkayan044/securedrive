@@ -13,7 +13,6 @@ import {
   MessageCircle
 } from 'lucide-react';
 import { useAdmin } from '../../contexts/AdminContext';
-import { useUser } from '../../contexts/UserContext';
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -22,19 +21,19 @@ interface AdminSidebarProps {
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onTabChange }) => {
   const { currentAdmin, logout, hasPermission } = useAdmin();
-  const { logout: userLogout } = useUser();
 
   const menuItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: null },
-    { id: 'locations', label: 'Lokasyonlar', icon: MapPin, permission: 'manage_locations' },
-    { id: 'pricing', label: 'Fiyatlandırma', icon: DollarSign, permission: 'manage_prices' },
-    { id: 'vehicles', label: 'Araçlar', icon: Car, permission: 'manage_vehicles' },
-    { id: 'extra-services', label: 'Ek Hizmetler', icon: Plus, permission: 'manage_vehicles' },
-    { id: 'reservations', label: 'Rezervasyonlar', icon: Calendar, permission: 'manage_reservations' },
-    { id: 'drivers', label: 'Sürücüler', icon: UserCheck, permission: 'manage_drivers' },
-    { id: 'messaging', label: 'Mesajlaşma', icon: MessageCircle, permission: 'manage_reservations' },
-    { id: 'customers', label: 'Müşteriler', icon: Users, permission: 'manage_users' },
-    { id: 'settings', label: 'Ayarlar', icon: Settings, permission: 'manage_settings' }
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, permission: null },
+  { id: 'locations', label: 'Lokasyonlar', icon: MapPin, permission: 'manage_locations' },
+  { id: 'pricing', label: 'Fiyatlandırma', icon: DollarSign, permission: 'manage_prices' },
+  { id: 'vehicles', label: 'Araçlar', icon: Car, permission: 'manage_vehicles' },
+  { id: 'extra-services', label: 'Ek Hizmetler', icon: Plus, permission: 'manage_vehicles' },
+  { id: 'reservations', label: 'Rezervasyonlar', icon: Calendar, permission: 'manage_reservations' },
+  { id: 'drivers', label: 'Sürücüler', icon: UserCheck, permission: 'manage_drivers' },
+  { id: 'messaging', label: 'Mesajlaşma', icon: MessageCircle, permission: 'manage_reservations' },
+  { id: 'customers', label: 'Müşteriler', icon: Users, permission: 'manage_users' },
+  { id: 'content', label: 'İçerik Yönetimi', icon: Settings, permission: 'manage_settings' },
+  { id: 'settings', label: 'Ayarlar', icon: Settings, permission: 'manage_settings' }
   ];
 
   const filteredMenuItems = menuItems.filter(item => 
@@ -96,7 +95,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ activeTab, onTabChange }) =
         </div>
         
         <button
-          onClick={() => { logout(); userLogout(); window.location.reload(); }}
+          onClick={logout}
           className="w-full flex items-center space-x-3 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200"
         >
           <LogOut className="w-4 h-4" />
