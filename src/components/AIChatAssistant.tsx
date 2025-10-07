@@ -26,15 +26,41 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ onReservationExtracte
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: newMessages })
       });
-      const data = await res.json();
-      if (data.reservation) {
-        onReservationExtracted(data.reservation);
-        setMessages([...newMessages, { role: 'assistant', content: data.message || 'Rezervasyon bilgilerinizi aşağıda özetledim.' }]);
+      let data;
+      try {
+        data = await res.json();
+      } catch {
+        setMessages([
+          ...newMessages,
+          { role: 'assistant', content: 'AI yanıtı geçerli JSON formatında değil. Lütfen tekrar deneyin.' }
+        ]);
+        setLoading(false);
+        return;
+      }
+      if (typeof data === 'object' && (data.reservation || data.message)) {
+        if (data.reservation) {
+          onReservationExtracted(data.reservation);
+          setMessages([
+            ...newMessages,
+            { role: 'assistant', content: data.message || 'Rezervasyon bilgilerinizi aşağıda özetledim.' }
+          ]);
+        } else if (data.message) {
+          setMessages([
+            ...newMessages,
+            { role: 'assistant', content: data.message }
+          ]);
+        }
       } else {
-        setMessages([...newMessages, { role: 'assistant', content: data.message || 'Bilgileri anlamadım, lütfen tekrar deneyin.' }]);
+        setMessages([
+          ...newMessages,
+          { role: 'assistant', content: 'AI yanıtı beklenen JSON formatında değil. Lütfen tekrar deneyin.' }
+        ]);
       }
     } catch (e) {
-      setMessages([...newMessages, { role: 'assistant', content: 'Bir hata oluştu, lütfen tekrar deneyin.' }]);
+      setMessages([
+        ...newMessages,
+        { role: 'assistant', content: 'Bir hata oluştu, lütfen tekrar deneyin.' }
+      ]);
     }
     setLoading(false);
   };
