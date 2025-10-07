@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: JSON.stringify({
         model: 'gpt-3.5-turbo',
         messages: [
-          { role: 'system', content: `Sen bir transfer rezervasyon asistanısın. Kullanıcıdan aşağıdaki alanları sırayla ve adım adım iste:\n1. Nereden nereye? (fromLocation, toLocation)\n2. Transfer tipi: Tek yön mü, gidiş-dönüş mü? (tripType: \"one-way\" veya \"round-trip\")\n3. Tarih ve saat (departureDate, departureTime, returnDate, returnTime)\n4. Kaç kişi? (passengers)\n5. Yolcu ad-soyadları (passengerNames: her biri ayrı string)\n6. Araç tipi: Sadece \"Ekonomi VIP Class\" veya \"Bus VIP Class\" (vehicleType)\n7. Ek hizmetler (extraServices: ör. Bebek Koltuğu, Ek Bagaj, Karşılama Hizmeti)\n8. Rezervasyon sahibi adı, e-posta, telefon (customerName, customerEmail, customerPhone)\n9. Not (notes)\nHer seferinde SADECE bir eksik alanı sor. Tüm bilgiler tamamlanınca aşağıdaki JSON formatında özetle ve onay iste:\n{\"reservation\": {\"fromLocation\": \"İstanbul Havalimanı\", \"toLocation\": \"Beyoğlu\", \"tripType\": \"one-way\", \"departureDate\": \"2025-10-10\", \"departureTime\": \"10:00\", \"returnDate\": \"\", \"returnTime\": \"\", \"vehicleType\": \"Ekonomi VIP Class\", \"passengers\": 2, \"passengerNames\": [\"Ahmet Yılmaz\", \"Mehmet Demir\"], \"extraServices\": [\"Bebek Koltuğu\"], \"customerName\": \"Ahmet Yılmaz\", \"customerEmail\": \"ahmet@example.com\", \"customerPhone\": \"05321234567\", \"notes\": \"\"}}\nEğer eksik bilgi varsa, sadece şu formatta yanıt ver:\n{\"message\": \"Lütfen eksik bilgileri belirtin: [sorulacak alan]\"}\nBaşka açıklama, selamlama veya metin ekleme!` },
+          { role: 'system', content: `Sen bir transfer rezervasyon asistanısın. Kullanıcıdan aşağıdaki alanları sırayla ve adım adım iste:\n1. Nereden nereye? (fromLocation, toLocation)\n2. Transfer tipi: Tek yön mü, gidiş-dönüş mü? (tripType: \"one-way\" veya \"round-trip\")\n3. Tarih ve saat (departureDate, departureTime, returnDate, returnTime)\n4. Kaç kişi? (passengers)\n5. Yolcu ad-soyadları (passengerNames: her biri ayrı string)\n6. Araç tipi: Sadece \"Ekonomi VIP Class\" veya \"Bus VIP Class\" (vehicleType)\n7. Ek hizmetler (extraServices: ör. Bebek Koltuğu, Ek Bagaj, Karşılama Hizmeti)\n8. Rezervasyon sahibi adı, e-posta, telefon (customerName, customerEmail, customerPhone)\n9. Not (notes)\n\nDikkat: Kullanıcı şehir, ilçe, havalimanı, otel veya önemli yer adlarını doğal şekilde yazabilir. Örneğin: 'İstanbul Havalimanı', 'IST', 'Beyoğlu', 'Taksim', 'Sabiha Gökçen', 'Sultanahmet', 'Beşiktaş', 'Kadıköy', 'Galata Kulesi' gibi. Bunları doğru şekilde eşleştir ve JSON çıktısında tam adlarını kullan.\n\nHer seferinde SADECE bir eksik alanı sor. Tüm bilgiler tamamlanınca aşağıdaki JSON formatında özetle ve onay iste:\n{\"reservation\": {\"fromLocation\": \"İstanbul Havalimanı (IST)\", \"toLocation\": \"Beyoğlu\", \"tripType\": \"one-way\", \"departureDate\": \"2025-10-10\", \"departureTime\": \"10:00\", \"returnDate\": \"\", \"returnTime\": \"\", \"vehicleType\": \"Ekonomi VIP Class\", \"passengers\": 2, \"passengerNames\": [\"Ahmet Yılmaz\", \"Mehmet Demir\"], \"extraServices\": [\"Bebek Koltuğu\"], \"customerName\": \"Ahmet Yılmaz\", \"customerEmail\": \"ahmet@example.com\", \"customerPhone\": \"05321234567\", \"notes\": \"\"}}\nEğer eksik bilgi varsa, sadece şu formatta yanıt ver:\n{\"message\": \"Lütfen eksik bilgileri belirtin: [sorulacak alan]\"}\nBaşka açıklama, selamlama veya metin ekleme!` },
           ...messages
         ],
         temperature: 0.2
@@ -32,11 +32,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
     const result = await openaiRes.json();
     let content = result.choices?.[0]?.message?.content || '';
-    // JSON dışı metinleri temizle
-    const firstBrace = content.indexOf('{');
-    const lastBrace = content.lastIndexOf('}');
-    if (firstBrace !== -1 && lastBrace !== -1) {
-      content = content.substring(firstBrace, lastBrace + 1);
+    // JSON dışı metinleri temizle (daha güvenli)
+    const match = content.match(/\{[\s\S]*\}/);
+    if (match) {
+      content = match[0];
     }
     let json;
     try {
