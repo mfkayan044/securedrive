@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Plane, Phone, Mail, MapPin, Clock, Shield, Award, Star, Settings, User, LogOut, MessageCircle } from 'lucide-react';
 import ReservationForm from './components/ReservationForm';
+import AIChatAssistant from './components/AIChatAssistant';
 import AdminPanel from './components/admin/AdminPanel';
 import DriverPanel from './components/driver/DriverPanel';
 import PaymentPage from './components/PaymentPage';
@@ -16,6 +17,8 @@ import DatabaseStatus from './components/DatabaseStatus';
 import { supabase } from './lib/supabase';
 
 const HomePage: React.FC = () => {
+  // AI ile doldurulacak form state'i
+  const [aiFormData, setAiFormData] = useState<any | null>(null);
   const { currentUser, isAuthenticated, logout } = useUser();
   const { logout: adminLogout } = useAdmin();
   const [showAuthModal, setShowAuthModal] = React.useState(false);
@@ -197,7 +200,14 @@ const HomePage: React.FC = () => {
           </div>
 
           {/* Reservation Form */}
-          <ReservationForm />
+          <ReservationForm {...(aiFormData ? {
+            forceEmptyCustomer: false,
+            noPaymentMode: false,
+            onSuccess: () => setAiFormData(null),
+            ...aiFormData
+          } : {})} />
+          {/* AI Chat Assistant */}
+          <AIChatAssistant onReservationExtracted={data => setAiFormData(data)} />
         </div>
       </section>
 
