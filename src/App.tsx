@@ -32,7 +32,7 @@ const HomePage: React.FC = () => {
 
   useEffect(() => {
     // Admin olarak müşteri arayüzüne erişim engelleniyor
-    if (currentUser && currentUser.email === "admin@istanbultransfer.com") {
+    if (currentUser && currentUser.email === "operasyon@securedrive.org") {
       logout();
       window.location.href = "/admin";
     }
@@ -77,7 +77,7 @@ const HomePage: React.FC = () => {
   if (!settings) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-        <span className="text-gray-400 text-lg animate-pulse">Yükleniyor...</span>
+        <span className="text-gray-400 text-lg animate-pulse">Ayrıcalıklı ulaşım herkesin hakkı!...</span>
       </div>
     );
   }
@@ -95,6 +95,68 @@ const HomePage: React.FC = () => {
         <meta name="twitter:title" content={settings.site_name || 'İstanbul Transfer'} />
         <meta name="twitter:description" content={settings.homepage_hero_desc || 'Havalimanından şehre, şehirden havalimanına 7/24 profesyonel transfer hizmeti. Konforlu araçlar, deneyimli şoförler, uygun fiyatlar.'} />
         <meta name="twitter:image" content={settings.logo_url || '/logo/logo.png'} />
+        {/* Organization JSON-LD */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            'name': settings.site_name || 'İstanbul Transfer',
+            'url': typeof window !== 'undefined' ? window.location.origin : '',
+            'logo': settings.logo_url || '/logo/logo.png',
+            'contactPoint': [
+              {
+                '@type': 'ContactPoint',
+                'telephone': settings.contact_phone || '+90 (212) 555 0123',
+                'contactType': 'customer service',
+                'email': settings.contact_email || 'info@istanbultransfer.com',
+                'areaServed': 'TR',
+                'availableLanguage': ['Turkish','English']
+              }
+            ],
+            'address': {
+              '@type': 'PostalAddress',
+              'addressLocality': 'İstanbul',
+              'addressCountry': 'TR'
+            }
+          })}
+        </script>
+        {/* LocalBusiness JSON-LD */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'LocalBusiness',
+            'name': settings.site_name || 'İstanbul Transfer',
+            'image': settings.logo_url || '/logo/logo.png',
+            'telephone': settings.contact_phone || '+90 (212) 555 0123',
+            'email': settings.contact_email || 'info@istanbultransfer.com',
+            'address': {
+              '@type': 'PostalAddress',
+              'addressLocality': 'İstanbul',
+              'addressCountry': 'TR'
+            },
+            'url': typeof window !== 'undefined' ? window.location.origin : '',
+            'openingHours': [
+              'Mo-Su 00:00-23:59'
+            ],
+            'priceRange': '₺₺',
+            'servesCuisine': 'Transfer, Ulaşım, VIP Araç',
+            'areaServed': 'İstanbul'
+          })}
+        </script>
+        {/* WebSite JSON-LD */}
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            'name': settings.site_name || 'İstanbul Transfer',
+            'url': typeof window !== 'undefined' ? window.location.origin : '',
+            'potentialAction': {
+              '@type': 'SearchAction',
+              'target': (typeof window !== 'undefined' ? window.location.origin : '') + '/?s={search_term_string}',
+              'query-input': 'required name=search_term_string'
+            }
+          })}
+        </script>
       </Helmet>
       {/* Header */}
       <header className="bg-white/90 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b-2 border-primary/30">
