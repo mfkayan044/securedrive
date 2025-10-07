@@ -6,6 +6,8 @@ import ReservationForm from './components/ReservationForm';
 import AdminPanel from './components/admin/AdminPanel';
 import DriverPanel from './components/driver/DriverPanel';
 import PaymentPage from './components/PaymentPage';
+import BlogPage from './components/BlogPage';
+import FAQPage from './components/FAQPage';
 import { AdminProvider, useAdmin } from './contexts/AdminContext';
 import { DriverProvider } from './contexts/DriverContext';
 import { UserProvider, useUser } from './contexts/UserContext';
@@ -536,6 +538,17 @@ const HomePage: React.FC = () => {
                   </div>
                 </div>
               )}
+              {/* Footer navigation links */}
+              <div className="mt-6">
+                <ul className="flex flex-wrap gap-6 text-sm text-white">
+                  <li>
+                    <Link to="/blog" className="hover:underline">Blog</Link>
+                  </li>
+                  <li>
+                    <Link to="/faq" className="hover:underline">Sıkça Sorulan Sorular</Link>
+                  </li>
+                </ul>
+              </div>
             </div>
             <div>
               <h4 className="font-semibold mb-4 text-white">Hizmetler</h4>
@@ -610,6 +623,8 @@ function App() {
                   <Route path="/driver" element={<DriverPanel />} />
                   <Route path="/" element={<HomePage />} />
                   <Route path="/payment/:reservationId" element={<PaymentPage />} />
+                  <Route path="/blog" element={<BlogPage />} />
+                  <Route path="/faq" element={<FAQPage />} />
                 </Routes>
               </Router>
             </MessagingProvider>
