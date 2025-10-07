@@ -24,14 +24,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: JSON.stringify({
         model: 'gpt-3.5-turbo',
         messages: [
-          { role: 'system', content: 'Kullanıcıdan transfer rezervasyonu için tarih, saat, güzergah, araç tipi, yolcu sayısı, ek hizmetler, iletişim bilgisi gibi alanları doğal dilden çıkar ve aşağıdaki JSON formatında döndür: { reservation: { fromLocation, toLocation, departureDate, departureTime, returnDate, returnTime, vehicleType, passengers, extraServices, customerName, customerEmail, customerPhone, notes } }. Eksik bilgi varsa "message" alanında Türkçe olarak kullanıcıdan iste.' },
+          { role: 'system', content: `Kullanıcıdan transfer rezervasyonu için tarih, saat, güzergah, araç tipi, yolcu sayısı, ek hizmetler, iletişim bilgisi gibi alanları doğal dilden çıkar ve SADECE aşağıdaki JSON formatında yanıt ver:\n{\n  \"reservation\": {\n    \"fromLocation\": \"İstanbul Havalimanı\",\n    \"toLocation\": \"Beyoğlu\",\n    \"departureDate\": \"2025-10-10\",\n    \"departureTime\": \"10:00\",\n    \"returnDate\": \"\",\n    \"returnTime\": \"\",\n    \"vehicleType\": \"Mercedes Vito\",\n    \"passengers\": 2,\n    \"extraServices\": [\"Bebek Koltuğu\"],\n    \"customerName\": \"\",\n    \"customerEmail\": \"\",\n    \"customerPhone\": \"\",\n    \"notes\": \"\"\n  }\n}\nEğer eksik bilgi varsa, sadece şu formatta yanıt ver:\n{\"message\": \"Lütfen eksik bilgileri belirtin: ...\"}\nBaşka açıklama, selamlama veya metin ekleme!` },
           ...messages
         ],
         temperature: 0.2
       })
     });
     const result = await openaiRes.json();
-    const content = result.choices?.[0]?.message?.content || '';
+    let content = result.choices?.[0]?.message?.content || '';
+    // JSON dışı metinleri temizle
+    const firstBrace = content.indexOf('{');
+    const lastBrace = content.lastIndexOf('}');
+    if (firstBrace !== -1 && lastBrace !== -1) {
+      content = content.substring(firstBrace, lastBrace + 1);
+    }
     let json;
     try {
       json = JSON.parse(content);
