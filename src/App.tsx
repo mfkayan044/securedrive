@@ -84,15 +84,15 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-white">
       <Helmet>
-        <title>{settings.site_name || 'İstanbul Transfer'} | {settings.site_description || 'Havalimanı Transfer Hizmeti'}</title>
+        <title>{settings.site_name || 'Secure Drive'} | {settings.site_description || 'Havalimanı Transfer Hizmeti'}</title>
         <meta name="description" content={settings.homepage_hero_desc || 'Havalimanından şehre, şehirden havalimanına 7/24 profesyonel transfer hizmeti. Konforlu araçlar, deneyimli şoförler, uygun fiyatlar.'} />
-        <meta property="og:title" content={settings.site_name || 'İstanbul Transfer'} />
+        <meta property="og:title" content={settings.site_name || 'Secure Drive'} />
         <meta property="og:description" content={settings.homepage_hero_desc || 'Havalimanından şehre, şehirden havalimanına 7/24 profesyonel transfer hizmeti. Konforlu araçlar, deneyimli şoförler, uygun fiyatlar.'} />
         <meta property="og:image" content={settings.logo_url || '/logo/logo.png'} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={settings.site_name || 'İstanbul Transfer'} />
+        <meta name="twitter:title" content={settings.site_name || 'Secure Drive'} />
         <meta name="twitter:description" content={settings.homepage_hero_desc || 'Havalimanından şehre, şehirden havalimanına 7/24 profesyonel transfer hizmeti. Konforlu araçlar, deneyimli şoförler, uygun fiyatlar.'} />
         <meta name="twitter:image" content={settings.logo_url || '/logo/logo.png'} />
         {/* Organization JSON-LD */}
@@ -100,13 +100,13 @@ const HomePage: React.FC = () => {
           {JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'Organization',
-            'name': settings.site_name || 'İstanbul Transfer',
+            'name': settings.site_name || 'Secure Drive',
             'url': typeof window !== 'undefined' ? window.location.origin : '',
             'logo': settings.logo_url || '/logo/logo.png',
             'contactPoint': [
               {
                 '@type': 'ContactPoint',
-                'telephone': settings.contact_phone || '+90 (212) 555 0123',
+                'telephone': settings.contact_phone || '+90 (212) 535 3434',
                 'contactType': 'customer service',
                 'email': settings.contact_email || 'info@istanbultransfer.com',
                 'areaServed': 'TR',
@@ -125,7 +125,7 @@ const HomePage: React.FC = () => {
           {JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'LocalBusiness',
-            'name': settings.site_name || 'İstanbul Transfer',
+            'name': settings.site_name || 'Secure Drive',
             'image': settings.logo_url || '/logo/logo.png',
             'telephone': settings.contact_phone || '+90 (212) 555 0123',
             'email': settings.contact_email || 'info@istanbultransfer.com',
@@ -148,7 +148,7 @@ const HomePage: React.FC = () => {
           {JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'WebSite',
-            'name': settings.site_name || 'İstanbul Transfer',
+            'name': settings.site_name || 'Secure Drive',
             'url': typeof window !== 'undefined' ? window.location.origin : '',
             'potentialAction': {
               '@type': 'SearchAction',
@@ -506,7 +506,7 @@ const HomePage: React.FC = () => {
                   <Plane className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">{settings.site_name || 'İstanbul Transfer'}</h3>
+                  <h3 className="text-xl font-bold text-white">{settings.site_name || 'Secure Drive'}</h3>
                   <p className="text-white text-sm">{settings.site_description || 'Premium Havalimanı Transfer Hizmeti'}</p>
                 </div>
               </div>
@@ -568,7 +568,7 @@ const HomePage: React.FC = () => {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-white">
-            <p>{settings.footer_text || '© 2025 İstanbul Transfer. Tüm hakları saklıdır.'}</p>
+            <p>{settings.footer_text || '© 2025 Secure Drive. Tüm hakları saklıdır.'}</p>
           </div>
         </div>
   </footer>
