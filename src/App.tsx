@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Plane, Phone, Mail, MapPin, Clock, Shield, Award, Star, Settings, User, LogOut, MessageCircle } from 'lucide-react';
 import ReservationForm from './components/ReservationForm';
-import ReservationWizard from './components/ReservationWizard';
 import AdminPanel from './components/admin/AdminPanel';
 import DriverPanel from './components/driver/DriverPanel';
 import PaymentPage from './components/PaymentPage';
@@ -210,8 +209,6 @@ const HomePage: React.FC = () => {
             onSuccess: () => setAiFormData(null),
             ...aiFormData
           } : {})} />
-          {/* AI Chat Assistant - otomatik açık başlar, kullanıcı kapatabilir */}
-          <ReservationWizard onComplete={handleReservationExtracted} />
         </div>
       </section>
 
