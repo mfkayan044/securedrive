@@ -11,6 +11,7 @@ import ReservationManagement from './ReservationManagement';
 import DriverManagement from './DriverManagement';
 import MessagingManagement from './MessagingManagement';
 import CustomerManagement from './CustomerManagement';
+import ContentManagement from './ContentManagement';
 
 const AdminPanel: React.FC = () => {
   const { isAuthenticated } = useAdmin();
@@ -41,7 +42,7 @@ const AdminPanel: React.FC = () => {
       case 'customers':
         return <CustomerManagement />;
       case 'content':
-        return <div className="max-w-3xl mx-auto"><b>İçerik Yönetimi (Blog & SSS)</b> sekmesi yakında... (Buradan blog ve SSS içeriklerini güncelleyebileceksiniz)</div>;
+        return <ContentManagement />;
       case 'settings':
         return <div className="text-center py-8">Ayarlar sayfası yakında...</div>;
       default:
