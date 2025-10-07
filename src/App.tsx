@@ -17,6 +17,10 @@ import DatabaseStatus from './components/DatabaseStatus';
 import { supabase } from './lib/supabase';
 
 const HomePage: React.FC = () => {
+  // ReservationWizard tamamlandığında çağrılacak fonksiyon
+  const handleReservationExtracted = (data: any) => {
+    setAiFormData(data);
+  };
   // AI ile doldurulacak form state'i
   const [aiFormData, setAiFormData] = useState<any | null>(null);
   const { currentUser, isAuthenticated, logout } = useUser();
