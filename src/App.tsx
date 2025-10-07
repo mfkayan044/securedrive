@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Helmet } from 'react-helmet';
+import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Plane, Phone, Mail, MapPin, Clock, Shield, Award, Star, Settings, User, LogOut, MessageCircle } from 'lucide-react';
 import ReservationForm from './components/ReservationForm';
@@ -537,22 +537,24 @@ const HomePage: React.FC = () => {
 
 function App() {
   return (
-    <UserProvider>
-      <DriverProvider>
-        <AdminProvider>
-          <MessagingProvider>
-            <Router>
-              <Routes>
-                <Route path="/admin/*" element={<AdminPanel />} />
-                <Route path="/driver" element={<DriverPanel />} />
-                <Route path="/" element={<HomePage />} />
-                <Route path="/payment/:reservationId" element={<PaymentPage />} />
-              </Routes>
-            </Router>
-          </MessagingProvider>
-        </AdminProvider>
-      </DriverProvider>
-    </UserProvider>
+    <HelmetProvider>
+      <UserProvider>
+        <DriverProvider>
+          <AdminProvider>
+            <MessagingProvider>
+              <Router>
+                <Routes>
+                  <Route path="/admin/*" element={<AdminPanel />} />
+                  <Route path="/driver" element={<DriverPanel />} />
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/payment/:reservationId" element={<PaymentPage />} />
+                </Routes>
+              </Router>
+            </MessagingProvider>
+          </AdminProvider>
+        </DriverProvider>
+      </UserProvider>
+    </HelmetProvider>
   );
 }
 
