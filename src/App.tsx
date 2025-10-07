@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Plane, Phone, Mail, MapPin, Clock, Shield, Award, Star, Settings, User, LogOut, MessageCircle } from 'lucide-react';
 import ReservationForm from './components/ReservationForm';
@@ -81,25 +82,36 @@ const HomePage: React.FC = () => {
     );
   }
   return (
-  <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white">
+      <Helmet>
+        <title>{settings.site_name || 'İstanbul Transfer'} | {settings.site_description || 'Havalimanı Transfer Hizmeti'}</title>
+        <meta name="description" content={settings.homepage_hero_desc || 'Havalimanından şehre, şehirden havalimanına 7/24 profesyonel transfer hizmeti. Konforlu araçlar, deneyimli şoförler, uygun fiyatlar.'} />
+        <meta property="og:title" content={settings.site_name || 'İstanbul Transfer'} />
+        <meta property="og:description" content={settings.homepage_hero_desc || 'Havalimanından şehre, şehirden havalimanına 7/24 profesyonel transfer hizmeti. Konforlu araçlar, deneyimli şoförler, uygun fiyatlar.'} />
+        <meta property="og:image" content={settings.logo_url || '/logo/logo.png'} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={settings.site_name || 'İstanbul Transfer'} />
+        <meta name="twitter:description" content={settings.homepage_hero_desc || 'Havalimanından şehre, şehirden havalimanına 7/24 profesyonel transfer hizmeti. Konforlu araçlar, deneyimli şoförler, uygun fiyatlar.'} />
+        <meta name="twitter:image" content={settings.logo_url || '/logo/logo.png'} />
+      </Helmet>
       {/* Header */}
-  <header className="bg-white/90 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b-2 border-primary/30">
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="bg-white/90 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b-2 border-primary/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <Link to="/" className="flex flex-col items-center p-0 m-0" style={{gap: 0}}>
-              <div className="flex flex-col items-center p-0 m-0" style={{gap: 0}}>
-                {settings.logo_url ? (
-                  <img src={settings.logo_url} alt="Site Logosu" className="h-10 w-40 object-contain rounded-xl bg-transparent p-0 m-0" style={{background: 'none', padding: 0, margin: 0}} />
-                ) : (
-                  <div className="bg-primary p-2 rounded-xl">
-                    <Plane className="w-8 h-8 text-white" />
-                  </div>
-                )}
-                <h1 className="text-2xl font-bold text-primary p-0 m-0" style={{margin: 0, padding: 0}}>
-                  {settings.site_name || ''}
-                </h1>
-                <p className="text-sm text-secondary p-0 m-0" style={{margin: 0, padding: 0}}>{settings.site_description || ''}</p>
-              </div>
+              {settings.logo_url ? (
+                <img src={settings.logo_url} alt="Site Logosu" className="h-10 w-40 object-contain rounded-xl bg-transparent p-0 m-0" style={{background: 'none', padding: 0, margin: 0}} />
+              ) : (
+                <div className="bg-primary p-2 rounded-xl">
+                  <Plane className="w-8 h-8 text-white" />
+                </div>
+              )}
+              <h1 className="text-2xl font-bold text-primary p-0 m-0" style={{margin: 0, padding: 0}}>
+                {settings.site_name || ''}
+              </h1>
+              <p className="text-sm text-secondary p-0 m-0" style={{margin: 0, padding: 0}}>{settings.site_description || ''}</p>
             </Link>
             <div className="hidden md:flex items-center space-x-6">
               <div className="flex items-center space-x-2 text-gray-600">
@@ -174,10 +186,10 @@ const HomePage: React.FC = () => {
             </div>
           </div>
         </div>
-      </header>
+  </header>
 
-      {/* Hero Section with Reservation Form */}
-  <section className="py-12 lg:py-20">
+    {/* Hero Section with Reservation Form */}
+    <section className="py-12 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Database Status */}
           <div className="mb-8">
@@ -210,64 +222,63 @@ const HomePage: React.FC = () => {
             ...aiFormData
           } : {})} />
         </div>
-      </section>
+  </section>
 
-      {/* Features Section */}
-  <section className="py-16 bg-white">
+    {/* Features Section */}
+    <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold text-primary mb-4">{settings.why_us_title || 'Neden Bizi Seçmelisiniz?'}</h3>
             <p className="text-lg text-secondary">{settings.why_us_desc || 'İstanbul\'da transfer hizmetinde öncü olmamızın sebepleri'}</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {settings.why_us_items
-              ? settings.why_us_items.split('\n').map((item, i) => (
-                  <div key={i} className="text-center group">
-                    <div className="bg-primary w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                      {/* Sembol ikonları örnek, istersen ikonları da ayarlayabilirsin */}
-                      {[<Clock />, <Shield />, <Award />, <MapPin />][i % 4]}
+              {settings.why_us_items
+                ? settings.why_us_items.split('\n').map((item, i) => (
+                    <div key={i} className="text-center group">
+                      <div className="bg-primary w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                        {/* Sembol ikonları örnek, istersen ikonları da ayarlayabilirsin */}
+                        {[<Clock />, <Shield />, <Award />, <MapPin />][i % 4]}
+                      </div>
+                      <h4 className="text-xl font-semibold text-gray-900 mb-2">{item}</h4>
                     </div>
-                    <h4 className="text-xl font-semibold text-gray-900 mb-2">{item}</h4>
-                  </div>
-                ))
-              : (
-                <>
-                  <div className="text-center group">
-                    <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                      <Clock className="w-8 h-8" />
+                  ))
+                : [
+                    <div className="text-center group" key="why1">
+                      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                        <Clock className="w-8 h-8" />
+                      </div>
+                      <h4 className="text-xl font-semibold text-gray-900 mb-2">7/24 Hizmet</h4>
+                      <p className="text-gray-600">Gece gündüz kesintisiz transfer hizmeti sunuyoruz</p>
+                    </div>,
+                    <div className="text-center group" key="why2">
+                      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                        <Shield className="w-8 h-8" />
+                      </div>
+                      <h4 className="text-xl font-semibold text-gray-900 mb-2">Güvenli Araçlar</h4>
+                      <p className="text-gray-600">Düzenli bakımlı, sigortalı ve temiz araç filosu</p>
+                    </div>,
+                    <div className="text-center group" key="why3">
+                      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                        <Award className="w-8 h-8" />
+                      </div>
+                      <h4 className="text-xl font-semibold text-gray-900 mb-2">Profesyonel Şoförler</h4>
+                      <p className="text-gray-600">Deneyimli, güvenilir ve nazik şoför kadromuz</p>
+                    </div>,
+                    <div className="text-center group" key="why4">
+                      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                        <MapPin className="w-8 h-8" />
+                      </div>
+                      <h4 className="text-xl font-semibold text-gray-900 mb-2">Tüm İstanbul</h4>
+                      <p className="text-gray-600">İstanbul'un her noktasına transfer hizmeti</p>
                     </div>
-                    <h4 className="text-xl font-semibold text-gray-900 mb-2">7/24 Hizmet</h4>
-                    <p className="text-gray-600">Gece gündüz kesintisiz transfer hizmeti sunuyoruz</p>
-                  </div>
-                  <div className="text-center group">
-                    <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                      <Shield className="w-8 h-8" />
-                    </div>
-                    <h4 className="text-xl font-semibold text-gray-900 mb-2">Güvenli Araçlar</h4>
-                    <p className="text-gray-600">Düzenli bakımlı, sigortalı ve temiz araç filosu</p>
-                  </div>
-                  <div className="text-center group">
-                    <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                      <Award className="w-8 h-8" />
-                    </div>
-                    <h4 className="text-xl font-semibold text-gray-900 mb-2">Profesyonel Şoförler</h4>
-                    <p className="text-gray-600">Deneyimli, güvenilir ve nazik şoför kadromuz</p>
-                  </div>
-                  <div className="text-center group">
-                    <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                      <MapPin className="w-8 h-8" />
-                    </div>
-                    <h4 className="text-xl font-semibold text-gray-900 mb-2">Tüm İstanbul</h4>
-                    <p className="text-gray-600">İstanbul'un her noktasına transfer hizmeti</p>
-                  </div>
-                </>
-              )}
+                  ]
+              }
           </div>
         </div>
-      </section>
+  </section>
 
-      {/* Service Areas */}
-  <section className="py-16 bg-secondary/10">
+    {/* Service Areas */}
+    <section className="py-16 bg-secondary/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold text-primary mb-4">{settings.regions_title || 'Hizmet Verdiğimiz Bölgeler'}</h3>
@@ -340,10 +351,10 @@ const HomePage: React.FC = () => {
               )}
           </div>
         </div>
-      </section>
+  </section>
 
-      {/* Contact Section */}
-  <section className="py-16 bg-primary text-white">
+    {/* Contact Section */}
+    <section className="py-16 bg-primary text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold mb-4">7/24 İletişim</h3>
@@ -421,10 +432,10 @@ const HomePage: React.FC = () => {
             </div>
           </div>
         </div>
-      </section>
+  </section>
 
-      {/* Footer */}
-  <footer className="bg-secondary text-white py-12">
+    {/* Footer */}
+    <footer className="bg-secondary text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
@@ -498,7 +509,7 @@ const HomePage: React.FC = () => {
             <p>{settings.footer_text || '© 2025 İstanbul Transfer. Tüm hakları saklıdır.'}</p>
           </div>
         </div>
-      </footer>
+  </footer>
       
       {/* Modals */}
       <UserAuthModal
@@ -506,11 +517,11 @@ const HomePage: React.FC = () => {
         onClose={() => setShowAuthModal(false)}
         initialMode={authMode}
       />
-      
+
       {showProfile && (
         <UserProfile onClose={() => setShowProfile(false)} />
       )}
-      
+
       {/* Messaging Panel */}
       {showMessaging && isAuthenticated && currentUser && (
         <MessagingPanel
