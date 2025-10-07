@@ -206,8 +206,8 @@ const HomePage: React.FC = () => {
             onSuccess: () => setAiFormData(null),
             ...aiFormData
           } : {})} />
-          {/* AI Chat Assistant */}
-          <AIChatAssistant onReservationExtracted={data => setAiFormData(data)} />
+          {/* AI Chat Assistant - otomatik açık başlar, kullanıcı kapatabilir */}
+          <AIChatAssistant onReservationExtracted={data => setAiFormData(data)} open={true} />
         </div>
       </section>
 
