@@ -39,7 +39,6 @@ const BlogPage: React.FC = () => {
   const settings = {
     site_name: 'Secure Drive',
     site_description: 'Havalimanı Transfer Hizmeti',
-    logo_url: '/logo/logo.png',
     contact_phone: '+90 (212) 535 3434',
     contact_email: 'operasyon@securedrive.org',
     footer_text: "İstanbul'da güvenilir havalimanı transfer hizmeti. Konforlu, güvenli ve uygun fiyatlı transfer çözümleri sunuyoruz.",
@@ -171,3 +170,4 @@ const BlogPage: React.FC = () => {
 };
 
 export default BlogPage;
+
