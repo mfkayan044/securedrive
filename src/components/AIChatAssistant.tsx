@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 
 interface AIChatAssistantProps {
   onReservationExtracted: (data: any) => void;
+  open?: boolean;
+  onClose?: () => void;
 }
 
-const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ onReservationExtracted }) => {
+const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ onReservationExtracted, open = true, onClose }) => {
   const [messages, setMessages] = useState([
-    { role: 'system', content: 'Merhaba! Transfer rezervasyonunuzu kolayca oluşturmak için bana tarih, saat, güzergah, araç tipi ve ek hizmetleri yazabilirsiniz.' }
+    { role: 'assistant', content: 'Merhaba! Transfer rezervasyonu için size yardımcı olacağım. Öncelikle, nereden nereye gitmek istiyorsunuz?' }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(open);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -36,9 +39,30 @@ const AIChatAssistant: React.FC<AIChatAssistantProps> = ({ onReservationExtracte
     setLoading(false);
   };
 
+  if (!isOpen) {
+    return (
+      <button
+        className="fixed bottom-6 right-6 z-50 bg-red-600 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2 hover:bg-red-700 transition"
+        onClick={() => setIsOpen(true)}
+        aria-label="AI Asistanı Aç"
+      >
+        <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10Zm-1-7h2v2h-2v-2Zm0-8h2v6h-2V7Z" fill="currentColor"/></svg>
+        AI
+      </button>
+    );
+  }
   return (
     <div className="fixed bottom-6 right-6 z-50 w-80 bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col">
-      <div className="bg-red-600 text-white px-4 py-2 rounded-t-xl font-bold">AI Transfer Asistanı</div>
+      <div className="bg-red-600 text-white px-4 py-2 rounded-t-xl font-bold flex items-center justify-between">
+        <span>AI Transfer Asistanı</span>
+        <button
+          className="ml-2 text-white hover:text-gray-200 text-lg font-bold focus:outline-none"
+          onClick={() => { setIsOpen(false); onClose && onClose(); }}
+          aria-label="Kapat"
+        >
+          ×
+        </button>
+      </div>
       <div className="flex-1 p-3 overflow-y-auto max-h-96 space-y-2">
         {messages.filter(m => m.role !== 'system').map((msg, i) => (
           <div key={i} className={`text-sm p-2 rounded-lg ${msg.role === 'user' ? 'bg-gray-100 text-right ml-8' : 'bg-red-50 text-left mr-8'}`}>{msg.content}</div>
