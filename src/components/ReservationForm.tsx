@@ -406,6 +406,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
       if (reservation && reservation[0]) {
         const fromLocationName = locations?.find((l: any) => l.id === reservation[0].from_location_id)?.name || '';
         const toLocationName = locations?.find((l: any) => l.id === reservation[0].to_location_id)?.name || '';
+        const vehicleTypeName = vehicleTypes?.find((v: any) => v.id === reservation[0].vehicle_type_id)?.name || '';
+        const extraServiceNames = (selectedExtras || []).map((id) => extraServices?.find((e: any) => e.id === id)?.name).filter(Boolean);
         await fetch('/api/notifyAdminOnReservation', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -414,6 +416,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
               ...reservation[0],
               from_location_name: fromLocationName,
               to_location_name: toLocationName,
+              vehicle_type_name: vehicleTypeName,
+              extra_services: extraServiceNames,
             }
           }),
         });
