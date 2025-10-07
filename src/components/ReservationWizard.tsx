@@ -144,3 +144,7 @@ const ReservationWizard: React.FC<{ onComplete: (data: ReservationData) => void 
         {step === steps.length - 1 ? 'Bitir' : 'İleri'}
       </button>
     </div>
+  );
+};
+
+export default ReservationWizard;
