@@ -45,7 +45,7 @@ const AdminPanel: React.FC = () => {
       case 'content':
         return <ContentManagement />;
       case 'settings':
-        return <AdminSettings>;
+        return <AdminSettings />;
       default:
         return <AdminDashboard />;
     }
