@@ -12,6 +12,7 @@ import DriverManagement from './DriverManagement';
 import MessagingManagement from './MessagingManagement';
 import CustomerManagement from './CustomerManagement';
 import ContentManagement from './ContentManagement';
+import AdminSettings from './AdminSettings';
 
 const AdminPanel: React.FC = () => {
   const { isAuthenticated } = useAdmin();
@@ -44,7 +45,7 @@ const AdminPanel: React.FC = () => {
       case 'content':
         return <ContentManagement />;
       case 'settings':
-        return <div className="text-center py-8">Ayarlar sayfası yakında...</div>;
+        return <AdminSettings>;
       default:
         return <AdminDashboard />;
     }
