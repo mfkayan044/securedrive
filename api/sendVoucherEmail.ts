@@ -91,9 +91,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     doc.text(' '); // spacing
     doc.fontSize(12).fillColor('gray').text('İyi yolculuklar dileriz.', { align: 'right' });
 
+
     doc.end();
 
-    // PDF stream to buffer
+    // PDF stream to buffer (tek pipe, yukarıda)
     await new Promise<void>((resolve, reject) => {
       pdfStream.on('data', (chunk) => chunks.push(chunk));
       pdfStream.on('end', () => {
@@ -101,8 +102,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         resolve();
       });
       pdfStream.on('error', reject);
-      doc.pipe(pdfStream);
     });
+
+    if (!pdfBuffer) {
+      console.error('PDF oluşturulamadı, buffer null');
+      return res.status(500).json({ error: 'PDF oluşturulamadı' });
+    }
 
     const mailOptions = {
       from: 'operasyon@securedrive.org',
@@ -134,9 +139,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ],
     };
 
-    const info = await transporter.sendMail(mailOptions);
-    return res.status(200).json({ success: true, info });
+    try {
+      const info = await transporter.sendMail(mailOptions);
+      return res.status(200).json({ success: true, info });
+    } catch (mailError: any) {
+      console.error('Mail gönderilemedi:', mailError);
+      return res.status(500).json({ error: 'Mail gönderilemedi', detail: mailError?.message || String(mailError) });
+    }
   } catch (error: any) {
+    console.error('Genel hata:', error);
     return res.status(500).json({ error: 'Mail gönderilemedi', detail: error?.message || String(error) });
   }
 }
