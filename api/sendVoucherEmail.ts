@@ -56,32 +56,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Detay satırlarını PDF işlemlerinden önce tanımla (tüm alanlar, fallback'lı ve sıralı)
     const detailRows = [
-      ['Ad Soyad', details?.customer_name?.toString().trim() || '-'],
-      ['E-posta', details?.customer_email?.toString().trim() || '-'],
-      ['Telefon', details?.customer_phone?.toString().trim() || '-'],
-      [
-        'Güzergah',
-        (details?.from_location_name && details?.to_location_name)
+    ['Ad Soyad', details?.customer_name?.toString().trim() || '-'],
+    ['E-posta', details?.customer_email?.toString().trim() || '-'],
+    ['Telefon', details?.customer_phone?.toString().trim() || '-'],
+    [
+      'Güzergah',
+      (getLocationName(details?.from_location_id) && getLocationName(details?.to_location_id))
+        ? `${getLocationName(details?.from_location_id)} → ${getLocationName(details?.to_location_id)}`
+        : (details?.from_location_name && details?.to_location_name)
           ? `${details.from_location_name} → ${details.to_location_name}`
           : (details?.route_name || details?.route || details?.guzergah || details?.guzergah_adi || details?.guzergah_name || details?.guzergahadi || details?.guzergahname || details?.from_location || details?.from || details?.pickup_location || '-') +
             ' → ' +
             (details?.to_location_name || details?.to_location || details?.to || details?.dropoff_location || details?.varis || details?.varis_nokta || details?.varis_adi || details?.varisadi || details?.varisname || '-')
-      ],
-      ['Transfer Türü', details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'],
-      ['Gidiş Tarihi', `${details?.departure_date || '-'} - ${details?.departure_time || '-'}`],
-      ['Dönüş Tarihi', `${details?.return_date || '-'} - ${details?.return_time || '-'}`],
-      ['Gidiş Uçuş Kodu', details?.departure_flight_code?.toString().trim() || '-'],
-      ['Dönüş Uçuş Kodu', details?.return_flight_code?.toString().trim() || '-'],
-      ['Yolcu Sayısı', details?.passengers?.toString().trim() || '-'],
-      ['Yolcu İsimleri', Array.isArray(details?.passenger_names) ? details.passenger_names.join(', ') : (details?.passenger_names?.toString().trim() || '-')],
-      [
-        'Araç Seçimi',
-        details?.vehicle_type_name?.toString().trim() || details?.vehicle_type?.toString().trim() || details?.vehicle?.toString().trim() || details?.vehicle_name?.toString().trim() || details?.vehicleType?.toString().trim() || details?.vehicle_selection?.toString().trim() || details?.arac || details?.arac_adi || details?.aracadi || details?.arac_name || '-'
-      ],
-      ['Ek Hizmetler', Array.isArray(details?.extra_services) ? details.extra_services.join(', ') : (details?.extra_services?.toString().trim() || '-')],
-      ['Ödeme Durumu', details?.payment_status?.toString().trim() || '-'],
-      ['Notlar', details?.notes?.toString().trim() || '-'],
-      ['Toplam Tutar', (details?.total_price ? details.total_price + ' ₺' : '-')],
+    ],
+    ['Transfer Türü', details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'],
+    ['Gidiş Tarihi', `${details?.departure_date || '-'} - ${details?.departure_time || '-'}`],
+    ['Dönüş Tarihi', `${details?.return_date || '-'} - ${details?.return_time || '-'}`],
+    ['Gidiş Uçuş Kodu', details?.departure_flight_code?.toString().trim() || '-'],
+    ['Dönüş Uçuş Kodu', details?.return_flight_code?.toString().trim() || '-'],
+    ['Yolcu Sayısı', details?.passengers?.toString().trim() || '-'],
+    ['Yolcu İsimleri', Array.isArray(details?.passenger_names) ? details.passenger_names.join(', ') : (details?.passenger_names?.toString().trim() || '-')],
+    [
+      'Araç Seçimi',
+      getVehicleName(details?.vehicle_type_id) ||
+      details?.vehicle_type_name?.toString().trim() || details?.vehicle_type?.toString().trim() || details?.vehicle?.toString().trim() || details?.vehicle_name?.toString().trim() || details?.vehicleType?.toString().trim() || details?.vehicle_selection?.toString().trim() || details?.arac || details?.arac_adi || details?.aracadi || details?.arac_name || '-'
+    ],
+    ['Ek Hizmetler', Array.isArray(details?.extra_services) ? details.extra_services.join(', ') : (details?.extra_services?.toString().trim() || '-')],
+    ['Ödeme Durumu', details?.payment_status?.toString().trim() || '-'],
+    ['Notlar', details?.notes?.toString().trim() || '-'],
+    ['Toplam Tutar', (details?.total_price ? details.total_price + ' ₺' : '-')],
     ];
     doc.pipe(pdfStream);
 
@@ -210,29 +213,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         <h2>Sayın ${name || ''},</h2>
         <p>Rezervasyonunuz için voucher kodunuz: <b>${voucherCode}</b></p>
         <h3>Rezervasyon Detayları:</h3>
-        <ul>
-          <li><b>Ad Soyad:</b> ${details?.customer_name || '-'}</li>
-          <li><b>E-posta:</b> ${details?.customer_email || '-'}</li>
-          <li><b>Telefon:</b> ${details?.customer_phone || '-'}</li>
-          <li><b>Güzergah:</b> ${(details?.from_location_name && details?.to_location_name)
-            ? `${details.from_location_name} → ${details.to_location_name}`
-            : (details?.route_name || details?.route || details?.guzergah || details?.guzergah_adi || details?.guzergah_name || details?.guzergahadi || details?.guzergahname || details?.from_location || details?.from || details?.pickup_location || '-') +
-              ' → ' +
-              (details?.to_location_name || details?.to_location || details?.to || details?.dropoff_location || details?.varis || details?.varis_nokta || details?.varis_adi || details?.varisadi || details?.varisname || '-')}
-          </li>
-          <li><b>Transfer Türü:</b> ${details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}</li>
-          <li><b>Gidiş Tarihi:</b> ${details?.departure_date || '-'} - ${details?.departure_time || '-'}</li>
-          <li><b>Dönüş Tarihi:</b> ${details?.return_date || '-'} - ${details?.return_time || '-'}</li>
-          <li><b>Gidiş Uçuş Kodu:</b> ${details?.departure_flight_code || '-'}</li>
-          <li><b>Dönüş Uçuş Kodu:</b> ${details?.return_flight_code || '-'}</li>
-          <li><b>Yolcu Sayısı:</b> ${details?.passengers || '-'}</li>
-          <li><b>Yolcu İsimleri:</b> ${Array.isArray(details?.passenger_names) ? details.passenger_names.join(', ') : (details?.passenger_names || '-')}</li>
-          <li><b>Araç Seçimi:</b> ${details?.vehicle_type_name || details?.vehicle_type || details?.vehicle || details?.vehicle_name || details?.vehicleType || details?.vehicle_selection || details?.arac || details?.arac_adi || details?.aracadi || details?.arac_name || '-'}</li>
-          <li><b>Ek Hizmetler:</b> ${Array.isArray(details?.extra_services) ? details.extra_services.join(', ') : (details?.extra_services || '-')}</li>
-          <li><b>Ödeme Durumu:</b> ${details?.payment_status || '-'}</li>
-          <li><b>Notlar:</b> ${details?.notes || '-'}</li>
-          <li><b>Toplam Tutar:</b> ${details?.total_price ? details.total_price + ' ₺' : '-'}</li>
-        </ul>
+      <ul>
+        <li><b>Ad Soyad:</b> ${reservation.customer_name || '-'}</li>
+        <li><b>E-posta:</b> ${reservation.customer_email || '-'}</li>
+        <li><b>Telefon:</b> ${reservation.customer_phone || '-'}</li>
+        <li><b>Güzergah:</b> ${reservation.from_location_name || '-'} → ${reservation.to_location_name || '-'}</li>
+        <li><b>Transfer Türü:</b> ${reservation.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}</li>
+        <li><b>Gidiş Tarihi:</b> ${reservation.departure_date || '-'} - ${reservation.departure_time || '-'}</li>
+        <li><b>Dönüş Tarihi:</b> ${reservation.return_date || '-'} - ${reservation.return_time || '-'}</li>
+        <li><b>Gidiş Uçuş Kodu:</b> ${reservation.departure_flight_code || '-'}</li>
+        <li><b>Dönüş Uçuş Kodu:</b> ${reservation.return_flight_code || '-'}</li>
+        <li><b>Yolcu Sayısı:</b> ${reservation.passengers || '-'}</li>
+        <li><b>Yolcu İsimleri:</b> ${Array.isArray(reservation.passenger_names) ? reservation.passenger_names.join(', ') : (reservation.passenger_names || '-')}</li>
+        <li><b>Araç Seçimi:</b> ${reservation.vehicle_type_name || '-'}</li>
+        <li><b>Ek Hizmetler:</b> ${Array.isArray(reservation.extra_services) ? reservation.extra_services.join(', ') : (reservation.extra_services || '-')}</li>
+        <li><b>Ödeme Durumu:</b> ${reservation.payment_status || '-'}</li>
+        <li><b>Notlar:</b> ${reservation.notes || '-'}</li>
+      </ul>
         <p>İyi yolculuklar dileriz.</p>
       `,
       attachments: [
