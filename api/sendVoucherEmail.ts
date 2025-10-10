@@ -208,7 +208,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       subject: 'Voucher Bilgilendirmesi',
       html: `
         <h2>Sayın ${name || ''},</h2>
-        <p>Rezervasyonunuz için voucher kodunuz: <b>${reservation_number}</b></p>
+        <p>Rezervasyonunuz için voucher kodunuz: <b>${details?.reservation_number || details?.id || voucherCode}</b></p>
         <h3>Rezervasyon Detayları:</h3>
         <ul>
           <li>Rezervasyon bilgileriniz ektedir.</li>
