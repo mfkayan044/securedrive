@@ -134,17 +134,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .fontSize(10)
       .text('www.securedrive.org  |  operasyon@securedrive.org', 0, doc.page.height - 40, { align: 'center' });
 
-    const detailRows = [
-      ['Transfer Türü', details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'],
-      ['Alış Tarihi', `${details?.departure_date || '-'} - ${details?.departure_time || '-'}`],
-      ['Dönüş Tarihi', `${details?.return_date || '-'} - ${details?.return_time || '-'}`],
-      ['Yolcu Adı', details?.customer_name || '-'],
-      ['Telefon', details?.customer_phone || '-'],
-      ['Yolcu Sayısı', details?.passengers || '-'],
-      ['Toplam Tutar', (details?.total_price ? details?.total_price + ' ₺' : '-')],
-      ['Gidiş Uçuş Kodu', details?.departure_flight_code || '-'],
-      ['Dönüş Uçuş Kodu', details?.return_flight_code || '-'],
-    ];
+
 
 
     detailRows.forEach(([label, value]) => {
