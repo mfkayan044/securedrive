@@ -63,7 +63,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'Güzergah',
         (details?.from_location_name && details?.to_location_name)
           ? `${details.from_location_name} → ${details.to_location_name}`
-          : ((details?.from_location || details?.from || details?.pickup_location || '-') + ' → ' + (details?.to_location || details?.to || details?.dropoff_location || '-'))
+          : (details?.route_name || details?.route || details?.guzergah || details?.guzergah_adi || details?.guzergah_name || details?.guzergahadi || details?.guzergahname || details?.from_location || details?.from || details?.pickup_location || '-') +
+            ' → ' +
+            (details?.to_location_name || details?.to_location || details?.to || details?.dropoff_location || details?.varis || details?.varis_nokta || details?.varis_adi || details?.varisadi || details?.varisname || '-')
       ],
       ['Transfer Türü', details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'],
       ['Gidiş Tarihi', `${details?.departure_date || '-'} - ${details?.departure_time || '-'}`],
@@ -74,7 +76,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ['Yolcu İsimleri', Array.isArray(details?.passenger_names) ? details.passenger_names.join(', ') : (details?.passenger_names?.toString().trim() || '-')],
       [
         'Araç Seçimi',
-        details?.vehicle_type_name?.toString().trim() || details?.vehicle_type?.toString().trim() || details?.vehicle?.toString().trim() || details?.vehicle_name?.toString().trim() || '-'
+        details?.vehicle_type_name?.toString().trim() || details?.vehicle_type?.toString().trim() || details?.vehicle?.toString().trim() || details?.vehicle_name?.toString().trim() || details?.vehicleType?.toString().trim() || details?.vehicle_selection?.toString().trim() || details?.arac || details?.arac_adi || details?.aracadi || details?.arac_name || '-'
       ],
       ['Ek Hizmetler', Array.isArray(details?.extra_services) ? details.extra_services.join(', ') : (details?.extra_services?.toString().trim() || '-')],
       ['Ödeme Durumu', details?.payment_status?.toString().trim() || '-'],
@@ -89,7 +91,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // LOGO sol üst köşe (küçük ve çakışmasız, path düzeltilmiş)
     try {
       const logoPath = path.join(process.cwd(), 'logo', 'logo.png');
-      const logoWidth = 70;
+      const logoWidth = 130;
       const logoHeight = 28;
       doc.image(logoPath, 42, 28, { width: logoWidth, height: logoHeight });
     } catch (e) {
@@ -104,7 +106,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .fillColor('#b71c1c')
       .font('roboto-bold')
       .fontSize(10)
-      .text('Rezervasyon No:', doc.page.width - 162, 36, { width: 60, align: 'left' })
+      .text('Rezervasyon No:', doc.page.width - 162, 36, { width: 80, align: 'left' })
       .fontSize(12)
       .text(reservationNo, doc.page.width - 102, 34, { width: 60, align: 'right' });
 
@@ -212,7 +214,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           <li><b>Ad Soyad:</b> ${details?.customer_name || '-'}</li>
           <li><b>E-posta:</b> ${details?.customer_email || '-'}</li>
           <li><b>Telefon:</b> ${details?.customer_phone || '-'}</li>
-          <li><b>Güzergah:</b> ${(details?.from_location_name && details?.to_location_name) ? `${details.from_location_name} → ${details.to_location_name}` : ((details?.from_location || details?.from || details?.pickup_location || '-') + ' → ' + (details?.to_location || details?.to || details?.dropoff_location || '-'))}</li>
+          <li><b>Güzergah:</b> ${(details?.from_location_name && details?.to_location_name)
+            ? `${details.from_location_name} → ${details.to_location_name}`
+            : (details?.route_name || details?.route || details?.guzergah || details?.guzergah_adi || details?.guzergah_name || details?.guzergahadi || details?.guzergahname || details?.from_location || details?.from || details?.pickup_location || '-') +
+              ' → ' +
+              (details?.to_location_name || details?.to_location || details?.to || details?.dropoff_location || details?.varis || details?.varis_nokta || details?.varis_adi || details?.varisadi || details?.varisname || '-')}
+          </li>
           <li><b>Transfer Türü:</b> ${details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}</li>
           <li><b>Gidiş Tarihi:</b> ${details?.departure_date || '-'} - ${details?.departure_time || '-'}</li>
           <li><b>Dönüş Tarihi:</b> ${details?.return_date || '-'} - ${details?.return_time || '-'}</li>
@@ -220,7 +227,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           <li><b>Dönüş Uçuş Kodu:</b> ${details?.return_flight_code || '-'}</li>
           <li><b>Yolcu Sayısı:</b> ${details?.passengers || '-'}</li>
           <li><b>Yolcu İsimleri:</b> ${Array.isArray(details?.passenger_names) ? details.passenger_names.join(', ') : (details?.passenger_names || '-')}</li>
-          <li><b>Araç Seçimi:</b> ${details?.vehicle_type_name || details?.vehicle_type || details?.vehicle || details?.vehicle_name || '-'}</li>
+          <li><b>Araç Seçimi:</b> ${details?.vehicle_type_name || details?.vehicle_type || details?.vehicle || details?.vehicle_name || details?.vehicleType || details?.vehicle_selection || details?.arac || details?.arac_adi || details?.aracadi || details?.arac_name || '-'}</li>
           <li><b>Ek Hizmetler:</b> ${Array.isArray(details?.extra_services) ? details.extra_services.join(', ') : (details?.extra_services || '-')}</li>
           <li><b>Ödeme Durumu:</b> ${details?.payment_status || '-'}</li>
           <li><b>Notlar:</b> ${details?.notes || '-'}</li>
