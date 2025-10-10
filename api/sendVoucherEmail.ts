@@ -56,24 +56,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Detay satırlarını PDF işlemlerinden önce tanımla
     const detailRows = [
-      ['Transfer Türü', details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'],
-      ['Alış Tarihi', `${details?.departure_date || '-'} - ${details?.departure_time || '-'}`],
-      ['Dönüş Tarihi', `${details?.return_date || '-'} - ${details?.return_time || '-'}`],
-      ['Yolcu Adı', details?.customer_name || '-'],
+      ['Ad Soyad', details?.customer_name || '-'],
+      ['E-posta', details?.customer_email || '-'],
       ['Telefon', details?.customer_phone || '-'],
-      ['Yolcu Sayısı', details?.passengers || '-'],
-      ['Toplam Tutar', (details?.total_price ? details?.total_price + ' ₺' : '-')],
+      ['Güzergah', (details?.from_location_name && details?.to_location_name) ? `${details.from_location_name} → ${details.to_location_name}` : '-'],
+      ['Transfer Türü', details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'],
+      ['Gidiş Tarihi', `${details?.departure_date || '-'} - ${details?.departure_time || '-'}`],
+      ['Dönüş Tarihi', `${details?.return_date || '-'} - ${details?.return_time || '-'}`],
       ['Gidiş Uçuş Kodu', details?.departure_flight_code || '-'],
       ['Dönüş Uçuş Kodu', details?.return_flight_code || '-'],
+      ['Yolcu Sayısı', details?.passengers || '-'],
+      ['Yolcu İsimleri', Array.isArray(details?.passenger_names) ? details.passenger_names.join(', ') : (details?.passenger_names || '-')],
+      ['Araç Seçimi', details?.vehicle_type_name || '-'],
+      ['Ek Hizmetler', Array.isArray(details?.extra_services) ? details.extra_services.join(', ') : (details?.extra_services || '-')],
+      ['Ödeme Durumu', details?.payment_status || '-'],
+      ['Notlar', details?.notes || '-'],
     ];
 
 
 
     doc.pipe(pdfStream);
 
-    // LOGO
+
+    // LOGO sağ üst köşe
     try {
-      doc.image('logo/logo.png', doc.page.width / 2 - 60, 30, { width: 120 });
+      const logoWidth = 90;
+      const logoHeight = 40;
+      doc.image('logo/logo.png', doc.page.width - logoWidth - 40, 32, { width: logoWidth, height: logoHeight });
     } catch (e) {
       // logo yoksa devam et
     }
