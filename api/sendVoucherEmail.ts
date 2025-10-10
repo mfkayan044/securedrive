@@ -56,29 +56,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Detay satırlarını PDF işlemlerinden önce tanımla
     const detailRows = [
-      ['Ad Soyad', details?.customer_name || '-'],
-      ['E-posta', details?.customer_email || '-'],
-      ['Telefon', details?.customer_phone || '-'],
+      ['Ad Soyad', details?.customer_name?.toString().trim() || '-'],
+      ['E-posta', details?.customer_email?.toString().trim() || '-'],
+      ['Telefon', details?.customer_phone?.toString().trim() || '-'],
       [
         'Güzergah',
         (details?.from_location_name && details?.to_location_name)
           ? `${details.from_location_name} → ${details.to_location_name}`
-          : (details?.from_location || details?.from || '-') + ' → ' + (details?.to_location || details?.to || '-')
+          : (details?.from_location || details?.from || details?.pickup_location || '-') + ' → ' + (details?.to_location || details?.to || details?.dropoff_location || '-')
       ],
       ['Transfer Türü', details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'],
       ['Gidiş Tarihi', `${details?.departure_date || '-'} - ${details?.departure_time || '-'}`],
       ['Dönüş Tarihi', `${details?.return_date || '-'} - ${details?.return_time || '-'}`],
-      ['Gidiş Uçuş Kodu', details?.departure_flight_code || '-'],
-      ['Dönüş Uçuş Kodu', details?.return_flight_code || '-'],
-      ['Yolcu Sayısı', details?.passengers || '-'],
-      ['Yolcu İsimleri', Array.isArray(details?.passenger_names) ? details.passenger_names.join(', ') : (details?.passenger_names || '-')],
+      ['Gidiş Uçuş Kodu', details?.departure_flight_code?.toString().trim() || '-'],
+      ['Dönüş Uçuş Kodu', details?.return_flight_code?.toString().trim() || '-'],
+      ['Yolcu Sayısı', details?.passengers?.toString().trim() || '-'],
+      ['Yolcu İsimleri', Array.isArray(details?.passenger_names) ? details.passenger_names.join(', ') : (details?.passenger_names?.toString().trim() || '-')],
       [
         'Araç Seçimi',
-        details?.vehicle_type_name || details?.vehicle_type || details?.vehicle || '-'
+        details?.vehicle_type_name?.toString().trim() || details?.vehicle_type?.toString().trim() || details?.vehicle?.toString().trim() || details?.vehicle_name?.toString().trim() || '-'
       ],
-      ['Ek Hizmetler', Array.isArray(details?.extra_services) ? details.extra_services.join(', ') : (details?.extra_services || '-')],
-      ['Ödeme Durumu', details?.payment_status || '-'],
-      ['Notlar', details?.notes || '-'],
+      ['Ek Hizmetler', Array.isArray(details?.extra_services) ? details.extra_services.join(', ') : (details?.extra_services?.toString().trim() || '-')],
+      ['Ödeme Durumu', details?.payment_status?.toString().trim() || '-'],
+      ['Notlar', details?.notes?.toString().trim() || '-'],
     ];
 
 
@@ -87,84 +87,81 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 
 
-    // LOGO sol üst köşe
+
+    // LOGO sol üst köşe (küçük ve çakışmasız)
     try {
-      const logoWidth = 80;
-      const logoHeight = 36;
-      doc.image('logo/logo.png', 40, 32, { width: logoWidth, height: logoHeight });
+      const logoWidth = 70;
+      const logoHeight = 28;
+      doc.image('logo/logo.png', 42, 28, { width: logoWidth, height: logoHeight });
     } catch (e) {
       // logo yoksa devam et
     }
-    // Başlık ve voucher kodu kutusu sağda
+
+    // Rezervasyon no kutusu sağ üstte, küçük font
     const reservationNo = details?.reservation_number || details?.id || voucherCode;
     doc
-      .rect(doc.page.width - 240, 32, 200, 36)
+      .rect(doc.page.width - 170, 28, 120, 28)
       .fillAndStroke('#ffcdd2', '#b71c1c')
       .fillColor('#b71c1c')
       .font('roboto-bold')
-      .fontSize(15)
-      .text('Rezervasyon No:', doc.page.width - 230, 42, { width: 90, align: 'left' })
+      .fontSize(10)
+      .text('Rezervasyon No:', doc.page.width - 162, 36, { width: 60, align: 'left' })
+      .fontSize(12)
+      .text(reservationNo, doc.page.width - 102, 34, { width: 60, align: 'right' });
+
+
+    // Başlık
+    doc
+      .font('roboto-bold')
       .fontSize(18)
-      .text(reservationNo, doc.page.width - 140, 40, { width: 90, align: 'right' });
-
-    // Başlık
-    doc
-      .font('roboto-bold')
-      .fontSize(24)
       .fillColor('#b71c1c')
-      .text('VOUCHER', 0, 90, { align: 'center', width: doc.page.width });
-    doc.moveDown(0.5);
+      .text('VOUCHER', 0, 70, { align: 'center', width: doc.page.width });
+    doc.moveDown(0.2);
 
-    // Başlık
-    doc
-      .font('roboto-bold')
-      .fontSize(26)
-      .fillColor('#b71c1c')
-      .text('VOUCHER', { align: 'center' });
-    doc.moveDown();
 
 
     // Alt başlık kutusu
     doc
-      .rect(40, 120, doc.page.width - 80, 32)
+      .rect(40, 100, doc.page.width - 80, 22)
       .fillAndStroke('#f5f5f5', '#bdbdbd')
       .fillColor('#333')
       .font('roboto-bold')
-      .fontSize(14)
-      .text(`Sayın ${name || ''}`, 0, 128, { align: 'center', width: doc.page.width - 80 });
-    doc.moveDown(0.5);
+      .fontSize(10)
+      .text(`Sayın ${name || ''}`, 0, 106, { align: 'center', width: doc.page.width - 80 });
+    doc.moveDown(0.1);
+
 
 
 
     // Detay başlığı
     doc
       .font('roboto-bold')
-      .fontSize(15)
+      .fontSize(11)
       .fillColor('#b71c1c')
-      .text('Rezervasyon Detayları', 0, 160, { align: 'center', width: doc.page.width });
-    doc.moveDown(0.2);
+      .text('Rezervasyon Detayları', 0, 125, { align: 'center', width: doc.page.width });
+    doc.moveDown(0.1);
 
     // Detay kutuları: daha kompakt, tek sayfa için optimize
-    let y = 180;
-    const rowHeight = 22;
-    const labelWidth = 120;
+    let y = 135;
+    const rowHeight = 16;
+    const labelWidth = 90;
     const valueWidth = doc.page.width - 120 - labelWidth;
     (detailRows as [string, string][]).forEach(([label, value]: [string, string]) => {
-      if (y > doc.page.height - 120) return; // Taşmayı engelle
+      if (y > doc.page.height - 100) return; // Taşmayı engelle
       doc
         .rect(60, y, doc.page.width - 120, rowHeight)
         .fillAndStroke('#f5f5f5', '#bdbdbd');
       doc
         .fillColor('#b71c1c')
         .font('roboto-bold')
-        .fontSize(11)
-        .text(label + ':', 70, y + 6, { width: labelWidth - 10, align: 'left', continued: false });
+        .fontSize(9)
+        .text(label + ':', 70, y + 3, { width: labelWidth - 10, align: 'left', continued: false });
       doc
         .fillColor('#222')
         .font('roboto')
-        .fontSize(11)
-        .text(value, 70 + labelWidth, y + 6, { width: valueWidth - 20, align: 'left', continued: false });
-      y += rowHeight + 2;
+        .fontSize(9)
+        .text(value, 70 + labelWidth, y + 3, { width: valueWidth - 20, align: 'left', continued: false });
+      y += rowHeight + 1;
     });
 
     // Alt gri kutu ve iletişim
