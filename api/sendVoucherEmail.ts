@@ -45,8 +45,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // PDFKit'in tip hatalarını aşmak için doc'u any olarak tanımla
   const doc: any = new PDFDocument({ size: 'A4', margin: 40 });
   // Türkçe karakter desteği için Roboto fontlarını yükle
-  doc.registerFont('roboto', 'fonts/Roboto-Regular.ttf');
-  doc.registerFont('roboto-bold', 'fonts/Roboto-Bold.ttf');
+  doc.registerFont('roboto', __dirname + '/fonts/Roboto-Regular.ttf');
+  doc.registerFont('roboto-bold', __dirname + '/fonts/Roboto-Bold.ttf');
     const pdfStream = new PassThrough();
     let pdfBuffer: Buffer | null = null;
     const chunks: Buffer[] = [];
