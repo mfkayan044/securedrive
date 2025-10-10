@@ -1,4 +1,4 @@
-  import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
   import { Calendar, Clock, User, MapPin, Car, Phone, Mail, Eye, Edit, Check, X, Search, Users } from 'lucide-react';
   import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
@@ -48,6 +48,28 @@ const sendVoucherEmail = async (reservation: any) => {
   }
 };
 
+// Voucher PDF indirme fonksiyonu
+const downloadVoucherPdf = async (reservation: any) => {
+  try {
+    const response = await fetch('/api/getVoucherPdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reservationDetails: reservation })
+    });
+    if (!response.ok) throw new Error('PDF alınamadı');
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `voucher_${reservation.reservation_number || reservation.id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    alert('PDF indirilemedi: ' + (err as any)?.message);
+  }
+}
 
   // Bildirim için state
   const [notification, setNotification] = useState<string | null>(null);
@@ -487,24 +509,33 @@ const sendVoucherEmail = async (reservation: any) => {
                               </button>
                             </>
                           )}
+
                           {/* Voucher Gönder butonu: her rezervasyon için */}
                           <button
-  // E-posta yoksa buton çalışmaz, sadece reservation.customer_email ile gönder
-  onClick={() => sendVoucherEmail(reservation)}
-  className={`text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-xs font-semibold transition-colors flex items-center space-x-1 ${voucherSendingId === reservation.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-  title="Voucher Gönder"
-  disabled={voucherSendingId === reservation.id}
->
-  {voucherSendingId === reservation.id ? (
-    <span>Gönderiliyor...</span>
-  ) : (
-    <>
-      <Mail className="w-4 h-4 mr-1" />
-      Voucher Gönder
-    </>
-  )}
-</button>
+                            onClick={() => sendVoucherEmail(reservation)}
+                            className={`text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-xs font-semibold transition-colors flex items-center space-x-1 ${voucherSendingId === reservation.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            title="Voucher Gönder"
+                            disabled={voucherSendingId === reservation.id}
+                          >
+                            {voucherSendingId === reservation.id ? (
+                              <span>Gönderiliyor...</span>
+                            ) : (
+                              <>
+                                <Mail className="w-4 h-4 mr-1" />
+                                Voucher Gönder
+                              </>
+                            )}
+                          </button>
 
+                          {/* Voucher PDF İndir butonu */}
+                          <button
+                            onClick={() => downloadVoucherPdf(reservation)}
+                            className="text-white bg-gray-700 hover:bg-gray-900 px-3 py-1 rounded text-xs font-semibold transition-colors flex items-center space-x-1"
+                            title="Voucher PDF İndir"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" /></svg>
+                            PDF İndir
+                          </button>
                           {reservation.status === 'confirmed' && (
                             <button
                               onClick={() => updateReservationStatus(reservation.id, 'completed')}
