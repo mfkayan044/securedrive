@@ -1,0 +1,2 @@
+Place TTF font files here for PDF generation. Suggested: OpenSans-Regular.ttf or Roboto-Regular.ttf.
+If deploying on Vercel, these files will be bundled and can be read via fs using an absolute path relative to process.cwd().
