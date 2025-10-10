@@ -54,7 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 
 
-    // Detay satırlarını PDF işlemlerinden önce tanımla
+    // Detay satırlarını PDF işlemlerinden önce tanımla (tüm alanlar, fallback'lı ve sıralı)
     const detailRows = [
       ['Ad Soyad', details?.customer_name?.toString().trim() || '-'],
       ['E-posta', details?.customer_email?.toString().trim() || '-'],
@@ -63,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'Güzergah',
         (details?.from_location_name && details?.to_location_name)
           ? `${details.from_location_name} → ${details.to_location_name}`
-          : (details?.from_location || details?.from || details?.pickup_location || '-') + ' → ' + (details?.to_location || details?.to || details?.dropoff_location || '-')
+          : ((details?.from_location || details?.from || details?.pickup_location || '-') + ' → ' + (details?.to_location || details?.to || details?.dropoff_location || '-'))
       ],
       ['Transfer Türü', details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'],
       ['Gidiş Tarihi', `${details?.departure_date || '-'} - ${details?.departure_time || '-'}`],
@@ -79,20 +79,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ['Ek Hizmetler', Array.isArray(details?.extra_services) ? details.extra_services.join(', ') : (details?.extra_services?.toString().trim() || '-')],
       ['Ödeme Durumu', details?.payment_status?.toString().trim() || '-'],
       ['Notlar', details?.notes?.toString().trim() || '-'],
+      ['Toplam Tutar', (details?.total_price ? details.total_price + ' ₺' : '-')],
     ];
-
-
-
     doc.pipe(pdfStream);
 
 
 
 
-    // LOGO sol üst köşe (küçük ve çakışmasız)
+    // LOGO sol üst köşe (küçük ve çakışmasız, path düzeltilmiş)
     try {
+      const logoPath = path.join(process.cwd(), 'logo', 'logo.png');
       const logoWidth = 70;
       const logoHeight = 28;
-      doc.image('logo/logo.png', 42, 28, { width: logoWidth, height: logoHeight });
+      doc.image(logoPath, 42, 28, { width: logoWidth, height: logoHeight });
     } catch (e) {
       // logo yoksa devam et
     }
@@ -141,9 +140,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .text('Rezervasyon Detayları', 0, 125, { align: 'center', width: doc.page.width });
     doc.moveDown(0.1);
 
-    // Detay kutuları: daha kompakt, tek sayfa için optimize
+    // Detay kutuları: daha kompakt, tek sayfa için optimize, satır yüksekliği ve font boyutu azaltıldı
     let y = 135;
-    const rowHeight = 16;
+    const rowHeight = 14;
     const labelWidth = 90;
     const valueWidth = doc.page.width - 120 - labelWidth;
     (detailRows as [string, string][]).forEach(([label, value]: [string, string]) => {
@@ -154,13 +153,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       doc
         .fillColor('#b71c1c')
         .font('roboto-bold')
-        .fontSize(9)
-        .text(label + ':', 70, y + 3, { width: labelWidth - 10, align: 'left', continued: false });
+        .fontSize(8)
+        .text(label + ':', 70, y + 2, { width: labelWidth - 10, align: 'left', continued: false });
       doc
         .fillColor('#222')
         .font('roboto')
-        .fontSize(9)
-        .text(value, 70 + labelWidth, y + 3, { width: valueWidth - 20, align: 'left', continued: false });
+        .fontSize(8)
+        .text(value, 70 + labelWidth, y + 2, { width: valueWidth - 20, align: 'left', continued: false });
       y += rowHeight + 1;
     });
 
@@ -210,15 +209,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         <p>Rezervasyonunuz için voucher kodunuz: <b>${voucherCode}</b></p>
         <h3>Rezervasyon Detayları:</h3>
         <ul>
-          <li><b>Transfer Türü:</b> ${details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}</li>
-          <li><b>Alış Tarihi:</b> ${details?.departure_date || '-'} - ${details?.departure_time || '-'}</li>
-          <li><b>Dönüş Tarihi:</b> ${details?.return_date || '-'} - ${details?.return_time || '-'}</li>
-          <li><b>Yolcu Adı:</b> ${details?.customer_name || '-'}</li>
+          <li><b>Ad Soyad:</b> ${details?.customer_name || '-'}</li>
+          <li><b>E-posta:</b> ${details?.customer_email || '-'}</li>
           <li><b>Telefon:</b> ${details?.customer_phone || '-'}</li>
-          <li><b>Yolcu Sayısı:</b> ${details?.passengers || '-'}</li>
-          <li><b>Toplam Tutar:</b> ${details?.total_price || '-'} ₺</li>
+          <li><b>Güzergah:</b> ${(details?.from_location_name && details?.to_location_name) ? `${details.from_location_name} → ${details.to_location_name}` : ((details?.from_location || details?.from || details?.pickup_location || '-') + ' → ' + (details?.to_location || details?.to || details?.dropoff_location || '-'))}</li>
+          <li><b>Transfer Türü:</b> ${details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'}</li>
+          <li><b>Gidiş Tarihi:</b> ${details?.departure_date || '-'} - ${details?.departure_time || '-'}</li>
+          <li><b>Dönüş Tarihi:</b> ${details?.return_date || '-'} - ${details?.return_time || '-'}</li>
           <li><b>Gidiş Uçuş Kodu:</b> ${details?.departure_flight_code || '-'}</li>
           <li><b>Dönüş Uçuş Kodu:</b> ${details?.return_flight_code || '-'}</li>
+          <li><b>Yolcu Sayısı:</b> ${details?.passengers || '-'}</li>
+          <li><b>Yolcu İsimleri:</b> ${Array.isArray(details?.passenger_names) ? details.passenger_names.join(', ') : (details?.passenger_names || '-')}</li>
+          <li><b>Araç Seçimi:</b> ${details?.vehicle_type_name || details?.vehicle_type || details?.vehicle || details?.vehicle_name || '-'}</li>
+          <li><b>Ek Hizmetler:</b> ${Array.isArray(details?.extra_services) ? details.extra_services.join(', ') : (details?.extra_services || '-')}</li>
+          <li><b>Ödeme Durumu:</b> ${details?.payment_status || '-'}</li>
+          <li><b>Notlar:</b> ${details?.notes || '-'}</li>
+          <li><b>Toplam Tutar:</b> ${details?.total_price ? details.total_price + ' ₺' : '-'}</li>
         </ul>
         <p>İyi yolculuklar dileriz.</p>
       `,
