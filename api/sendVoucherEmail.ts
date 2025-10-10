@@ -97,41 +97,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .text(`Sayın ${name || ''}`, 0, 132, { align: 'center', width: doc.page.width - 80 });
     doc.moveDown();
 
-    // Voucher kodu kutusu
+
+    // Voucher kodu kutusu (daha büyük ve ortalanmış)
     doc
-      .rect(40, 180, doc.page.width - 80, 40)
+      .rect(40, 180, doc.page.width - 80, 50)
       .fillAndStroke('#ffcdd2', '#b71c1c')
       .fillColor('#b71c1c')
       .font('roboto-bold')
-      .fontSize(18)
-      .text(`Voucher Kodunuz: ${voucherCode}`, 0, 192, { align: 'center', width: doc.page.width - 80 });
-    doc.moveDown();
+      .fontSize(22)
+      .text(`Voucher Kodunuz: ${voucherCode}`, 0, 195, { align: 'center', width: doc.page.width - 80 });
+    doc.moveDown(1.5);
 
     // Detay başlığı
     doc
       .font('roboto-bold')
-      .fontSize(15)
+      .fontSize(17)
       .fillColor('#b71c1c')
-      .text('Rezervasyon Detayları', 0, 240, { align: 'center', width: doc.page.width - 80 });
-    doc.moveDown();
+      .text('Rezervasyon Detayları', 0, 245, { align: 'center', width: doc.page.width - 80 });
+    doc.moveDown(0.5);
 
-    // Detay kutusu
-    let y = 270;
-    detailRows.forEach(([label, value]: [string, string]) => {
+    // Detay kutuları: modern, iki sütunlu, paddingli
+    let y = 275;
+    const rowHeight = 34;
+    const labelWidth = 160;
+    const valueWidth = doc.page.width - 120 - labelWidth;
+  (detailRows as [string, string][]).forEach(([label, value]: [string, string]) => {
+      // Kutu
       doc
-        .rect(60, y, doc.page.width - 120, 28)
+        .rect(60, y, doc.page.width - 120, rowHeight)
         .fillAndStroke('#f5f5f5', '#bdbdbd');
+      // Label
       doc
         .fillColor('#b71c1c')
         .font('roboto-bold')
-        .fontSize(12)
-        .text(label + ':', 70, y + 8, { continued: true, width: 120 });
+        .fontSize(13)
+        .text(label + ':', 70, y + 10, { width: labelWidth - 10, align: 'left', continued: false });
+      // Value
       doc
-        .fillColor('#333')
+        .fillColor('#222')
         .font('roboto')
-        .fontSize(12)
-        .text(' ' + value, { continued: false, width: doc.page.width - 220 });
-      y += 32;
+        .fontSize(13)
+        .text(value, 70 + labelWidth, y + 10, { width: valueWidth - 20, align: 'left', continued: false });
+      y += rowHeight + 4;
     });
 
     // Alt gri kutu ve iletişim
