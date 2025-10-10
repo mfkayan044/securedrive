@@ -47,26 +47,88 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const pdfStream = new PassThrough();
     let pdfBuffer: Buffer | null = null;
     const chunks: Buffer[] = [];
+
     doc.pipe(pdfStream);
 
-    // PDF tasarımı
-
-    doc.fontSize(22).fillColor('#1a237e').text('Voucher Bilgilendirmesi', { align: 'center' });
+    // LOGO
+    try {
+      doc.image('logo/logo.png', doc.page.width / 2 - 60, 30, { width: 120 });
+    } catch (e) {
+      // logo yoksa devam et
+    }
     doc.moveDown && doc.moveDown();
 
-    doc.fontSize(16).fillColor('black').text(`Sayın ${name || ''},`, { align: 'left' });
-    doc.text(' '); // spacing
+    // Başlık
+    doc
+      .fontSize(26)
+      .fillColor('#b71c1c') // kırmızı ton
+      .font('Helvetica-Bold')
+      .text('VOUCHER', { align: 'center' });
 
-    doc.fontSize(14).text(`Rezervasyonunuz için voucher kodunuz: `, { continued: true });
-    doc.fillColor('#388e3c');
-    doc.font && doc.font('Helvetica-Bold');
-    doc.text(voucherCode);
-    doc.fillColor('black');
-    doc.font && doc.font('Helvetica');
-    doc.text(' '); // spacing
+    doc.moveDown && doc.moveDown();
 
-    doc.fontSize(15).fillColor('#1a237e').text('Rezervasyon Detayları:', { underline: true });
-    doc.text(' '); // spacing
+    // Alt başlık kutusu
+    doc
+      .rect(40, 120, doc.page.width - 80, 40)
+      .fillAndStroke('#f5f5f5', '#bdbdbd') // gri arka plan, gri kenar
+      .fillColor('#333')
+      .fontSize(16)
+      .font('Helvetica-Bold')
+      .text(`Sayın ${name || ''}`, 0, 132, { align: 'center' });
+
+    doc.moveDown && doc.moveDown();
+
+    // Voucher kodu kutusu
+    doc
+      .rect(40, 180, doc.page.width - 80, 40)
+      .fillAndStroke('#ffcdd2', '#b71c1c') // açık kırmızı arka plan, koyu kırmızı kenar
+      .fillColor('#b71c1c')
+      .fontSize(18)
+      .font('Helvetica-Bold')
+      .text(`Voucher Kodunuz: ${voucherCode}`, 0, 192, { align: 'center' });
+
+    doc.moveDown && doc.moveDown();
+
+    // Detay başlığı
+    doc
+      .fontSize(15)
+      .fillColor('#b71c1c')
+      .font('Helvetica-Bold')
+      .text('Rezervasyon Detayları', 0, 240, { align: 'center' });
+
+    // Detay kutusu
+    let y = 270;
+    detailRows.forEach(([label, value]) => {
+      doc
+        .rect(60, y, doc.page.width - 120, 28)
+        .fillAndStroke('#f5f5f5', '#bdbdbd');
+      doc
+        .fillColor('#b71c1c')
+        .font('Helvetica-Bold')
+        .fontSize(12)
+        .text(label + ':', 70, y + 8, { continued: true });
+      doc
+        .fillColor('#333')
+        .font('Helvetica')
+        .fontSize(12)
+        .text(' ' + value, { continued: false });
+      y += 32;
+    });
+
+    // Alt gri kutu ve iletişim
+    doc
+      .rect(0, doc.page.height - 80, doc.page.width, 80)
+      .fill('#eeeeee');
+    doc
+      .fillColor('#b71c1c')
+      .font('Helvetica-Bold')
+      .fontSize(12)
+      .text('İyi yolculuklar dileriz.', 0, doc.page.height - 60, { align: 'center' });
+    doc
+      .fillColor('#757575')
+      .font('Helvetica')
+      .fontSize(10)
+      .text('www.securedrive.org  |  operasyon@securedrive.org', 0, doc.page.height - 40, { align: 'center' });
 
     const detailRows = [
       ['Transfer Türü', details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'],
