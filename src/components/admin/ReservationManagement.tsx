@@ -26,6 +26,8 @@ const sendVoucherEmail = async (reservation: any) => {
         name: reservation.customer_name,
         voucherCode,
         reservationDetails: JSON.stringify(reservation, null, 2),
+        locations,
+        vehicleTypes
       }),
     });
 
