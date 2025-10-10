@@ -137,15 +137,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 
 
-    detailRows.forEach(([label, value]) => {
-      doc.font && doc.font('Helvetica-Bold');
-      doc.fontSize(12).text(label + ': ', { continued: true });
-      doc.font && doc.font('Helvetica');
-      doc.fontSize(12).text(value);
-    });
-
-    doc.text(' '); // spacing
-    doc.fontSize(12).fillColor('gray').text('İyi yolculuklar dileriz.', { align: 'right' });
 
 
     doc.end();
