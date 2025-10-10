@@ -48,6 +48,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let pdfBuffer: Buffer | null = null;
     const chunks: Buffer[] = [];
 
+
+    // Detay satırlarını önce tanımla
+    const detailRows = [
+      ['Transfer Türü', details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'],
+      ['Alış Tarihi', `${details?.departure_date || '-'} - ${details?.departure_time || '-'}`],
+      ['Dönüş Tarihi', `${details?.return_date || '-'} - ${details?.return_time || '-'}`],
+      ['Yolcu Adı', details?.customer_name || '-'],
+      ['Telefon', details?.customer_phone || '-'],
+      ['Yolcu Sayısı', details?.passengers || '-'],
+      ['Toplam Tutar', (details?.total_price ? details?.total_price + ' ₺' : '-')],
+      ['Gidiş Uçuş Kodu', details?.departure_flight_code || '-'],
+      ['Dönüş Uçuş Kodu', details?.return_flight_code || '-'],
+    ];
+
     doc.pipe(pdfStream);
 
     // LOGO
