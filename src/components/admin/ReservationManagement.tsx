@@ -54,7 +54,11 @@ const downloadVoucherPdf = async (reservation: any) => {
     const response = await fetch('/api/getVoucherPdf', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ reservationDetails: reservation })
+      body: JSON.stringify({
+        reservationDetails: reservation,
+        locations,
+        vehicleTypes
+      })
     });
     if (!response.ok) throw new Error('PDF alınamadı');
     const blob = await response.blob();
