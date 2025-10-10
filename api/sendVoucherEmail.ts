@@ -4,6 +4,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import nodemailer from 'nodemailer';
 import PDFDocument from 'pdfkit';
+import path from 'path';
 import { PassThrough } from 'stream';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -45,8 +46,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // PDFKit'in tip hatalarını aşmak için doc'u any olarak tanımla
   const doc: any = new PDFDocument({ size: 'A4', margin: 40 });
   // Türkçe karakter desteği için Roboto fontlarını yükle
-  doc.registerFont('roboto', process.cwd() + '/api/fonts/Roboto-Regular.ttf');
-  doc.registerFont('roboto-bold', process.cwd() + '/api/fonts/Roboto-Bold.ttf');
+  doc.registerFont('roboto', path.join(process.cwd(), 'public/fonts/Roboto-Regular.ttf'));
+  doc.registerFont('roboto-bold', path.join(process.cwd(), 'public/fonts/Roboto-Bold.ttf'));
     const pdfStream = new PassThrough();
     let pdfBuffer: Buffer | null = null;
     const chunks: Buffer[] = [];
