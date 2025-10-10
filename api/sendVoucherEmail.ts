@@ -44,6 +44,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // PDF oluştur
   // PDFKit'in tip hatalarını aşmak için doc'u any olarak tanımla
   const doc: any = new PDFDocument({ size: 'A4', margin: 40 });
+  // Türkçe karakter desteği için Roboto fontlarını yükle
+  doc.registerFont('roboto', 'assets/fonts/Roboto-Regular.ttf');
+  doc.registerFont('roboto-bold', 'assets/fonts/Roboto-Bold.ttf');
     const pdfStream = new PassThrough();
     let pdfBuffer: Buffer | null = null;
     const chunks: Buffer[] = [];
@@ -64,6 +67,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ];
 
 
+
     doc.pipe(pdfStream);
 
     // LOGO
@@ -72,62 +76,60 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (e) {
       // logo yoksa devam et
     }
-    doc.moveDown && doc.moveDown();
+    doc.moveDown();
 
     // Başlık
     doc
+      .font('roboto-bold')
       .fontSize(26)
-      .fillColor('#b71c1c') // kırmızı ton
-      .font('Helvetica-Bold')
+      .fillColor('#b71c1c')
       .text('VOUCHER', { align: 'center' });
-
-    doc.moveDown && doc.moveDown();
+    doc.moveDown();
 
     // Alt başlık kutusu
     doc
       .rect(40, 120, doc.page.width - 80, 40)
-      .fillAndStroke('#f5f5f5', '#bdbdbd') // gri arka plan, gri kenar
+      .fillAndStroke('#f5f5f5', '#bdbdbd')
       .fillColor('#333')
+      .font('roboto-bold')
       .fontSize(16)
-      .font('Helvetica-Bold')
-      .text(`Sayın ${name || ''}`, 0, 132, { align: 'center' });
-
-    doc.moveDown && doc.moveDown();
+      .text(`Sayın ${name || ''}`, 0, 132, { align: 'center', width: doc.page.width - 80 });
+    doc.moveDown();
 
     // Voucher kodu kutusu
     doc
       .rect(40, 180, doc.page.width - 80, 40)
-      .fillAndStroke('#ffcdd2', '#b71c1c') // açık kırmızı arka plan, koyu kırmızı kenar
+      .fillAndStroke('#ffcdd2', '#b71c1c')
       .fillColor('#b71c1c')
+      .font('roboto-bold')
       .fontSize(18)
-      .font('Helvetica-Bold')
-      .text(`Voucher Kodunuz: ${voucherCode}`, 0, 192, { align: 'center' });
-
-    doc.moveDown && doc.moveDown();
+      .text(`Voucher Kodunuz: ${voucherCode}`, 0, 192, { align: 'center', width: doc.page.width - 80 });
+    doc.moveDown();
 
     // Detay başlığı
     doc
+      .font('roboto-bold')
       .fontSize(15)
       .fillColor('#b71c1c')
-      .font('Helvetica-Bold')
-      .text('Rezervasyon Detayları', 0, 240, { align: 'center' });
+      .text('Rezervasyon Detayları', 0, 240, { align: 'center', width: doc.page.width - 80 });
+    doc.moveDown();
 
     // Detay kutusu
     let y = 270;
-    detailRows.forEach(([label, value]) => {
+    detailRows.forEach(([label, value]: [string, string]) => {
       doc
         .rect(60, y, doc.page.width - 120, 28)
         .fillAndStroke('#f5f5f5', '#bdbdbd');
       doc
         .fillColor('#b71c1c')
-        .font('Helvetica-Bold')
+        .font('roboto-bold')
         .fontSize(12)
-        .text(label + ':', 70, y + 8, { continued: true });
+        .text(label + ':', 70, y + 8, { continued: true, width: 120 });
       doc
         .fillColor('#333')
-        .font('Helvetica')
+        .font('roboto')
         .fontSize(12)
-        .text(' ' + value, { continued: false });
+        .text(' ' + value, { continued: false, width: doc.page.width - 220 });
       y += 32;
     });
 
@@ -137,14 +139,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .fill('#eeeeee');
     doc
       .fillColor('#b71c1c')
-      .font('Helvetica-Bold')
+      .font('roboto-bold')
       .fontSize(12)
-      .text('İyi yolculuklar dileriz.', 0, doc.page.height - 60, { align: 'center' });
+      .text('İyi yolculuklar dileriz.', 0, doc.page.height - 60, { align: 'center', width: doc.page.width });
     doc
       .fillColor('#757575')
-      .font('Helvetica')
+      .font('roboto')
       .fontSize(10)
-      .text('www.securedrive.org  |  operasyon@securedrive.org', 0, doc.page.height - 40, { align: 'center' });
+      .text('www.securedrive.org  |  operasyon@securedrive.org', 0, doc.page.height - 40, { align: 'center', width: doc.page.width });
 
 
 
