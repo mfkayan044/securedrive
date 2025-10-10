@@ -1,3 +1,4 @@
+
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import PDFDocument from 'pdfkit';
 import path from 'path';
@@ -8,7 +9,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Sadece POST isteği destekleniyor.' });
   }
 
-  let { reservationDetails } = req.body;
+
+  let { reservationDetails, locations, vehicleTypes } = req.body;
   if (typeof reservationDetails === 'string') {
     try {
       reservationDetails = JSON.parse(reservationDetails);
@@ -16,7 +18,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Rezervasyon detayları çözümlenemedi.' });
     }
   }
+  // Parse locations and vehicleTypes if stringified
+  if (typeof locations === 'string') {
+    try {
+      locations = JSON.parse(locations);
+    } catch { locations = []; }
+  }
+  if (typeof vehicleTypes === 'string') {
+    try {
+      vehicleTypes = JSON.parse(vehicleTypes);
+    } catch { vehicleTypes = []; }
+  }
   const details = reservationDetails;
+
+  // Helper functions for mapping
+  const getLocationName = (id: string) => {
+    if (!id || !Array.isArray(locations)) return '';
+    const found = locations.find((loc: any) => loc.id === id);
+    return found ? found.name : '';
+  };
+  const getVehicleName = (id: string) => {
+    if (!id || !Array.isArray(vehicleTypes)) return '';
+    const found = vehicleTypes.find((v: any) => v.id === id);
+    return found ? found.name : '';
+  };
 
   // PDF oluştur
   const doc: any = new PDFDocument({ size: 'A4', margin: 40 });
@@ -56,11 +81,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ['Telefon', details?.customer_phone?.toString().trim() || '-'],
     [
       'Güzergah',
-      (details?.from_location_name && details?.to_location_name)
-        ? `${details.from_location_name} → ${details.to_location_name}`
-        : (details?.route_name || details?.route || details?.guzergah || details?.guzergah_adi || details?.guzergah_name || details?.guzergahadi || details?.guzergahname || details?.from_location || details?.from || details?.pickup_location || '-') +
-          ' → ' +
-          (details?.to_location_name || details?.to_location || details?.to || details?.dropoff_location || details?.varis || details?.varis_nokta || details?.varis_adi || details?.varisadi || details?.varisname || '-')
+      (getLocationName(details?.from_location_id) && getLocationName(details?.to_location_id))
+        ? `${getLocationName(details?.from_location_id)} → ${getLocationName(details?.to_location_id)}`
+        : (details?.from_location_name && details?.to_location_name)
+          ? `${details.from_location_name} → ${details.to_location_name}`
+          : (details?.route_name || details?.route || details?.guzergah || details?.guzergah_adi || details?.guzergah_name || details?.guzergahadi || details?.guzergahname || details?.from_location || details?.from || details?.pickup_location || '-') +
+            ' → ' +
+            (details?.to_location_name || details?.to_location || details?.to || details?.dropoff_location || details?.varis || details?.varis_nokta || details?.varis_adi || details?.varisadi || details?.varisname || '-')
     ],
     ['Transfer Türü', details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'],
     ['Gidiş Tarihi', `${details?.departure_date || '-'} - ${details?.departure_time || '-'}`],
@@ -71,6 +98,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ['Yolcu İsimleri', Array.isArray(details?.passenger_names) ? details.passenger_names.join(', ') : (details?.passenger_names?.toString().trim() || '-')],
     [
       'Araç Seçimi',
+      getVehicleName(details?.vehicle_type_id) ||
       details?.vehicle_type_name?.toString().trim() || details?.vehicle_type?.toString().trim() || details?.vehicle?.toString().trim() || details?.vehicle_name?.toString().trim() || details?.vehicleType?.toString().trim() || details?.vehicle_selection?.toString().trim() || details?.arac || details?.arac_adi || details?.aracadi || details?.arac_name || '-'
     ],
     ['Ek Hizmetler', Array.isArray(details?.extra_services) ? details.extra_services.join(', ') : (details?.extra_services?.toString().trim() || '-')],
