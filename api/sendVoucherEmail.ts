@@ -59,7 +59,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ['Ad Soyad', details?.customer_name || '-'],
       ['E-posta', details?.customer_email || '-'],
       ['Telefon', details?.customer_phone || '-'],
-      ['Güzergah', (details?.from_location_name && details?.to_location_name) ? `${details.from_location_name} → ${details.to_location_name}` : '-'],
+      [
+        'Güzergah',
+        (details?.from_location_name && details?.to_location_name)
+          ? `${details.from_location_name} → ${details.to_location_name}`
+          : (details?.from_location || details?.from || '-') + ' → ' + (details?.to_location || details?.to || '-')
+      ],
       ['Transfer Türü', details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'],
       ['Gidiş Tarihi', `${details?.departure_date || '-'} - ${details?.departure_time || '-'}`],
       ['Dönüş Tarihi', `${details?.return_date || '-'} - ${details?.return_time || '-'}`],
@@ -67,7 +72,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ['Dönüş Uçuş Kodu', details?.return_flight_code || '-'],
       ['Yolcu Sayısı', details?.passengers || '-'],
       ['Yolcu İsimleri', Array.isArray(details?.passenger_names) ? details.passenger_names.join(', ') : (details?.passenger_names || '-')],
-      ['Araç Seçimi', details?.vehicle_type_name || '-'],
+      [
+        'Araç Seçimi',
+        details?.vehicle_type_name || details?.vehicle_type || details?.vehicle || '-'
+      ],
       ['Ek Hizmetler', Array.isArray(details?.extra_services) ? details.extra_services.join(', ') : (details?.extra_services || '-')],
       ['Ödeme Durumu', details?.payment_status || '-'],
       ['Notlar', details?.notes || '-'],
@@ -78,15 +86,34 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     doc.pipe(pdfStream);
 
 
-    // LOGO sağ üst köşe
+
+    // LOGO sol üst köşe
     try {
-      const logoWidth = 90;
-      const logoHeight = 40;
-      doc.image('logo/logo.png', doc.page.width - logoWidth - 40, 32, { width: logoWidth, height: logoHeight });
+      const logoWidth = 80;
+      const logoHeight = 36;
+      doc.image('logo/logo.png', 40, 32, { width: logoWidth, height: logoHeight });
     } catch (e) {
       // logo yoksa devam et
     }
-    doc.moveDown();
+    // Başlık ve voucher kodu kutusu sağda
+    const reservationNo = details?.reservation_number || details?.id || voucherCode;
+    doc
+      .rect(doc.page.width - 240, 32, 200, 36)
+      .fillAndStroke('#ffcdd2', '#b71c1c')
+      .fillColor('#b71c1c')
+      .font('roboto-bold')
+      .fontSize(15)
+      .text('Rezervasyon No:', doc.page.width - 230, 42, { width: 90, align: 'left' })
+      .fontSize(18)
+      .text(reservationNo, doc.page.width - 140, 40, { width: 90, align: 'right' });
+
+    // Başlık
+    doc
+      .font('roboto-bold')
+      .fontSize(24)
+      .fillColor('#b71c1c')
+      .text('VOUCHER', 0, 90, { align: 'center', width: doc.page.width });
+    doc.moveDown(0.5);
 
     // Başlık
     doc
@@ -96,58 +123,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .text('VOUCHER', { align: 'center' });
     doc.moveDown();
 
+
     // Alt başlık kutusu
     doc
-      .rect(40, 120, doc.page.width - 80, 40)
+      .rect(40, 120, doc.page.width - 80, 32)
       .fillAndStroke('#f5f5f5', '#bdbdbd')
       .fillColor('#333')
       .font('roboto-bold')
-      .fontSize(16)
-      .text(`Sayın ${name || ''}`, 0, 132, { align: 'center', width: doc.page.width - 80 });
-    doc.moveDown();
+      .fontSize(14)
+      .text(`Sayın ${name || ''}`, 0, 128, { align: 'center', width: doc.page.width - 80 });
+    doc.moveDown(0.5);
 
 
-    // Voucher kodu kutusu (daha büyük ve ortalanmış)
-    doc
-      .rect(40, 180, doc.page.width - 80, 50)
-      .fillAndStroke('#ffcdd2', '#b71c1c')
-      .fillColor('#b71c1c')
-      .font('roboto-bold')
-      .fontSize(22)
-      .text(`Voucher Kodunuz: ${voucherCode}`, 0, 195, { align: 'center', width: doc.page.width - 80 });
-    doc.moveDown(1.5);
 
     // Detay başlığı
     doc
       .font('roboto-bold')
-      .fontSize(17)
+      .fontSize(15)
       .fillColor('#b71c1c')
-      .text('Rezervasyon Detayları', 0, 245, { align: 'center', width: doc.page.width - 80 });
-    doc.moveDown(0.5);
+      .text('Rezervasyon Detayları', 0, 160, { align: 'center', width: doc.page.width });
+    doc.moveDown(0.2);
 
-    // Detay kutuları: modern, iki sütunlu, paddingli
-    let y = 275;
-    const rowHeight = 34;
-    const labelWidth = 160;
+    // Detay kutuları: daha kompakt, tek sayfa için optimize
+    let y = 180;
+    const rowHeight = 22;
+    const labelWidth = 120;
     const valueWidth = doc.page.width - 120 - labelWidth;
-  (detailRows as [string, string][]).forEach(([label, value]: [string, string]) => {
-      // Kutu
+    (detailRows as [string, string][]).forEach(([label, value]: [string, string]) => {
+      if (y > doc.page.height - 120) return; // Taşmayı engelle
       doc
         .rect(60, y, doc.page.width - 120, rowHeight)
         .fillAndStroke('#f5f5f5', '#bdbdbd');
-      // Label
       doc
         .fillColor('#b71c1c')
         .font('roboto-bold')
-        .fontSize(13)
-        .text(label + ':', 70, y + 10, { width: labelWidth - 10, align: 'left', continued: false });
-      // Value
+        .fontSize(11)
+        .text(label + ':', 70, y + 6, { width: labelWidth - 10, align: 'left', continued: false });
       doc
         .fillColor('#222')
         .font('roboto')
-        .fontSize(13)
-        .text(value, 70 + labelWidth, y + 10, { width: valueWidth - 20, align: 'left', continued: false });
-      y += rowHeight + 4;
+        .fontSize(11)
+        .text(value, 70 + labelWidth, y + 6, { width: valueWidth - 20, align: 'left', continued: false });
+      y += rowHeight + 2;
     });
 
     // Alt gri kutu ve iletişim
