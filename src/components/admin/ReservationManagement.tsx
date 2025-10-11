@@ -3,6 +3,10 @@ import React, { useState, useEffect } from 'react';
   import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
 const ReservationManagement: React.FC = () => {
+  // Düzenleme modalı için state'ler
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editReservation, setEditReservation] = useState<any>(null);
+  const [editLoading, setEditLoading] = useState(false);
   const [voucherSendingId, setVoucherSendingId] = useState<string | null>(null);
 
     // Voucher Gönder API çağrısı
@@ -312,6 +316,7 @@ const downloadVoucherPdf = async (reservation: any) => {
   const viewReservationDetails = (reservation: any) => {
     setSelectedReservation(reservation);
     setShowDetailModal(true);
+    setEditReservation(reservation); // Düzenleme için de seçili rezervasyonu ata
   };
 
   return (
@@ -578,7 +583,10 @@ const downloadVoucherPdf = async (reservation: any) => {
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => setShowEditModal(true)}
+                      onClick={() => {
+                        setEditReservation(selectedReservation);
+                        setShowEditModal(true);
+                      }}
                       className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-semibold hover:bg-blue-700 transition-colors mr-3"
                     >
                       Rezervasyonu Güncelle
