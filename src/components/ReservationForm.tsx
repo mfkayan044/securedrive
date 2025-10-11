@@ -148,8 +148,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
 
   // Auth olunca formu doldur
   useEffect(() => {
+<<<<<<< HEAD
     if (forceEmptyCustomer) return;
     if (isAuthenticated && currentUser) {
+=======
+    if (!forceEmptyCustomer && isAuthenticated && currentUser) {
+>>>>>>> aaaa2f4 (Admin paneli manuel rezervasyon: müşteri bilgileri otomatik dolmaz, forceEmptyCustomer düzeltildi.)
       setFormData(prev => ({
         ...prev,
         customerName: currentUser.name || '',
@@ -401,26 +405,14 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
           notes: pendingReservation.notes || null,
           status: reservationStatus,
           payment_status: noPaymentMode ? 'pending' : 'paid'
-        }).select();
-      // Admin'e mail gönder
-      if (reservation && reservation[0]) {
-        const fromLocationName = locations?.find((l: any) => l.id === reservation[0].from_location_id)?.name || '';
-        const toLocationName = locations?.find((l: any) => l.id === reservation[0].to_location_id)?.name || '';
-        const vehicleTypeName = vehicleTypes?.find((v: any) => v.id === reservation[0].vehicle_type_id)?.name || '';
-        const extraServiceNames = (selectedExtras || []).map((id) => extraServices?.find((e: any) => e.id === id)?.name).filter(Boolean);
-        await fetch('/api/notifyAdminOnReservation', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            reservation: {
-              ...reservation[0],
-              from_location_name: fromLocationName,
-              to_location_name: toLocationName,
-              vehicle_type_name: vehicleTypeName,
-              extra_services: extraServiceNames,
-            }
-          }),
         });
+
+      // Kullanıcıya ait toplam rezervasyon sayısını artır
+      if (currentUser?.id) {
+        await supabase
+          .from('users')
+          .update({ total_reservations: (currentUser.totalReservations || 0) + 1 })
+          .eq('id', currentUser.id);
       }
   setPassengerNames(['']);
   setSelectedExtras([]);
