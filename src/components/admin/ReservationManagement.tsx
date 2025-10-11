@@ -576,9 +576,17 @@ const downloadVoucherPdf = async (reservation: any) => {
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">
-                    Rezervasyon Detayları - #{selectedReservation.reservation_number ? selectedReservation.reservation_number : selectedReservation.id.slice(0, 8)}
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setShowEditModal(true)}
+                      className="bg-blue-600 text-white px-3 py-1 rounded text-xs font-semibold hover:bg-blue-700 transition-colors mr-3"
+                    >
+                      Rezervasyonu Güncelle
+                    </button>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      Rezervasyon Detayları - #{selectedReservation.reservation_number ? selectedReservation.reservation_number : selectedReservation.id.slice(0, 8)}
+                    </h2>
+                  </div>
                   <button
                     onClick={() => setShowDetailModal(false)}
                     className="text-gray-400 hover:text-gray-600"
@@ -588,6 +596,105 @@ const downloadVoucherPdf = async (reservation: any) => {
                 </div>
 
                 <div className="space-y-6 relative">
+          {/* Rezervasyon Güncelle Modalı */}
+          {showEditModal && selectedReservation && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-bold text-gray-900">Rezervasyonu Güncelle</h2>
+                  <button
+                    onClick={() => setShowEditModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    setEditLoading(true);
+                    const { error } = await supabase
+                      .from('reservations')
+                      .update(editReservation)
+                      .eq('id', editReservation.id);
+                    setEditLoading(false);
+                    if (!error) {
+                      setShowEditModal(false);
+                      setShowDetailModal(false);
+                      fetchData();
+                      setNotification('Rezervasyon başarıyla güncellendi.');
+                    } else {
+                      setNotification('Güncelleme sırasında hata oluştu.');
+                    }
+                  }}
+                  className="space-y-4"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-gray-600">Müşteri Adı</label>
+                      <input type="text" className="w-full border rounded px-2 py-1" value={editReservation.customer_name || ''} onChange={e => setEditReservation(r => ({ ...r, customer_name: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">E-posta</label>
+                      <input type="email" className="w-full border rounded px-2 py-1" value={editReservation.customer_email || ''} onChange={e => setEditReservation(r => ({ ...r, customer_email: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Telefon</label>
+                      <input type="text" className="w-full border rounded px-2 py-1" value={editReservation.customer_phone || ''} onChange={e => setEditReservation(r => ({ ...r, customer_phone: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Yolcu Sayısı</label>
+                      <input type="number" className="w-full border rounded px-2 py-1" value={editReservation.passengers || ''} onChange={e => setEditReservation(r => ({ ...r, passengers: e.target.value }))} />
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Alış Lokasyonu</label>
+                      <select className="w-full border rounded px-2 py-1" value={editReservation.from_location_id || ''} onChange={e => setEditReservation(r => ({ ...r, from_location_id: e.target.value }))}>
+                        <option value="">Seçiniz</option>
+                        {locations.map((loc: any) => (
+                          <option key={loc.id} value={loc.id}>{loc.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Varış Lokasyonu</label>
+                      <select className="w-full border rounded px-2 py-1" value={editReservation.to_location_id || ''} onChange={e => setEditReservation(r => ({ ...r, to_location_id: e.target.value }))}>
+                        <option value="">Seçiniz</option>
+                        {locations.map((loc: any) => (
+                          <option key={loc.id} value={loc.id}>{loc.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Araç Tipi</label>
+                      <select className="w-full border rounded px-2 py-1" value={editReservation.vehicle_type_id || ''} onChange={e => setEditReservation(r => ({ ...r, vehicle_type_id: e.target.value }))}>
+                        <option value="">Seçiniz</option>
+                        {vehicleTypes.map((v: any) => (
+                          <option key={v.id} value={v.id}>{v.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-sm text-gray-600">Ödeme Durumu</label>
+                      <select className="w-full border rounded px-2 py-1" value={editReservation.payment_status || ''} onChange={e => setEditReservation(r => ({ ...r, payment_status: e.target.value }))}>
+                        <option value="pending">Bekliyor</option>
+                        <option value="paid">Ödendi</option>
+                        <option value="refunded">İade Edildi</option>
+                        <option value="failed">Başarısız</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-600">Notlar</label>
+                    <textarea className="w-full border rounded px-2 py-1" value={editReservation.notes || ''} onChange={e => setEditReservation(r => ({ ...r, notes: e.target.value }))} />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">Vazgeç</button>
+                    <button type="submit" disabled={editLoading} className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Kaydet</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
                   {/* Yolcu İsimleri ve Uçuş Kodları */}
                   <div className="bg-gray-50 rounded-lg p-4">
                     <h3 className="font-semibold text-gray-900 mb-3 flex items-center">
