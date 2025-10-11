@@ -1,10 +1,9 @@
-  // Sürücü bilgisi gönder modalı için state
-  const [showDriverModal, setShowDriverModal] = useState(false);
-  const [driverInfo, setDriverInfo] = useState({ name: '', contact: '', plate: '' });
-  const [driverLoading, setDriverLoading] = useState(false);
-import React, { useState, useEffect } from 'react';
+  import React, { useState, useEffect } from 'react';
   import { Calendar, Clock, User, MapPin, Car, Phone, Mail, Eye, Edit, Check, X, Search, Users } from 'lucide-react';
   import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+
+  // Sürücü bilgisi gönder modalı için state
+  // (Artık importlardan sonra, doğru yerde)
 
 const ReservationManagement: React.FC = () => {
   // Düzenleme modalı için state'ler
