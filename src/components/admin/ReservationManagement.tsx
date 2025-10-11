@@ -1,3 +1,7 @@
+  // Sürücü bilgisi gönder modalı için state
+  const [showDriverModal, setShowDriverModal] = useState(false);
+  const [driverInfo, setDriverInfo] = useState({ name: '', contact: '', plate: '' });
+  const [driverLoading, setDriverLoading] = useState(false);
 import React, { useState, useEffect } from 'react';
   import { Calendar, Clock, User, MapPin, Car, Phone, Mail, Eye, Edit, Check, X, Search, Users } from 'lucide-react';
   import { supabase, isSupabaseConfigured } from '../../lib/supabase';
@@ -591,6 +595,12 @@ const downloadVoucherPdf = async (reservation: any) => {
                     >
                       Rezervasyonu Güncelle
                     </button>
+                    <button
+                      onClick={() => setShowDriverModal(true)}
+                      className="bg-green-700 text-white px-3 py-1 rounded text-xs font-semibold hover:bg-green-800 transition-colors mr-3"
+                    >
+                      Sürücü Bilgisi Gönder
+                    </button>
                     <h2 className="text-xl font-bold text-gray-900">
                       Rezervasyon Detayları - #{selectedReservation.reservation_number ? selectedReservation.reservation_number : selectedReservation.id.slice(0, 8)}
                     </h2>
@@ -602,6 +612,69 @@ const downloadVoucherPdf = async (reservation: any) => {
                     <X className="w-6 h-6" />
                   </button>
                 </div>
+          {/* Sürücü Bilgisi Gönder Modalı */}
+          {showDriverModal && selectedReservation && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-lg font-bold text-gray-900">Sürücü Bilgisi Gönder</h2>
+                  <button
+                    onClick={() => setShowDriverModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    setDriverLoading(true);
+                    try {
+                      const response = await fetch('/api/sendDriverInfo', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          to: selectedReservation.customer_email,
+                          name: selectedReservation.customer_name,
+                          reservationId: selectedReservation.id,
+                          driverName: driverInfo.name,
+                          driverContact: driverInfo.contact,
+                          driverPlate: driverInfo.plate
+                        })
+                      });
+                      const data = await response.json();
+                      if (!response.ok) throw new Error(data.detail || 'Mail gönderilemedi');
+                      setShowDriverModal(false);
+                      setNotification('Sürücü bilgisi başarıyla gönderildi.');
+                      setDriverInfo({ name: '', contact: '', plate: '' });
+                    } catch (err: any) {
+                      setNotification('Sürücü bilgisi gönderilemedi: ' + (err?.message || ''));
+                    } finally {
+                      setDriverLoading(false);
+                    }
+                  }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="text-sm text-gray-600">Sürücü Adı</label>
+                    <input type="text" className="w-full border rounded px-2 py-1" value={driverInfo.name} onChange={e => setDriverInfo(i => ({ ...i, name: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-600">Sürücü İletişim</label>
+                    <input type="text" className="w-full border rounded px-2 py-1" value={driverInfo.contact} onChange={e => setDriverInfo(i => ({ ...i, contact: e.target.value }))} required />
+                  </div>
+                  <div>
+                    <label className="text-sm text-gray-600">Plaka</label>
+                    <input type="text" className="w-full border rounded px-2 py-1" value={driverInfo.plate} onChange={e => setDriverInfo(i => ({ ...i, plate: e.target.value }))} required />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button type="button" onClick={() => setShowDriverModal(false)} className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300">Vazgeç</button>
+                    <button type="submit" disabled={driverLoading} className="px-4 py-2 rounded bg-green-700 text-white hover:bg-green-800">Gönder</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
 
                 <div className="space-y-6 relative">
           {/* Rezervasyon Güncelle Modalı */}
