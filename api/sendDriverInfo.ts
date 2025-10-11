@@ -48,6 +48,7 @@ export default async function handler(req, res) {
     });
     return res.status(200).json({ ok: true });
   } catch (err) {
-    return res.status(500).json({ detail: 'Mail gönderilemedi', error: err.message });
+    console.error('sendDriverInfo API error:', err);
+    return res.status(500).json({ detail: 'Mail gönderilemedi', error: err && err.message ? err.message : String(err) });
   }
 }
