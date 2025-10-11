@@ -528,7 +528,7 @@ const downloadVoucherPdf = async (reservation: any) => {
                             ) : (
                               <>
                                 <Mail className="w-4 h-4 mr-1" />
-                                Voucher Gönder
+                                
                               </>
                             )}
                           </button>
@@ -537,7 +537,7 @@ const downloadVoucherPdf = async (reservation: any) => {
                           <button
                             onClick={() => downloadVoucherPdf(reservation)}
                             className="text-white bg-gray-700 hover:bg-gray-900 px-3 py-1 rounded text-xs font-semibold transition-colors flex items-center space-x-1"
-                            title="Voucher PDF İndir"
+                            title=""
                           >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" /></svg>
                             PDF İndir
