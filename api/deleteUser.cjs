@@ -6,18 +6,22 @@ const supabase = createClient(
 );
 
 module.exports = async (req, res) => {
+  console.log('Silme isteği alındı', { method: req.method, query: req.query });
   if (req.method !== 'GET') {
+    console.log('Yanlış method:', req.method);
     res.status(405).json({ error: 'Method not allowed' });
     return;
   }
   const { id } = req.query;
   if (!id) {
+    console.log('Eksik id');
     res.status(400).json({ error: 'Eksik bilgi' });
     return;
   }
   // 1. Supabase Auth'tan kullanıcıyı sil
   const { error: authError } = await supabase.auth.admin.deleteUser(id);
   if (authError) {
+    console.log('Auth silme hatası:', authError.message);
     res.status(500).json({ error: authError.message });
     return;
   }
@@ -27,8 +31,10 @@ module.exports = async (req, res) => {
     .delete()
     .eq('id', id);
   if (dbError) {
+    console.log('DB silme hatası:', dbError.message);
     res.status(500).json({ error: dbError.message });
     return;
   }
+  console.log('Silme başarılı', { id });
   res.status(200).json({ success: true });
 };
