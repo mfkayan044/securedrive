@@ -38,3 +38,4 @@ module.exports = async (req, res) => {
   console.log('Silme başarılı', { id });
   res.status(200).json({ success: true });
 };
+
