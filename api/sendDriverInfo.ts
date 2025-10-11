@@ -11,14 +11,17 @@ export default async function handler(req, res) {
     return res.status(400).json({ detail: 'Eksik bilgi: e-posta, sürücü adı, iletişim ve plaka zorunlu.' });
   }
 
-  // Mail transporter (gerekirse kendi SMTP bilgilerinizi girin)
+  // Brevo (Sendinblue) ile aynı SMTP yapılandırması
+  if (!process.env.SIB_USER || !process.env.SIB_PASS) {
+    return res.status(500).json({ detail: 'Mail gönderim ayarları eksik (SIB_USER/SIB_PASS).' });
+  }
   const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT) || 587,
+    host: 'smtp-relay.brevo.com',
+    port: 587,
     secure: false,
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: process.env.SIB_USER,
+      pass: process.env.SIB_PASS,
     },
   });
 
@@ -41,7 +44,7 @@ export default async function handler(req, res) {
 
   try {
     await transporter.sendMail({
-      from: process.env.SMTP_FROM || process.env.SMTP_USER,
+      from: 'operasyon@securedrive.org',
       to,
       subject,
       html,
