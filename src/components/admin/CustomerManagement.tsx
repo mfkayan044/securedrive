@@ -167,12 +167,18 @@ const CustomerManagement: React.FC = () => {
                     <button
                       onClick={async () => {
                         if (window.confirm('Bu kaydı silmek istediğinize emin misiniz?')) {
+                          let response;
                           if (customer.permissions) {
-                            await fetch(`/api/deleteadmin?id=${customer.id}`);
+                            response = await fetch(`/api/deleteadmin?id=${customer.id}`);
                           } else {
-                            await fetch(`/api/deleteUser?id=${customer.id}`);
+                            response = await fetch(`/api/deleteUser?id=${customer.id}`);
                           }
-                          refetch();
+                          if (!response.ok) {
+                            const data = await response.json().catch(() => ({}));
+                            alert('Silme işlemi başarısız: ' + (data.error || response.statusText));
+                          } else {
+                            refetch();
+                          }
                         }
                       }}
                       className="bg-red-100 text-red-700 px-2 py-1 rounded hover:bg-red-200 flex items-center gap-1 text-xs"
