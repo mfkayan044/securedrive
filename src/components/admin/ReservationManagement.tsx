@@ -6,6 +6,10 @@
   // (Artık importlardan sonra, doğru yerde)
 
 const ReservationManagement: React.FC = () => {
+  // Sürücü bilgisi gönder modalı için state
+  const [showDriverModal, setShowDriverModal] = useState(false);
+  const [driverInfo, setDriverInfo] = useState({ name: '', contact: '', plate: '' });
+  const [driverLoading, setDriverLoading] = useState(false);
   // Düzenleme modalı için state'ler
   const [showEditModal, setShowEditModal] = useState(false);
   const [editReservation, setEditReservation] = useState<any>(null);
