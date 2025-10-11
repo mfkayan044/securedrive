@@ -287,6 +287,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
 
           if (!profileError) {
+            // Hoş geldin e-postası gönder
+            try {
+              await fetch('/api/sendWelcomeMail', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  to: userData.email,
+                  name: userData.name
+                })
+              });
+            } catch (mailErr) {
+              console.error('Hoş geldin maili gönderilemedi:', mailErr);
+            }
             // Önce eski rezervasyonları yeni kullanıcıya bağla
             await supabase
               .from('reservations')
