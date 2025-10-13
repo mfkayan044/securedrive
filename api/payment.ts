@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 // QNB Bank Sanal POS Konfigürasyonu (AZZ TUR)
 const QNB_CONFIG = {
   PRODUCTION: {
-    PAYMENT_URL: 'https://vpos.qnbfinansbank.com/Gateway/XMLGate.aspx',
+  PAYMENT_URL: 'https://vpos.qnb.com.tr/Gateway/XMLGate.aspx',
     MERCHANT_ID: '106600000017400',
     MERCHANT_PASS: '29222247',
     USER_CODE: 'azzturapi2',
