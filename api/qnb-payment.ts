@@ -2,27 +2,27 @@ import crypto from 'crypto';
 
 // QNB Bank Sanal POS Konfigürasyonu (AZZ TUR)
 const QNB_CONFIG = {
-  // Test ortamı
+  // Test ortamı (AZZ TUR)
   TEST: {
     PAYMENT_URL: 'https://vpostest.qnbfinansbank.com/Gateway/XMLGate.aspx',
-    MERCHANT_ID: process.env.QNB_TEST_MERCHANT_ID || '106600000017400',
-    MERCHANT_PASS: process.env.QNB_TEST_MERCHANT_PASS || '29222247',
-    USER_CODE: process.env.QNB_TEST_USER_CODE || 'azzturapi2',
-    USER_PASS: process.env.QNB_TEST_USER_PASS || 'WkhJ8',
-    TERMINAL_ID: process.env.QNB_TEST_TERMINAL_ID || 'V1787296',
+    MERCHANT_ID: '106600000017400',
+    MERCHANT_PASS: '29222247',
+    USER_CODE: 'azzturapi2',
+    USER_PASS: 'WkhJ8',
+    TERMINAL_ID: 'V1787296',
     SECURE_TYPE: '3DModel',
     CURRENCY_CODE: '949', // TRY
     LANG: 'TR'
   },
   
-  // Production ortamı
+  // Production ortamı (şu anda test ile aynı)
   PRODUCTION: {
     PAYMENT_URL: 'https://vpos.qnbfinansbank.com/Gateway/XMLGate.aspx',
-    MERCHANT_ID: process.env.QNB_MERCHANT_ID || '106600000017400',
-    MERCHANT_PASS: process.env.QNB_MERCHANT_PASS || '29222247',
-    USER_CODE: process.env.QNB_USER_CODE || 'azzturapi2',
-    USER_PASS: process.env.QNB_USER_PASS || 'WkhJ8',
-    TERMINAL_ID: process.env.QNB_TERMINAL_ID || 'V1787296',
+    MERCHANT_ID: '106600000017400',
+    MERCHANT_PASS: '29222247',
+    USER_CODE: 'azzturapi2',
+    USER_PASS: 'WkhJ8',
+    TERMINAL_ID: 'V1787296',
     SECURE_TYPE: '3DModel',
     CURRENCY_CODE: '949', // TRY
     LANG: 'TR'
@@ -31,8 +31,8 @@ const QNB_CONFIG = {
 
 // Aktif ortamı belirleme
 const getQNBConfig = () => {
-  const isProduction = process.env.NODE_ENV === 'production' && process.env.QNB_ENVIRONMENT === 'production';
-  return isProduction ? QNB_CONFIG.PRODUCTION : QNB_CONFIG.TEST;
+  // Şu anda test ortamını kullan (ileride production'a geçeceğiz)
+  return QNB_CONFIG.TEST;
 };
 
 // QNB Bank Error Kodları
