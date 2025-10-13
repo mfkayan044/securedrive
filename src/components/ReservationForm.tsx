@@ -148,7 +148,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
 
   // Auth olunca formu doldur
   useEffect(() => {
+<<<<<<< HEAD
+    if (forceEmptyCustomer) return;
+    if (isAuthenticated && currentUser) {
+=======
     if (!forceEmptyCustomer && isAuthenticated && currentUser) {
+>>>>>>> aaaa2f4 (Admin paneli manuel rezervasyon: müşteri bilgileri otomatik dolmaz, forceEmptyCustomer düzeltildi.)
       setFormData(prev => ({
         ...prev,
         customerName: currentUser.name || '',
@@ -313,7 +318,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
       return;
     }
 
-    // Anasayfa için: ödeme modalını açma, direkt kayıt
+    // QNB Bank ödeme modalını aç
     if (typeof noPaymentMode === 'undefined' || noPaymentMode === false) {
       setPendingReservation({
         ...formData,
@@ -321,7 +326,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
         selectedExtras: [...selectedExtras],
         currentPrice
       });
-      await handlePaymentSuccess();
+      setShowPayment(true);
       return;
     }
 
@@ -401,14 +406,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
           status: reservationStatus,
           payment_status: noPaymentMode ? 'pending' : 'paid'
         });
-
-      // Kullanıcıya ait toplam rezervasyon sayısını artır
-      if (currentUser?.id) {
-        await supabase
-          .from('users')
-          .update({ total_reservations: (currentUser.totalReservations || 0) + 1 })
-          .eq('id', currentUser.id);
-      }
   setPassengerNames(['']);
   setSelectedExtras([]);
   setPendingReservation(null);
@@ -830,8 +827,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
         )}
       </form>
 
-      {/* Ödeme Modalı */}
-      {/*
+      {/* Ödeme Modalı - QNB Bank */}
       {showPayment && !noPaymentMode && (
         <PaymentModal
           isOpen={showPayment}
@@ -840,7 +836,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
           onPaymentSuccess={handlePaymentSuccess}
         />
       )}
-      */}
     {/* Bildirim Toast */}
     {notification && (
       <div
