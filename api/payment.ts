@@ -160,10 +160,12 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
       if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
         // JSON ise hata mesajını döndür
         const json = JSON.parse(trimmed);
+        // Bazı QNB yanıtları { PaymentRequest: { ... } } şeklinde döner
+        const pr = json.PaymentRequest || json;
         return {
           success: false,
-          error: json.ErrMsg || 'Banka JSON hata yanıtı',
-          errorCode: json.ProcReturnCode || undefined
+          error: pr.ErrMsg || pr.Message || 'Banka JSON hata yanıtı',
+          errorCode: pr.ProcReturnCode || undefined
         };
       }
       // XML ise parse etmeye devam et
@@ -184,10 +186,11 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
     } else if (typeof response.data === 'object') {
       // Yanıt doğrudan JSON ise
       console.log('QNB XML yanıtı (object):', JSON.stringify(response.data).substring(0, 500));
+      const pr = response.data.PaymentRequest || response.data;
       return {
         success: false,
-        error: response.data.ErrMsg || 'Banka JSON hata yanıtı',
-        errorCode: response.data.ProcReturnCode || undefined
+        error: pr.ErrMsg || pr.Message || 'Banka JSON hata yanıtı',
+        errorCode: pr.ProcReturnCode || undefined
       };
     } else {
       // Beklenmeyen format
@@ -286,9 +289,13 @@ export default async function handler(req: any, res: any) {
         });
       } else {
         console.log('QNB Payment Error:', result);
+        let errorMsg = result.error || result.message || 'Banka yanıtı alınamadı';
+        if (result.errorCode) {
+          errorMsg += ` (Kod: ${result.errorCode})`;
+        }
         return res.status(400).json({
           success: false,
-          error: result.error || result.message || 'Ödeme başlatılamadı',
+          error: errorMsg,
           errorCode: result.errorCode || undefined
         });
       }
