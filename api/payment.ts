@@ -69,19 +69,22 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
     MERCHANT_PASS: '29222247',
     USER_CODE: 'azzturapi2',
     USER_PASS: 'WkhJ8',
-    TERMINAL_ID: 'V1787296',
+    // QNB dökümanına göre TerminalID sadece rakam ve 8 karakter olmalı (örn. 1787296 veya 01787296)
+    TERMINAL_ID: '01787296',
     CURRENCY_CODE: '949',
     LANG: 'TR'
   };
 
   // QNB dökümantasyonuna göre HashData algoritması:
   // HashData = Base64( SHA1( OrderID + TerminalID + CardNumber + Amount + ProvUserID + UserPassword ) )
+  // Amount 12 karakter, başı sıfır dolu string olmalı (örn. 100 için 000000001000)
   const crypto = await import('crypto');
+  const amountStr = paymentRequest.amount.toString().padStart(12, '0');
   const hashString =
     paymentRequest.orderId +
     config.TERMINAL_ID +
     paymentRequest.cardNumber +
-    paymentRequest.amount.toString() +
+    amountStr +
     config.USER_CODE +
     config.USER_PASS;
   const hash = crypto.createHash('sha1').update(hashString).digest('base64');
@@ -129,7 +132,7 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
       <Transaction>
         <Type>sales</Type>
         <InstallmentCnt>0</InstallmentCnt>
-        <Amount>${paymentRequest.amount}</Amount>
+        <Amount>${amountStr}</Amount>
         <CurrencyCode>${config.CURRENCY_CODE}</CurrencyCode>
         <CardholderPresentCode>0</CardholderPresentCode>
         <MotoInd>N</MotoInd>
