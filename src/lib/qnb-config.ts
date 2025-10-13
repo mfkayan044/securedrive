@@ -19,7 +19,7 @@ export const QNB_CONFIG = {
     MERCHANT_ID: import.meta.env.VITE_QNB_MERCHANT_ID || '106600000017400',
     MERCHANT_PASS: import.meta.env.VITE_QNB_MERCHANT_PASS || '29222247',
     USER_CODE: import.meta.env.VITE_QNB_USER_CODE || 'azzturapi2',
-    USER_PASS: import.meta.env.VITE_QNB_USER_PASS || 'WkhJ8',
+  USER_PASS: import.meta.env.VITE_QNB_USER_PASS || 'g42rG',
     TERMINAL_ID: import.meta.env.VITE_QNB_TERMINAL_ID || 'V1787296',
     SECURE_TYPE: '3DModel',
     CURRENCY_CODE: '949', // TRY
