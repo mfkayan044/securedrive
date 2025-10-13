@@ -4,17 +4,6 @@ import { createClient } from '@supabase/supabase-js';
 
 // QNB Bank Sanal POS Konfigürasyonu (AZZ TUR)
 const QNB_CONFIG = {
-  TEST: {
-    PAYMENT_URL: 'https://vpostest.qnbfinansbank.com/Gateway/XMLGate.aspx',
-    MERCHANT_ID: '106600000017400',
-    MERCHANT_PASS: '29222247',
-    USER_CODE: 'azzturapi2',
-    USER_PASS: 'WkhJ8',
-    TERMINAL_ID: 'V1787296',
-    SECURE_TYPE: '3DModel',
-    CURRENCY_CODE: '949', // TRY
-    LANG: 'TR'
-  },
   PRODUCTION: {
     PAYMENT_URL: 'https://vpos.qnbfinansbank.com/Gateway/XMLGate.aspx',
     MERCHANT_ID: '106600000017400',
