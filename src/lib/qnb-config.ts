@@ -2,7 +2,7 @@
 export const QNB_CONFIG = {
   // Production ortamı (AZZ TUR)
   PRODUCTION: {
-    PAYMENT_URL: 'https://vpos.qnbfinansbank.com/Gateway/XMLGate.aspx',
+  PAYMENT_URL: 'https://vpos.qnb.com.tr/Gateway/XMLGate.aspx',
     MERCHANT_ID: import.meta.env.VITE_QNB_MERCHANT_ID || '106600000017400',
     MERCHANT_PASS: import.meta.env.VITE_QNB_MERCHANT_PASS || '29222247',
     USER_CODE: import.meta.env.VITE_QNB_USER_CODE || 'azzturapi2',
