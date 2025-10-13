@@ -28,7 +28,8 @@ const QNB_CONFIG = {
   }
 };
 
-const getQNBConfig = () => QNB_CONFIG.TEST;
+// Ortam seçimine göre config döndür (şu an PRODUCTION)
+const getQNBConfig = () => QNB_CONFIG.PRODUCTION;
 
 const QNB_ERROR_CODES: { [key: string]: string } = {
   '00': 'İşlem başarılı',
@@ -63,17 +64,10 @@ export interface QNBPaymentRequest {
 
 // 3D Secure başlatma fonksiyonu (örnek, gerçek API çağrısı eklenmeli)
 export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Promise<any> {
-  const config = {
-    PAYMENT_URL: 'https://vpostest.qnbfinansbank.com/Gateway/XMLGate.aspx',
-    MERCHANT_ID: '106600000017400',
-    MERCHANT_PASS: '29222247',
-    USER_CODE: 'azzturapi2',
-    USER_PASS: 'WkhJ8',
-    // QNB dökümanına göre TerminalID sadece rakam ve 8 karakter olmalı (örn. 1787296 veya 01787296)
-    TERMINAL_ID: '01787296',
-    CURRENCY_CODE: '949',
-    LANG: 'TR'
-  };
+  // Ortama göre config al
+  const config = getQNBConfig();
+  // QNB dökümanına göre TerminalID sadece rakam ve 8 karakter olmalı (örn. 1787296 veya 01787296)
+  config.TERMINAL_ID = '01787296';
 
   // QNB dökümantasyonuna göre HashData algoritması:
   // HashData = Base64( SHA1( OrderID + TerminalID + CardNumber + Amount + ProvUserID + UserPassword ) )
