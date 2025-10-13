@@ -155,23 +155,45 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
     // Yanıtı logla (ilk 500 karakter)
     if (typeof response.data === 'string') {
       console.log('QNB XML yanıtı (ilk 500):', response.data.substring(0, 500));
-    } else {
+      // Yanıt XML mi yoksa JSON mu kontrol et
+      const trimmed = response.data.trim();
+      if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+        // JSON ise hata mesajını döndür
+        const json = JSON.parse(trimmed);
+        return {
+          success: false,
+          message: json.ErrMsg || json.ProcReturnCode || 'Banka JSON hata yanıtı',
+          code: json.ProcReturnCode || undefined
+        };
+      }
+      // XML ise parse etmeye devam et
+      const parsed = await xml2js.parseStringPromise(response.data, { explicitArray: false });
+      const redirectUrl = parsed?.GVPSResponse?.Transaction?.Secure3D?.Html;
+      if (redirectUrl) {
+        return {
+          success: true,
+          redirectUrl,
+          orderId: paymentRequest.orderId
+        };
+      } else {
+        return {
+          success: false,
+          message: parsed?.GVPSResponse?.ReasonCode || 'Banka yanıtı alınamadı'
+        };
+      }
+    } else if (typeof response.data === 'object') {
+      // Yanıt doğrudan JSON ise
       console.log('QNB XML yanıtı (object):', JSON.stringify(response.data).substring(0, 500));
-    }
-    // XML cevabını parse et
-    const parsed = await xml2js.parseStringPromise(response.data, { explicitArray: false });
-    // 3D yönlendirme linkini al
-    const redirectUrl = parsed?.GVPSResponse?.Transaction?.Secure3D?.Html;
-    if (redirectUrl) {
-      return {
-        success: true,
-        redirectUrl,
-        orderId: paymentRequest.orderId
-      };
-    } else {
       return {
         success: false,
-        message: parsed?.GVPSResponse?.ReasonCode || 'Banka yanıtı alınamadı'
+        message: response.data.ErrMsg || response.data.ProcReturnCode || 'Banka JSON hata yanıtı',
+        code: response.data.ProcReturnCode || undefined
+      };
+    } else {
+      // Beklenmeyen format
+      return {
+        success: false,
+        message: 'Banka yanıtı beklenmeyen formatta'
       };
     }
   } catch (err: any) {
