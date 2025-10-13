@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import QNBPaymentForm from '../QNBPaymentForm';
 
@@ -16,7 +15,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, totalPrice, onClose
   const [couponApplied, setCouponApplied] = useState(false);
   const [discount, setDiscount] = useState(0);
   const [checkingCoupon, setCheckingCoupon] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'qnb' | 'traditional'>('qnb');
+
 
   const finalAmount = totalPrice - discount;
 
@@ -48,6 +47,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, totalPrice, onClose
       return;
     }
     try {
+      if (!supabase) {
+        setError('Sunucu bağlantısı hatası.');
+        setCheckingCoupon(false);
+        return;
+      }
       const { data, error } = await supabase
         .from('coupons')
         .select('*')
