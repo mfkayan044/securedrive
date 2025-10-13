@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import QNBPaymentForm from '../QNBPaymentForm';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -19,10 +20,13 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, totalPrice, onClose
   const [couponApplied, setCouponApplied] = useState(false);
   const [discount, setDiscount] = useState(0);
   const [checkingCoupon, setCheckingCoupon] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'qnb' | 'traditional'>('qnb');
+
+  const finalAmount = totalPrice - discount;
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleTraditionalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!cardNumber || !cardName || !cardExpiry || !cardCvc) {
       setError('Lütfen tüm kart bilgilerini doldurun.');
@@ -30,6 +34,21 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, totalPrice, onClose
     }
     setError('');
     onPaymentSuccess({ cardNumber, cardName, cardExpiry, cardCvc }, couponCode);
+  };
+
+  const handleQNBPaymentSuccess = (result: any) => {
+    console.log('QNB Payment Success:', result);
+    // Başarılı ödeme sonrası işlemler
+    onPaymentSuccess({ 
+      cardNumber: '****', 
+      cardName: 'QNB Payment', 
+      cardExpiry: '**/**', 
+      cardCvc: '***' 
+    }, couponCode);
+  };
+
+  const handleQNBPaymentError = (errorMessage: string) => {
+    setError(errorMessage);
   };
 
   // Kupon kodunu kontrol et
