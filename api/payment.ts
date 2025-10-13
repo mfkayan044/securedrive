@@ -20,7 +20,7 @@ const QNB_CONFIG = {
     MERCHANT_ID: '106600000017400',
     MERCHANT_PASS: '29222247',
     USER_CODE: 'azzturapi2',
-    USER_PASS: 'WkhJ8',
+    USER_PASS: 'g42rG', // Güncel şifre
     TERMINAL_ID: 'V1787296',
     SECURE_TYPE: '3DModel',
     CURRENCY_CODE: '949', // TRY
