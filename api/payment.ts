@@ -168,6 +168,7 @@ export default async function handler(req: any, res: any) {
   if (action === 'initiate') {
     // Ödeme başlatma
     try {
+      console.log('Ödeme başlatılıyor, gelen body:', req.body);
       const {
         orderId,
         amount,
@@ -222,7 +223,10 @@ export default async function handler(req: any, res: any) {
       }
     } catch (error) {
       console.error('initiate-payment error:', error);
-      return res.status(500).json({ error: 'Ödeme başlatılırken hata oluştu' });
+      if (error.response) {
+        console.error('QNB yanıtı:', error.response.data);
+      }
+      return res.status(500).json({ error: error.message || 'Ödeme başlatılırken hata oluştu' });
     }
   } else if (action === 'callback') {
     // 3D Secure callback
