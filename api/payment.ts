@@ -1,4 +1,5 @@
-import crypto from 'crypto';
+import axios from 'axios';
+import xml2js from 'xml2js';
 import { createClient } from '@supabase/supabase-js';
 
 // QNB Bank Sanal POS Konfigürasyonu (AZZ TUR)
@@ -62,14 +63,81 @@ export interface QNBPaymentRequest {
 
 // 3D Secure başlatma fonksiyonu (örnek, gerçek API çağrısı eklenmeli)
 export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Promise<any> {
-  // ... QNB API ile ödeme başlatma işlemleri ...
-  // Burada gerçek API çağrısı yapılmalı
-  return {
-    success: true,
-    message: '3D Secure başlatıldı',
-    redirectUrl: 'https://dummy-3d-secure-url.com',
-    orderId: paymentRequest.orderId
+  const config = {
+    PAYMENT_URL: 'https://vpostest.qnbfinansbank.com/Gateway/XMLGate.aspx',
+    MERCHANT_ID: '106600000017400',
+    MERCHANT_PASS: '29222247',
+    USER_CODE: 'azzturapi2',
+    USER_PASS: 'WkhJ8',
+    TERMINAL_ID: 'V1787296',
+    CURRENCY_CODE: '949',
+    LANG: 'TR'
   };
+
+  // Kart bilgileri ve sipariş detayları ile XML oluştur
+  const xml = `
+    <GVPSRequest>
+      <Mode>TEST</Mode>
+      <Version>v0.01</Version>
+      <Terminal>
+        <ProvUserID>${config.USER_CODE}</ProvUserID>
+        <HashData></HashData>
+        <UserID>${config.USER_CODE}</UserID>
+        <ID>${config.TERMINAL_ID}</ID>
+        <MerchantID>${config.MERCHANT_ID}</MerchantID>
+      </Terminal>
+      <Customer>
+        <IPAddress>127.0.0.1</IPAddress>
+        <EmailAddress>${paymentRequest.customerEmail || ''}</EmailAddress>
+      </Customer>
+      <Card>
+        <Number>${paymentRequest.cardNumber}</Number>
+        <ExpireDate>${paymentRequest.cardExpiry}</ExpireDate>
+        <CVV2>${paymentRequest.cardCvv}</CVV2>
+      </Card>
+      <Order>
+        <OrderID>${paymentRequest.orderId}</OrderID>
+      </Order>
+      <Transaction>
+        <Type>sales</Type>
+        <InstallmentCnt>0</InstallmentCnt>
+        <Amount>${paymentRequest.amount}</Amount>
+        <CurrencyCode>${config.CURRENCY_CODE}</CurrencyCode>
+        <CardholderPresentCode>0</CardholderPresentCode>
+        <MotoInd>N</MotoInd>
+        <Secure3D>
+          <AuthenticationCode></AuthenticationCode>
+          <SecurityLevel></SecurityLevel>
+          <TxnID></TxnID>
+          <Md></Md>
+        </Secure3D>
+      </Transaction>
+    </GVPSRequest>
+  `;
+
+  // XML'i bankaya gönder
+  const response = await axios.post(config.PAYMENT_URL, xml, {
+    headers: { 'Content-Type': 'text/xml' }
+  });
+
+  // XML cevabını parse et
+  const parsed = await xml2js.parseStringPromise(response.data, { explicitArray: false });
+
+  // 3D yönlendirme linkini al
+  const redirectUrl = parsed?.GVPSResponse?.Transaction?.Secure3D?.Html;
+
+  if (redirectUrl) {
+    return {
+      success: true,
+      redirectUrl,
+      orderId: paymentRequest.orderId
+    };
+  } else {
+    return {
+      success: false,
+      message: parsed?.GVPSResponse?.ReasonCode || 'Banka yanıtı alınamadı'
+    };
+  }
 }
 
 // 3D Secure doğrulama fonksiyonu (örnek, gerçek API çağrısı eklenmeli)
