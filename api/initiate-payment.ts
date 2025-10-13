@@ -1,4 +1,4 @@
-import { initiate3DPayment, QNBPaymentRequest } from './qnb-payment';
+import { initiate3DPayment, QNBPaymentRequest } from './qnb-payment.js';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
