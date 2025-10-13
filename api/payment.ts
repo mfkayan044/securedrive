@@ -74,6 +74,18 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
     LANG: 'TR'
   };
 
+  // HashData hesaplama (QNB dökümantasyonuna göre)
+  const crypto = await import('crypto');
+  const hashString =
+    paymentRequest.orderId +
+    paymentRequest.cardNumber +
+    paymentRequest.cardExpiry +
+    paymentRequest.cardCvv +
+    config.MERCHANT_ID +
+    config.TERMINAL_ID +
+    config.MERCHANT_PASS;
+  const hash = crypto.createHash('sha1').update(hashString).digest('base64');
+
   // Kart bilgileri ve sipariş detayları ile XML oluştur
   const xml = `
     <GVPSRequest>
@@ -81,7 +93,7 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
       <Version>v0.01</Version>
       <Terminal>
         <ProvUserID>${config.USER_CODE}</ProvUserID>
-        <HashData></HashData>
+        <HashData>${hash}</HashData>
         <UserID>${config.USER_CODE}</UserID>
         <ID>${config.TERMINAL_ID}</ID>
         <MerchantID>${config.MERCHANT_ID}</MerchantID>
@@ -115,28 +127,36 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
     </GVPSRequest>
   `;
 
-  // XML'i bankaya gönder
-  const response = await axios.post(config.PAYMENT_URL, xml, {
-    headers: { 'Content-Type': 'text/xml' }
-  });
-
-  // XML cevabını parse et
-  const parsed = await xml2js.parseStringPromise(response.data, { explicitArray: false });
-
-  // 3D yönlendirme linkini al
-  const redirectUrl = parsed?.GVPSResponse?.Transaction?.Secure3D?.Html;
-
-  if (redirectUrl) {
-    return {
-      success: true,
-      redirectUrl,
-      orderId: paymentRequest.orderId
-    };
-  } else {
-    return {
-      success: false,
-      message: parsed?.GVPSResponse?.ReasonCode || 'Banka yanıtı alınamadı'
-    };
+  try {
+    // XML'i bankaya gönder
+    const response = await axios.post(config.PAYMENT_URL, xml, {
+      headers: { 'Content-Type': 'text/xml' }
+    });
+    // Yanıtı logla (ilk 500 karakter)
+    console.log('QNB XML yanıtı (ilk 500):', response.data?.substring(0, 500));
+    // XML cevabını parse et
+    const parsed = await xml2js.parseStringPromise(response.data, { explicitArray: false });
+    // 3D yönlendirme linkini al
+    const redirectUrl = parsed?.GVPSResponse?.Transaction?.Secure3D?.Html;
+    if (redirectUrl) {
+      return {
+        success: true,
+        redirectUrl,
+        orderId: paymentRequest.orderId
+      };
+    } else {
+      return {
+        success: false,
+        message: parsed?.GVPSResponse?.ReasonCode || 'Banka yanıtı alınamadı'
+      };
+    }
+  } catch (err) {
+    // XML parse hatası veya banka yanıtı XML değilse
+    console.error('QNB ödeme isteği hatası:', err);
+    if (err.response && err.response.data) {
+      console.error('QNB response data (ilk 500):', err.response.data.substring(0, 500));
+    }
+    throw new Error('QNB ödeme isteği başarısız veya yanıt hatalı.');
   }
 }
 
