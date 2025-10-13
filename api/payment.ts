@@ -133,7 +133,11 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
       headers: { 'Content-Type': 'text/xml' }
     });
     // Yanıtı logla (ilk 500 karakter)
-    console.log('QNB XML yanıtı (ilk 500):', response.data?.substring(0, 500));
+    if (typeof response.data === 'string') {
+      console.log('QNB XML yanıtı (ilk 500):', response.data.substring(0, 500));
+    } else {
+      console.log('QNB XML yanıtı (object):', JSON.stringify(response.data).substring(0, 500));
+    }
     // XML cevabını parse et
     const parsed = await xml2js.parseStringPromise(response.data, { explicitArray: false });
     // 3D yönlendirme linkini al
@@ -154,7 +158,11 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
     // XML parse hatası veya banka yanıtı XML değilse
     console.error('QNB ödeme isteği hatası:', err);
     if (err.response && err.response.data) {
-      console.error('QNB response data (ilk 500):', err.response.data.substring(0, 500));
+      if (typeof err.response.data === 'string') {
+        console.error('QNB response data (ilk 500):', err.response.data.substring(0, 500));
+      } else {
+        console.error('QNB response data (object):', JSON.stringify(err.response.data).substring(0, 500));
+      }
     }
     throw new Error('QNB ödeme isteği başarısız veya yanıt hatalı.');
   }
