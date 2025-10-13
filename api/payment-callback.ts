@@ -1,4 +1,4 @@
-import { verify3DPayment } from './qnb-payment';
+import { verify3DPayment } from './qnb-payment.js';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
