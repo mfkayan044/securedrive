@@ -74,23 +74,24 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
     LANG: 'TR'
   };
 
-  // HashData hesaplama (QNB dökümantasyonuna göre)
+  // QNB dökümantasyonuna göre HashData algoritması:
+  // HashData = Base64( SHA1( OrderID + TerminalID + CardNumber + Amount + ProvUserID + UserPassword ) )
   const crypto = await import('crypto');
   const hashString =
     paymentRequest.orderId +
-    paymentRequest.cardNumber +
-    paymentRequest.cardExpiry +
-    paymentRequest.cardCvv +
-    config.MERCHANT_ID +
     config.TERMINAL_ID +
-    config.MERCHANT_PASS;
+    paymentRequest.cardNumber +
+    paymentRequest.amount.toString() +
+    config.USER_CODE +
+    config.USER_PASS;
   const hash = crypto.createHash('sha1').update(hashString).digest('base64');
 
-  // Kart bilgileri ve sipariş detayları ile XML oluştur
-  const xml = `
+  // Kart bilgileri ve sipariş detayları ile QNB dökümantasyonuna uygun XML oluştur
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
     <GVPSRequest>
       <Mode>TEST</Mode>
       <Version>v0.01</Version>
+      <ChannelCode></ChannelCode>
       <Terminal>
         <ProvUserID>${config.USER_CODE}</ProvUserID>
         <HashData>${hash}</HashData>
@@ -109,6 +110,21 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
       </Card>
       <Order>
         <OrderID>${paymentRequest.orderId}</OrderID>
+        <GroupID></GroupID>
+        <AddressList>
+          <Address>
+            <Type>S</Type>
+            <Name></Name>
+            <LastName></LastName>
+            <Company></Company>
+            <Text></Text>
+            <District></District>
+            <City></City>
+            <Country></Country>
+            <PostCode></PostCode>
+            <PhoneNumber>${paymentRequest.customerPhone || ''}</PhoneNumber>
+          </Address>
+        </AddressList>
       </Order>
       <Transaction>
         <Type>sales</Type>
@@ -123,7 +139,11 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
           <TxnID></TxnID>
           <Md></Md>
         </Secure3D>
+        <ReturnURL>${paymentRequest.returnUrl}</ReturnURL>
+        <ErrorURL>${paymentRequest.errorUrl}</ErrorURL>
       </Transaction>
+      <SecureType>3DModel</SecureType>
+      <Lang>${config.LANG}</Lang>
     </GVPSRequest>
   `;
 
@@ -154,10 +174,10 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
         message: parsed?.GVPSResponse?.ReasonCode || 'Banka yanıtı alınamadı'
       };
     }
-  } catch (err) {
+  } catch (err: any) {
     // XML parse hatası veya banka yanıtı XML değilse
     console.error('QNB ödeme isteği hatası:', err);
-    if (err.response && err.response.data) {
+    if (typeof err === 'object' && err !== null && 'response' in err && err.response && 'data' in err.response) {
       if (typeof err.response.data === 'string') {
         console.error('QNB response data (ilk 500):', err.response.data.substring(0, 500));
       } else {
@@ -249,12 +269,12 @@ export default async function handler(req: any, res: any) {
           error: result.message || 'Ödeme başlatılamadı'
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('initiate-payment error:', error);
-      if (error.response) {
+      if (typeof error === 'object' && error !== null && 'response' in error && error.response && 'data' in error.response) {
         console.error('QNB yanıtı:', error.response.data);
       }
-      return res.status(500).json({ error: error.message || 'Ödeme başlatılırken hata oluştu' });
+      return res.status(500).json({ error: (typeof error === 'object' && error !== null && 'message' in error) ? error.message : 'Ödeme başlatılırken hata oluştu' });
     }
   } else if (action === 'callback') {
     // 3D Secure callback
