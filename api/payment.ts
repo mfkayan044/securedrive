@@ -86,7 +86,7 @@ export async function initiate3DPayment(paymentRequest: QNBPaymentRequest): Prom
   // Kart bilgileri ve sipariş detayları ile QNB dökümantasyonuna uygun XML oluştur
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
     <GVPSRequest>
-      <Mode>TEST</Mode>
+      <Mode>PROD</Mode>
       <Version>v0.01</Version>
       <ChannelCode></ChannelCode>
       <Terminal>
