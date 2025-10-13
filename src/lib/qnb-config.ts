@@ -1,18 +1,5 @@
 // QNB Bank Sanal POS Entegrasyon Konfigürasyonu
 export const QNB_CONFIG = {
-  // Test ortamı (AZZ TUR)
-  TEST: {
-    PAYMENT_URL: 'https://vpostest.qnbfinansbank.com/Gateway/XMLGate.aspx',
-    MERCHANT_ID: import.meta.env.VITE_QNB_TEST_MERCHANT_ID || '106600000017400',
-    MERCHANT_PASS: import.meta.env.VITE_QNB_TEST_MERCHANT_PASS || '29222247',
-    USER_CODE: import.meta.env.VITE_QNB_TEST_USER_CODE || 'azzturapi2',
-    USER_PASS: import.meta.env.VITE_QNB_TEST_USER_PASS || 'WkhJ8',
-    TERMINAL_ID: import.meta.env.VITE_QNB_TEST_TERMINAL_ID || 'V1787296',
-    SECURE_TYPE: '3DModel',
-    CURRENCY_CODE: '949', // TRY
-    LANG: 'TR'
-  },
-  
   // Production ortamı (AZZ TUR)
   PRODUCTION: {
     PAYMENT_URL: 'https://vpos.qnbfinansbank.com/Gateway/XMLGate.aspx',
