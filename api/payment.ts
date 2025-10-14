@@ -64,7 +64,7 @@ export async function sendQNB3DPayment({
   const merchantId = process.env.VITE_QNB_MERCHANT_ID || '';
   const userCode = process.env.VITE_QNB_USER_CODE || '';
   const userPass = process.env.VITE_QNB_USER_PASS || '';
-  const secureType = '3DModel';
+  const secureType = '3D'; // Türkçe: 3D Secure işlemi için SecureType '3D' olarak ayarlandı
   const rnd = Math.random().toString();
   // Hash algoritması: OrderId + MerchantId + Amount + OkUrl + FailUrl + UserCode + Rnd + UserPass
   const hashStr = orderId + merchantId + amount + okUrl + failUrl + userCode + rnd + userPass;
@@ -105,7 +105,7 @@ export async function sendQNB3DPayment({
 // API route handler
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Yalnızca POST isteği desteklenmektedir.' });
   }
   try {
     const {
@@ -114,31 +114,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       okUrl, failUrl, lang, cardHolderName, requestGuid, is3DCallback
     } = req.body;
 
-    // SecureType parametresini asla dışarıdan alma, her zaman '3DModel' olarak gönder
+  // SecureType parametresini asla dışarıdan alma, her zaman '3D' olarak gönder
 
     if (is3DCallback) {
-      // 3D doğrulama sonrası ikinci adım (Payfor3DModelPayment.xml)
+  // 3D doğrulama sonrası ikinci adım (Payfor3DModelPayment.xml)
       const result = await sendQNB3DModelPayment({
         requestGuid,
         userCode: process.env.VITE_QNB_USER_CODE || '',
         userPass: process.env.VITE_QNB_USER_PASS || '',
         orderId,
       });
-      console.log('API handler 3DModelPayment yanıtı:', result);
+  console.log('API handler 3DModelPayment yanıtı:', result);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(200).send(result);
     } else {
-      // İlk adım: 3D başlatma
+  // İlk adım: 3D başlatma
       const result = await sendQNB3DPayment({
         amount, currency, orderId, installmentCount,
         txnType, pan, expiry, cvv2, okUrl, failUrl, lang, cardHolderName
       });
-      console.log('API handler 3DPayment yanıtı:', result);
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.status(200).send(result);
+  console.log('API handler 3DPayment yanıtı:', result);
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  return res.status(200).send(result);
     }
   } catch (err: any) {
-    console.error('QNB ödeme API error:', err);
-    return res.status(500).json({ success: false, error: err?.message || 'Sunucu hatası' });
+    console.error('QNB ödeme API hatası:', err);
+    return res.status(500).json({ success: false, error: err?.message || 'Sunucu tarafında bir hata oluştu.' });
   }
 }
