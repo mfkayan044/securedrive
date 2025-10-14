@@ -1,30 +1,36 @@
+
+
+
 import type { NextApiRequest, NextApiResponse } from 'next';
-import axios from 'axios';
+
 import crypto from 'crypto';
 
-// API route handler
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-  try {
-    const {
-      mbrId, merchantId, amount, currency, orderId, installmentCount,
-      txnType, userCode, userPass, secureType, pan, expiry, cvv2,
-      okUrl, failUrl, lang
-    } = req.body;
-
-    const result = await sendQNB3DPayment({
-      mbrId, merchantId, amount, currency, orderId, installmentCount,
-      txnType, userCode, userPass, secureType, pan, expiry, cvv2,
-      okUrl, failUrl, lang
-    });
-
-    return res.status(200).json({ success: true, data: result });
-  } catch (err: any) {
-    console.error('QNB ödeme API error:', err);
-    return res.status(500).json({ success: false, error: err?.message || 'Sunucu hatası' });
-  }
+// 3D doğrulama sonrası Payfor3DModelPayment.xml akışı
+export async function sendQNB3DModelPayment({
+  requestGuid,
+  userCode,
+  userPass,
+  orderId
+}: {
+  requestGuid: string;
+  userCode: string;
+  userPass: string;
+  orderId: string;
+}) {
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<PayforRequest>
+  <RequestGuid>${requestGuid}</RequestGuid>
+  <UserCode>${userCode}</UserCode>
+  <UserPass>${userPass}</UserPass>
+  <OrderId>${orderId}</OrderId>
+  <SecureType>3DModelPayment</SecureType>
+</PayforRequest>`;
+  const response = await axios.post(
+    'https://vpos.qnb.com.tr/Gateway/XMLGate.aspx',
+    xml,
+    { headers: { 'Content-Type': 'text/xml' } }
+  );
+  return response.data;
 }
 
 // Banka örneğine tam uyumlu 3D ödeme fonksiyonu
@@ -44,7 +50,8 @@ export async function sendQNB3DPayment({
   cvv2,
   okUrl,
   failUrl,
-  lang
+  lang,
+  cardHolderName
 }: {
   mbrId: string;
   merchantId: string;
@@ -62,6 +69,7 @@ export async function sendQNB3DPayment({
   okUrl: string;
   failUrl: string;
   lang: string;
+  cardHolderName: string;
 }) {
   const rnd = Math.random().toString();
   // Hash algoritması: OrderId + MerchantId + Amount + OkUrl + FailUrl + UserCode + Rnd + UserPass
@@ -71,23 +79,24 @@ export async function sendQNB3DPayment({
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <PayforRequest>
   <MbrId>${mbrId}</MbrId>
-  <MerchantId>${merchantId}</MerchantId>
-  <PurchAmount>${amount}</PurchAmount>
-  <Currency>${currency}</Currency>
-  <OrderId>${orderId}</OrderId>
-  <InstallmentCount>${installmentCount}</InstallmentCount>
-  <TxnType>${txnType}</TxnType>
+  <MerchantID>${merchantId}</MerchantID>
   <UserCode>${userCode}</UserCode>
   <UserPass>${userPass}</UserPass>
   <SecureType>${secureType}</SecureType>
+  <TxnType>${txnType}</TxnType>
+  <InstallmentCount>${installmentCount}</InstallmentCount>
+  <Currency>${currency}</Currency>
+  <CardHolderName>${cardHolderName}</CardHolderName>
   <Pan>${pan}</Pan>
   <Expiry>${expiry}</Expiry>
   <Cvv2>${cvv2}</Cvv2>
   <OkUrl>${okUrl}</OkUrl>
   <FailUrl>${failUrl}</FailUrl>
-  <Hash>${hash}</Hash>
-  <Rnd>${rnd}</Rnd>
+  <OrderId>${orderId}</OrderId>
+  <PurchAmount>${amount}</PurchAmount>
   <Lang>${lang}</Lang>
+  <Rnd>${rnd}</Rnd>
+  <Hash>${hash}</Hash>
 </PayforRequest>`;
 
   const response = await axios.post(
@@ -98,16 +107,41 @@ export async function sendQNB3DPayment({
   return response.data;
 }
 
-// 3D Secure doğrulama fonksiyonu (örnek, gerçek API çağrısı eklenmeli)
-export async function verify3DPayment(callbackData: any): Promise<any> {
-  // ... QNB API ile doğrulama işlemleri ...
-  // Burada gerçek API çağrısı yapılmalı
-  return {
-    success: true,
-    orderId: callbackData.orderId,
-    transactionId: 'dummy-transaction-id',
-    authCode: 'dummy-auth-code',
-    message: 'Ödeme başarılı'
-  };
+// API route handler
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  try {
+    const {
+      mbrId, merchantId, amount, currency, orderId, installmentCount,
+      txnType, userCode, userPass, secureType, pan, expiry, cvv2,
+      okUrl, failUrl, lang, cardHolderName, requestGuid, is3DCallback
+    } = req.body;
+
+    if (is3DCallback) {
+      // 3D doğrulama sonrası ikinci adım (Payfor3DModelPayment.xml)
+      const result = await sendQNB3DModelPayment({
+        requestGuid,
+        userCode,
+        userPass,
+        orderId,
+      });
+      return res.status(200).json({ success: true, data: result });
+    } else {
+      // İlk adım: 3D başlatma
+      const result = await sendQNB3DPayment({
+        mbrId, merchantId, amount, currency, orderId, installmentCount,
+        txnType, userCode, userPass, secureType, pan, expiry, cvv2,
+        okUrl, failUrl, lang, cardHolderName
+      });
+      return res.status(200).json({ success: true, data: result });
+    }
+  } catch (err: any) {
+    console.error('QNB ödeme API error:', err);
+    return res.status(500).json({ success: false, error: err?.message || 'Sunucu hatası' });
+  }
 }
+import axios from 'axios';
+
 
