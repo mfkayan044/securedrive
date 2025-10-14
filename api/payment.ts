@@ -1,3 +1,5 @@
+
+
 import axios from 'axios';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import crypto from 'crypto';
@@ -27,6 +29,7 @@ export async function sendQNB3DModelPayment({
     xml,
     { headers: { 'Content-Type': 'text/xml' } }
   );
+  console.log('QNB 3DModelPayment yanıtı:', response.data);
   return response.data;
 }
 
@@ -101,6 +104,7 @@ export async function sendQNB3DPayment({
     xml,
     { headers: { 'Content-Type': 'text/xml' } }
   );
+  console.log('QNB 3DPayment yanıtı:', response.data);
   return response.data;
 }
 
@@ -124,7 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         userPass,
         orderId,
       });
-      // QNB'den dönen yanıtı string olarak ilet
+      console.log('API handler 3DModelPayment yanıtı:', result);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(200).send(result);
     } else {
@@ -134,7 +138,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         txnType, userCode, userPass, secureType, pan, expiry, cvv2,
         okUrl, failUrl, lang, cardHolderName
       });
-      // QNB'den dönen yanıtı string olarak ilet
+      console.log('API handler 3DPayment yanıtı:', result);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(200).send(result);
     }
@@ -143,3 +147,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ success: false, error: err?.message || 'Sunucu hatası' });
   }
 }
+
+
+
