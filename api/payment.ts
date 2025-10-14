@@ -123,6 +123,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // Frontend'den gelen alanları QNB'nin beklediği parametrelere map'le
     const body = req.body || {};
+    // OkUrl ve FailUrl zorunlu olarak frontend'den veya .env'den gelmeli, yoksa hata döndür
+    const okUrl = body.okUrl || process.env.VITE_QNB_OK_URL;
+    const failUrl = body.failUrl || process.env.VITE_QNB_FAIL_URL;
+    if (!okUrl || !failUrl) {
+      return res.status(400).json({ error: 'OkUrl ve FailUrl zorunludur. Lütfen gerçek yönlendirme adreslerinizi belirtin.' });
+    }
     const mapped = {
       amount: body.amount,
       currency: body.currency || '949',
@@ -132,8 +138,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       pan: body.pan || body.cardNumber,
       expiry: body.expiry || body.cardExpiry,
       cvv2: body.cvv2 || body.cardCvv,
-      okUrl: body.okUrl || process.env.VITE_QNB_OK_URL || 'https://example.com/payment-success',
-      failUrl: body.failUrl || process.env.VITE_QNB_FAIL_URL || 'https://example.com/payment-fail',
+      okUrl,
+      failUrl,
       lang: body.lang || 'tr',
       cardHolderName: body.cardHolderName || body.cardHolder,
       requestGuid: body.requestGuid || (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString()),
