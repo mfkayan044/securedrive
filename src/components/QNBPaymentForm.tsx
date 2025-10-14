@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { CreditCard, Lock, AlertCircle } from 'lucide-react';
 
 interface QNBPaymentFormProps {
@@ -26,6 +26,8 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
   const [cvv, setCvv] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
+  const [bankFormHtml, setBankFormHtml] = useState<string | null>(null);
+  const formContainerRef = useRef<HTMLDivElement>(null);
 
   // Kart numarası formatı (4-4-4-4)
   const formatCardNumber = (value: string) => {
@@ -101,13 +103,19 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
 
       const result = await response.json();
 
+      // QNB'den dönen veri HTML formu içeriyorsa (ör: <form ...)</form>), bunu ekrana bas
+      if (result.success && typeof result.data === 'string' && result.data.includes('<form')) {
+        setBankFormHtml(result.data);
+        // Otomatik submit için kısa bir süre sonra formu submit et
+        setTimeout(() => {
+          const form = formContainerRef.current?.querySelector('form');
+          if (form) (form as HTMLFormElement).submit();
+        }, 100);
+        return;
+      }
+
       if (result.success) {
-        // 3D Secure sayfasına yönlendirme
-        if (result.redirectUrl) {
-          window.location.href = result.redirectUrl;
-        } else {
-          onPaymentSuccess(result);
-        }
+        onPaymentSuccess(result);
       } else {
         throw new Error(result.error || 'Ödeme işlemi başarısız');
       }
@@ -120,6 +128,13 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       setIsProcessing(false);
     }
   };
+
+  if (bankFormHtml) {
+    // QNB'nin döndürdüğü formu ekrana bas ve otomatik submit et
+    return (
+      <div ref={formContainerRef} dangerouslySetInnerHTML={{ __html: bankFormHtml }} />
+    );
+  }
 
   return (
     <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6">
