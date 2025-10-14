@@ -1,23 +1,21 @@
 // QNB Bank Sanal POS Entegrasyon Konfigürasyonu
 export const QNB_CONFIG = {
-  // Production ortamı (AZZ TUR)
+  // Production ortamı (QNB gereksinimlerine tam uyumlu)
   PRODUCTION: {
-  PAYMENT_URL: 'https://vpos.qnb.com.tr/Gateway/XMLGate.aspx',
-    MERCHANT_ID: import.meta.env.VITE_QNB_MERCHANT_ID || '106600000017400',
-    MERCHANT_PASS: import.meta.env.VITE_QNB_MERCHANT_PASS || '29222247',
-    USER_CODE: import.meta.env.VITE_QNB_USER_CODE || 'azzturapi2',
-  USER_PASS: import.meta.env.VITE_QNB_USER_PASS || 'g42rG',
-    TERMINAL_ID: import.meta.env.VITE_QNB_TERMINAL_ID || 'V1787296',
-    SECURE_TYPE: '3DModel',
+    PAYMENT_URL: 'https://vpos.qnb.com.tr/Gateway/Default.aspx',
+    MERCHANT_ID: '106600000017400',
+    USER_CODE: import.meta.env.VITE_QNB_USER_CODE || '',
+    USER_PASS: import.meta.env.VITE_QNB_USER_PASS || '',
+    TERMINAL_ID: '5',
+    SECURE_TYPE: '3D',
     CURRENCY_CODE: '949', // TRY
     LANG: 'TR'
   }
 };
-
 // Aktif ortamı belirleme
 export const getQNBConfig = () => {
-  const isProduction = import.meta.env.MODE === 'production' && import.meta.env.VITE_QNB_ENVIRONMENT === 'production';
-  return isProduction ? QNB_CONFIG.PRODUCTION : QNB_CONFIG.TEST;
+  // Sadece production ortamı için sabit konfigürasyon döndürülüyor
+  return QNB_CONFIG.PRODUCTION;
 };
 
 // QNB Bank Error Kodları
