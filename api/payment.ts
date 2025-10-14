@@ -109,17 +109,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   try {
     const {
-      mbrId, merchantId, amount, currency, orderId, installmentCount,
-      txnType, userCode, userPass, secureType, pan, expiry, cvv2,
+      amount, currency, orderId, installmentCount,
+      txnType, pan, expiry, cvv2,
       okUrl, failUrl, lang, cardHolderName, requestGuid, is3DCallback
     } = req.body;
+
+    // SecureType parametresini asla dışarıdan alma, her zaman '3DModel' olarak gönder
 
     if (is3DCallback) {
       // 3D doğrulama sonrası ikinci adım (Payfor3DModelPayment.xml)
       const result = await sendQNB3DModelPayment({
         requestGuid,
-        userCode,
-        userPass,
+        userCode: process.env.VITE_QNB_USER_CODE || '',
+        userPass: process.env.VITE_QNB_USER_PASS || '',
         orderId,
       });
       console.log('API handler 3DModelPayment yanıtı:', result);
