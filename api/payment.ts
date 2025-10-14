@@ -1,5 +1,3 @@
-
-
 import axios from 'axios';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import crypto from 'crypto';
@@ -35,16 +33,11 @@ export async function sendQNB3DModelPayment({
 
 // Banka örneğine tam uyumlu 3D ödeme fonksiyonu
 export async function sendQNB3DPayment({
-  mbrId,
-  merchantId,
   amount,
   currency,
   orderId,
   installmentCount,
   txnType,
-  userCode,
-  userPass,
-  secureType,
   pan,
   expiry,
   cvv2,
@@ -53,16 +46,11 @@ export async function sendQNB3DPayment({
   lang,
   cardHolderName
 }: {
-  mbrId: string;
-  merchantId: string;
   amount: string;
   currency: string;
   orderId: string;
   installmentCount: string;
   txnType: string;
-  userCode: string;
-  userPass: string;
-  secureType: string;
   pan: string;
   expiry: string;
   cvv2: string;
@@ -71,6 +59,12 @@ export async function sendQNB3DPayment({
   lang: string;
   cardHolderName: string;
 }) {
+  // QNB API bilgilerini environment variable'dan al
+  const mbrId = process.env.VITE_QNB_TERMINAL_ID || '';
+  const merchantId = process.env.VITE_QNB_MERCHANT_ID || '';
+  const userCode = process.env.VITE_QNB_USER_CODE || '';
+  const userPass = process.env.VITE_QNB_USER_PASS || '';
+  const secureType = '3DModel';
   const rnd = Math.random().toString();
   // Hash algoritması: OrderId + MerchantId + Amount + OkUrl + FailUrl + UserCode + Rnd + UserPass
   const hashStr = orderId + merchantId + amount + okUrl + failUrl + userCode + rnd + userPass;
@@ -134,9 +128,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
       // İlk adım: 3D başlatma
       const result = await sendQNB3DPayment({
-        mbrId, merchantId, amount, currency, orderId, installmentCount,
-        txnType, userCode, userPass, secureType, pan, expiry, cvv2,
-        okUrl, failUrl, lang, cardHolderName
+        amount, currency, orderId, installmentCount,
+        txnType, pan, expiry, cvv2, okUrl, failUrl, lang, cardHolderName
       });
       console.log('API handler 3DPayment yanıtı:', result);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -147,6 +140,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ success: false, error: err?.message || 'Sunucu hatası' });
   }
 }
-
-
-
