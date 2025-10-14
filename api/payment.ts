@@ -118,6 +118,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Yalnızca POST isteği desteklenmektedir.' });
   }
+  // Gelen body'yi logla
+  console.log('Gelen ödeme isteği body:', req.body);
   try {
     const {
       amount, currency, orderId, installmentCount,
@@ -125,21 +127,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       okUrl, failUrl, lang, cardHolderName, requestGuid, is3DCallback
     } = req.body;
 
-  // SecureType parametresini asla dışarıdan alma, her zaman '3D' olarak gönder
+    // SecureType parametresini asla dışarıdan alma, her zaman '3D' olarak gönder
 
     if (is3DCallback) {
-  // 3D doğrulama sonrası ikinci adım (Payfor3DModelPayment.xml)
+      // 3D doğrulama sonrası ikinci adım (Payfor3DModelPayment.xml)
       const result = await sendQNB3DModelPayment({
         requestGuid,
         userCode: process.env.VITE_QNB_USER_CODE || '',
         userPass: process.env.VITE_QNB_USER_PASS || '',
         orderId,
       });
-  console.log('API handler 3DModelPayment yanıtı:', result);
+      console.log('API handler 3DModelPayment yanıtı:', result);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(200).send(result);
     } else {
-  // İlk adım: 3D başlatma
+      // İlk adım: 3D başlatma
       const result = await sendQNB3DPayment({
         amount,
         currency,
@@ -155,9 +157,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         cardHolderName,
         requestGuid: req.body.requestGuid || (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString())
       });
-  console.log('API handler 3DPayment yanıtı:', result);
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  return res.status(200).send(result);
+      console.log('API handler 3DPayment yanıtı:', result);
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.status(200).send(result);
     }
   } catch (err: any) {
     console.error('QNB ödeme API hatası:', err);
