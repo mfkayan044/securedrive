@@ -45,10 +45,11 @@ export async function sendQNB3DPayment({
   okUrl,
   failUrl,
   lang,
-  cardHolderName
+  cardHolderName,
+  requestGuid
 }: {
   amount: string;
-  currency: string;
+  currency?: string;
   orderId: string;
   installmentCount: string;
   txnType: string;
@@ -59,6 +60,7 @@ export async function sendQNB3DPayment({
   failUrl: string;
   lang: string;
   cardHolderName: string;
+  requestGuid?: string;
 }) {
   // QNB API gereği: MbrId her zaman 5, MerchantID sabit, endpoint Default.aspx, amount kuruşlu formatta
   const mbrId = '5';
@@ -67,8 +69,12 @@ export async function sendQNB3DPayment({
   const userPass = process.env.VITE_QNB_USER_PASS || '';
   const secureType = '3D';
   const rnd = Math.random().toString();
+  // Para birimi zorunlu olarak 949 (TRY) gönderilecek
+  const currencyCode = currency && currency !== '0' ? currency : '949';
   // PurchAmount kuruşlu formatta olmalı (örn: 1.00)
   const formattedAmount = Number(amount).toFixed(2);
+  // Her işlem için benzersiz bir requestGuid kullan (yoksa üret)
+  const guid = requestGuid || (crypto.randomUUID ? crypto.randomUUID() : rnd);
   // Hash algoritması: OrderId + MerchantId + Amount + OkUrl + FailUrl + UserCode + Rnd + UserPass
   const hashStr = orderId + merchantId + formattedAmount + okUrl + failUrl + userCode + rnd + userPass;
   const hash = crypto.createHash('sha1').update(hashStr).digest('base64');
@@ -82,7 +88,7 @@ export async function sendQNB3DPayment({
   <SecureType>${secureType}</SecureType>
   <TxnType>${txnType}</TxnType>
   <InstallmentCount>${installmentCount}</InstallmentCount>
-  <Currency>${currency}</Currency>
+  <Currency>${currencyCode}</Currency>
   <CardHolderName>${cardHolderName}</CardHolderName>
   <Pan>${pan}</Pan>
   <Expiry>${expiry}</Expiry>
@@ -93,6 +99,7 @@ export async function sendQNB3DPayment({
   <PurchAmount>${formattedAmount}</PurchAmount>
   <Lang>${lang}</Lang>
   <Rnd>${rnd}</Rnd>
+  <RequestGuid>${guid}</RequestGuid>
   <Hash>${hash}</Hash>
 </PayforRequest>`;
 
@@ -134,8 +141,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
   // İlk adım: 3D başlatma
       const result = await sendQNB3DPayment({
-        amount, currency, orderId, installmentCount,
-        txnType, pan, expiry, cvv2, okUrl, failUrl, lang, cardHolderName
+        amount,
+        currency,
+        orderId,
+        installmentCount,
+        txnType,
+        pan,
+        expiry,
+        cvv2,
+        okUrl,
+        failUrl,
+        lang,
+        cardHolderName,
+        requestGuid: req.body.requestGuid || (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString())
       });
   console.log('API handler 3DPayment yanıtı:', result);
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
