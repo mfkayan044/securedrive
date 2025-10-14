@@ -59,15 +59,17 @@ export async function sendQNB3DPayment({
   lang: string;
   cardHolderName: string;
 }) {
-  // QNB API bilgilerini environment variable'dan al
-  const mbrId = process.env.VITE_QNB_TERMINAL_ID || '';
-  const merchantId = process.env.VITE_QNB_MERCHANT_ID || '';
+  // QNB API gereği: MbrId her zaman 5, MerchantID sabit, endpoint Default.aspx, amount kuruşlu formatta
+  const mbrId = '5';
+  const merchantId = '106600000017400';
   const userCode = process.env.VITE_QNB_USER_CODE || '';
   const userPass = process.env.VITE_QNB_USER_PASS || '';
-  const secureType = '3D'; // Türkçe: 3D Secure işlemi için SecureType '3D' olarak ayarlandı
+  const secureType = '3D';
   const rnd = Math.random().toString();
+  // PurchAmount kuruşlu formatta olmalı (örn: 1.00)
+  const formattedAmount = Number(amount).toFixed(2);
   // Hash algoritması: OrderId + MerchantId + Amount + OkUrl + FailUrl + UserCode + Rnd + UserPass
-  const hashStr = orderId + merchantId + amount + okUrl + failUrl + userCode + rnd + userPass;
+  const hashStr = orderId + merchantId + formattedAmount + okUrl + failUrl + userCode + rnd + userPass;
   const hash = crypto.createHash('sha1').update(hashStr).digest('base64');
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -87,14 +89,14 @@ export async function sendQNB3DPayment({
   <OkUrl>${okUrl}</OkUrl>
   <FailUrl>${failUrl}</FailUrl>
   <OrderId>${orderId}</OrderId>
-  <PurchAmount>${amount}</PurchAmount>
+  <PurchAmount>${formattedAmount}</PurchAmount>
   <Lang>${lang}</Lang>
   <Rnd>${rnd}</Rnd>
   <Hash>${hash}</Hash>
 </PayforRequest>`;
 
   const response = await axios.post(
-    'https://vpos.qnb.com.tr/Gateway/XMLGate.aspx',
+    'https://vpos.qnb.com.tr/Gateway/Default.aspx',
     xml,
     { headers: { 'Content-Type': 'text/xml' } }
   );
