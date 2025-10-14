@@ -22,6 +22,7 @@ export async function sendQNB3DModelPayment({
   <OrderId>${orderId}</OrderId>
   <SecureType>3DModelPayment</SecureType>
 </PayforRequest>`;
+  console.log('QNB 3DModelPayment gönderilen XML:', xml);
   const response = await axios.post(
     'https://vpos.qnb.com.tr/Gateway/XMLGate.aspx',
     xml,
@@ -95,6 +96,7 @@ export async function sendQNB3DPayment({
   <Hash>${hash}</Hash>
 </PayforRequest>`;
 
+  console.log('QNB 3DPayment gönderilen XML:', xml);
   const response = await axios.post(
     'https://vpos.qnb.com.tr/Gateway/Default.aspx',
     xml,
