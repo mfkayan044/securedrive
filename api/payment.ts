@@ -121,21 +121,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Gelen body'yi logla
   console.log('Gelen ödeme isteği body:', req.body);
   try {
-    const {
-      amount, currency, orderId, installmentCount,
-      txnType, pan, expiry, cvv2,
-      okUrl, failUrl, lang, cardHolderName, requestGuid, is3DCallback
-    } = req.body;
+    // Frontend'den gelen alanları QNB'nin beklediği parametrelere map'le
+    const body = req.body || {};
+    const mapped = {
+      amount: body.amount,
+      currency: body.currency || '949',
+      orderId: body.orderId,
+      installmentCount: body.installmentCount || '0',
+      txnType: body.txnType || 'Auth',
+      pan: body.pan || body.cardNumber,
+      expiry: body.expiry || body.cardExpiry,
+      cvv2: body.cvv2 || body.cardCvv,
+      okUrl: body.okUrl || process.env.VITE_QNB_OK_URL || 'https://example.com/payment-success',
+      failUrl: body.failUrl || process.env.VITE_QNB_FAIL_URL || 'https://example.com/payment-fail',
+      lang: body.lang || 'tr',
+      cardHolderName: body.cardHolderName || body.cardHolder,
+      requestGuid: body.requestGuid || (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString()),
+      is3DCallback: body.is3DCallback
+    };
 
     // SecureType parametresini asla dışarıdan alma, her zaman '3D' olarak gönder
 
-    if (is3DCallback) {
+    if (mapped.is3DCallback) {
       // 3D doğrulama sonrası ikinci adım (Payfor3DModelPayment.xml)
       const result = await sendQNB3DModelPayment({
-        requestGuid,
+        requestGuid: mapped.requestGuid,
         userCode: process.env.VITE_QNB_USER_CODE || '',
         userPass: process.env.VITE_QNB_USER_PASS || '',
-        orderId,
+        orderId: mapped.orderId,
       });
       console.log('API handler 3DModelPayment yanıtı:', result);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -143,19 +156,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     } else {
       // İlk adım: 3D başlatma
       const result = await sendQNB3DPayment({
-        amount,
-        currency,
-        orderId,
-        installmentCount,
-        txnType,
-        pan,
-        expiry,
-        cvv2,
-        okUrl,
-        failUrl,
-        lang,
-        cardHolderName,
-        requestGuid: req.body.requestGuid || (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString())
+        amount: mapped.amount,
+        currency: mapped.currency,
+        orderId: mapped.orderId,
+        installmentCount: mapped.installmentCount,
+        txnType: mapped.txnType,
+        pan: mapped.pan,
+        expiry: mapped.expiry,
+        cvv2: mapped.cvv2,
+        okUrl: mapped.okUrl,
+        failUrl: mapped.failUrl,
+        lang: mapped.lang,
+        cardHolderName: mapped.cardHolderName,
+        requestGuid: mapped.requestGuid
       });
       console.log('API handler 3DPayment yanıtı:', result);
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
