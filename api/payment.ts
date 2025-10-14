@@ -1,5 +1,31 @@
+import type { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
 import crypto from 'crypto';
+
+// API route handler
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  try {
+    const {
+      mbrId, merchantId, amount, currency, orderId, installmentCount,
+      txnType, userCode, userPass, secureType, pan, expiry, cvv2,
+      okUrl, failUrl, lang
+    } = req.body;
+
+    const result = await sendQNB3DPayment({
+      mbrId, merchantId, amount, currency, orderId, installmentCount,
+      txnType, userCode, userPass, secureType, pan, expiry, cvv2,
+      okUrl, failUrl, lang
+    });
+
+    return res.status(200).json({ success: true, data: result });
+  } catch (err: any) {
+    console.error('QNB ödeme API error:', err);
+    return res.status(500).json({ success: false, error: err?.message || 'Sunucu hatası' });
+  }
+}
 
 // Banka örneğine tam uyumlu 3D ödeme fonksiyonu
 export async function sendQNB3DPayment({
@@ -70,40 +96,6 @@ export async function sendQNB3DPayment({
     { headers: { 'Content-Type': 'text/xml' } }
   );
   return response.data;
-}
-// ...existing code...
-          success: false,
-          message: parsed?.GVPSResponse?.ReasonCode || 'Banka yanıtı alınamadı'
-        };
-      }
-    } else if (typeof response.data === 'object') {
-      // Yanıt doğrudan JSON ise
-      console.log('QNB XML yanıtı (object):', JSON.stringify(response.data).substring(0, 500));
-      const pr = response.data.PaymentRequest || response.data;
-      return {
-        success: false,
-        error: pr.ErrMsg || pr.Message || 'Banka JSON hata yanıtı',
-        errorCode: pr.ProcReturnCode || undefined
-      };
-    } else {
-      // Beklenmeyen format
-      return {
-        success: false,
-        message: 'Banka yanıtı beklenmeyen formatta'
-      };
-    }
-  } catch (err: any) {
-    // XML parse hatası veya banka yanıtı XML değilse
-    console.error('QNB ödeme isteği hatası:', err);
-    if (typeof err === 'object' && err !== null && 'response' in err && err.response && 'data' in err.response) {
-      if (typeof err.response.data === 'string') {
-        console.error('QNB response data (ilk 500):', err.response.data.substring(0, 500));
-      } else {
-        console.error('QNB response data (object):', JSON.stringify(err.response.data).substring(0, 500));
-      }
-    }
-    throw new Error('QNB ödeme isteği başarısız veya yanıt hatalı.');
-  }
 }
 
 // 3D Secure doğrulama fonksiyonu (örnek, gerçek API çağrısı eklenmeli)
