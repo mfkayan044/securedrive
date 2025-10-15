@@ -63,8 +63,17 @@ export async function sendQNB3DPayment({
   requestGuid?: string;
 }) {
   // QNB API gereği: MbrId her zaman 5, MerchantID sabit, endpoint Default.aspx, amount kuruşlu formatta
+  // ENV ve parametre kontrol logları
+  console.log('QNB ENV kontrol:', {
+    VITE_QNB_USER_CODE: process.env.VITE_QNB_USER_CODE,
+    VITE_QNB_USER_PASS: process.env.VITE_QNB_USER_PASS,
+    VITE_QNB_MERCHANT_ID: process.env.VITE_QNB_MERCHANT_ID,
+    VITE_QNB_ENVIRONMENT: process.env.VITE_QNB_ENVIRONMENT,
+    endpoint: 'https://vpos.qnb.com.tr/Gateway/Default.aspx',
+  });
   const mbrId = '5';
-  const merchantId = '106600000017400';
+  // MerchantID ve UserCode canlı ortamdan mı geliyor?
+  const merchantId = process.env.VITE_QNB_MERCHANT_ID || '106600000017400';
   const userCode = process.env.VITE_QNB_USER_CODE || '';
   const userPass = process.env.VITE_QNB_USER_PASS || '';
   const secureType = '3DPay';
@@ -78,6 +87,7 @@ export async function sendQNB3DPayment({
   // Hash algoritması: OrderId + MerchantId + Amount + OkUrl + FailUrl + UserCode + Rnd + UserPass
   const hashStr = orderId + merchantId + formattedAmount + okUrl + failUrl + userCode + rnd + userPass;
   const hash = crypto.createHash('sha1').update(hashStr).digest('base64');
+  console.log('QNB hash string:', hashStr);
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <PayforRequest>
@@ -129,6 +139,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (!okUrl || !failUrl) {
       return res.status(400).json({ error: 'OkUrl ve FailUrl zorunludur. Lütfen gerçek yönlendirme adreslerinizi belirtin.' });
     }
+    // Parametre mapping ve canlı/test ayrımı kontrolü
+    console.log('QNB parametre mapping:', {
+      amount: body.amount,
+      currency: body.currency || '949',
+      orderId: body.orderId,
+      installmentCount: body.installmentCount || '0',
+      txnType: body.txnType || 'Auth',
+      pan: body.pan || body.cardNumber,
+      expiry: body.expiry || body.cardExpiry,
+      cvv2: body.cvv2 || body.cardCvv,
+      okUrl,
+      failUrl,
+      lang: body.lang || 'tr',
+      cardHolderName: body.cardHolderName || body.cardHolder,
+      requestGuid: body.requestGuid || (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString()),
+      is3DCallback: body.is3DCallback
+    });
     const mapped = {
       amount: body.amount,
       currency: body.currency || '949',
