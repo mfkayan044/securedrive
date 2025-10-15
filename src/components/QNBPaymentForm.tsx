@@ -84,7 +84,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       }
 
       // QNB Bank ödeme API'sine istek gönder
-  const response = await fetch('/api/payment?action=initiate', {
+  const response = await fetch('http://102.133.145.180:3000/payment?action=initiate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
