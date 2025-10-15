@@ -67,7 +67,7 @@ export async function sendQNB3DPayment({
   const merchantId = '106600000017400';
   const userCode = process.env.VITE_QNB_USER_CODE || '';
   const userPass = process.env.VITE_QNB_USER_PASS || '';
-  const secureType = '3D';
+  const secureType = '3DPay';
   const rnd = Math.random().toString();
   // Para birimi zorunlu olarak 949 (TRY) gönderilecek
   const currencyCode = currency && currency !== '0' ? currency : '949';
@@ -97,7 +97,7 @@ export async function sendQNB3DPayment({
   <FailUrl>${failUrl}</FailUrl>
   <OrderId>${orderId}</OrderId>
   <PurchAmount>${formattedAmount}</PurchAmount>
-  <Lang>${lang}</Lang>
+  <Lang>TR</Lang>
   <Rnd>${rnd}</Rnd>
   <RequestGuid>${guid}</RequestGuid>
   <Hash>${hash}</Hash>
