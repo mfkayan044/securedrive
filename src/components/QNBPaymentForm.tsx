@@ -84,7 +84,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       }
 
     // QNB Bank ödeme API'sine istek gönder
-    const response = await fetch('https://api.securedrive.org/payment?action=initiate', {
+      const response = await fetch('https://api.securedrive.org/payment?action=initiate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -97,7 +97,9 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
           cardCvv: cvv,
           cardHolder: cardHolder.toUpperCase(),
           customerEmail: customerInfo.email,
-          customerPhone: customerInfo.phone
+          customerPhone: customerInfo.phone,
+          okUrl: 'https://securedrive.org/payment/success',
+          failUrl: 'https://securedrive.org/payment/fail'
         })
       });
 
