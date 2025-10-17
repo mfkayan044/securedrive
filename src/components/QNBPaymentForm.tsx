@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { QNB3DWindowExample } from './QNB3DWindowExample';
 import { CreditCard, Lock, AlertCircle } from 'lucide-react';
 
 interface QNBPaymentFormProps {
@@ -26,8 +27,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
   const [cvv, setCvv] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
-  const [bankFormHtml, setBankFormHtml] = useState<string | null>(null);
-  const formContainerRef = useRef<HTMLDivElement>(null);
+  // QNB3DWindowExample ile yeni pencere açılacak, eski HTML render mantığı kaldırıldı.
 
   // Kart numarası formatı (4-4-4-4)
   const formatCardNumber = (value: string) => {
@@ -64,79 +64,45 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
     e.preventDefault();
     setError('');
     setIsProcessing(true);
-
-    try {
-      // Form validasyonu
-      if (!cardNumber || !cardHolder || !expiryDate || !cvv) {
-        throw new Error('Lütfen tüm alanları doldurun');
-      }
-
-      if (cardNumber.replace(/\s/g, '').length < 16) {
-        throw new Error('Geçerli bir kart numarası girin');
-      }
-
-      if (expiryDate.length !== 5) {
-        throw new Error('Geçerli bir son kullanma tarihi girin (MM/YY)');
-      }
-
-      if (cvv.length < 3) {
-        throw new Error('Geçerli bir CVV kodu girin');
-      }
-
-    // QNB Bank ödeme API'sine istek gönder
-      const response = await fetch('https://api.securedrive.org/payment?action=initiate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          orderId,
-          amount,
-          cardNumber: cardNumber.replace(/\s/g, ''),
-          cardExpiry: expiryDate.replace('/', ''),
-          cardCvv: cvv,
-          cardHolder: cardHolder.toUpperCase(),
-          customerEmail: customerInfo.email,
-          customerPhone: customerInfo.phone,
-          okUrl: 'https://securedrive.org/payment/success',
-          failUrl: 'https://securedrive.org/payment/fail'
-        })
-      });
-
-      const result = await response.json();
-
-      // QNB'den dönen veri HTML formu içeriyorsa (ör: <form ...)</form>), bunu ekrana bas
-      if (result.success && typeof result.data === 'string' && result.data.includes('<form')) {
-        setBankFormHtml(result.data);
-        // Otomatik submit için kısa bir süre sonra formu submit et
-        setTimeout(() => {
-          const form = formContainerRef.current?.querySelector('form');
-          if (form) (form as HTMLFormElement).submit();
-        }, 100);
-        return;
-      }
-
-      if (result.success) {
-        onPaymentSuccess(result);
-      } else {
-        throw new Error(result.error || 'Ödeme işlemi başarısız');
-      }
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Ödeme işlemi sırasında hata oluştu';
-      setError(errorMessage);
-      onPaymentError(errorMessage);
-    } finally {
+    // Form validasyonu
+    if (!cardNumber || !cardHolder || !expiryDate || !cvv) {
+      setError('Lütfen tüm alanları doldurun');
       setIsProcessing(false);
+      return;
     }
+    if (cardNumber.replace(/\s/g, '').length < 16) {
+      setError('Geçerli bir kart numarası girin');
+      setIsProcessing(false);
+      return;
+    }
+    if (expiryDate.length !== 5) {
+      setError('Geçerli bir son kullanma tarihi girin (MM/YY)');
+      setIsProcessing(false);
+      return;
+    }
+    if (cvv.length < 3) {
+      setError('Geçerli bir CVV kodu girin');
+      setIsProcessing(false);
+      return;
+    }
+    // QNB3DWindowExample ile yeni pencerede açılacak ödeme datası
+    const paymentData = {
+      mrcOrderId: orderId,
+      amount,
+      pan: cardNumber.replace(/\s/g, ''),
+      expiry: expiryDate.replace('/', ''),
+      cvv2: cvv,
+      cardHolderName: cardHolder.toUpperCase(),
+      okUrl: 'https://securedrive.org/payment/success',
+      failUrl: 'https://securedrive.org/payment/fail',
+      // Diğer gerekli alanlar eklenebilir
+    };
+    // Yeni pencereyi aç
+    QNB3DWindowExample({ paymentData });
+    setIsProcessing(false);
   };
 
-  if (bankFormHtml) {
-    // QNB'nin döndürdüğü formu ekrana bas ve otomatik submit et
-    return (
-      <div ref={formContainerRef} dangerouslySetInnerHTML={{ __html: bankFormHtml }} />
-    );
-  }
+
 
   return (
     <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6">
@@ -155,7 +121,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
         <div className="text-xs text-gray-500 mt-1">Sipariş No: {orderId}</div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+  <form onSubmit={handleSubmit} className="space-y-4">
         {/* Kart Numarası */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
