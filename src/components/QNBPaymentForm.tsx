@@ -99,7 +99,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
     };
     try {
       // Sunucuya ödeme isteği gönder
-      const response = await fetch('/api/qnb3d', {
+  const response = await fetch('/payment', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -133,7 +133,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
   <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6">
       <div className="flex items-center justify-center mb-6">
         <div className="flex items-center space-x-2">
-          <CreditCard className="w-6 h-6 text-blue-600" />
+          <CreditCard className="w-6 h-6 text-red-600" />
           <h2 className="text-xl font-bold text-gray-800">QNB Bank Ödeme</h2>
           <Lock className="w-5 h-5 text-green-600" />
         </div>
@@ -142,7 +142,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       {/* Tutar gösterimi */}
       <div className="bg-gray-50 rounded-lg p-4 mb-6 text-center">
         <div className="text-sm text-gray-600 mb-1">Ödenecek Tutar</div>
-        <div className="text-2xl font-bold text-blue-600">{amount.toFixed(2)} ₺</div>
+        <div className="text-2xl font-bold text-red-600">{amount.toFixed(2)} ₺</div>
         <div className="text-xs text-gray-500 mt-1">Sipariş No: {orderId}</div>
       </div>
 
@@ -159,7 +159,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
               onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
               placeholder="1234 5678 9012 3456"
               maxLength={19}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red focus:border-red"
               disabled={isProcessing}
             />
             <div className="absolute right-3 top-3 text-xs text-gray-500">
@@ -178,7 +178,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
             value={cardHolder}
             onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
             placeholder="KART SAHİBİNİN ADI"
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red focus:border-red"
             disabled={isProcessing}
           />
         </div>
@@ -195,7 +195,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
               onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
               placeholder="MM/YY"
               maxLength={5}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red focus:border-red"
               disabled={isProcessing}
             />
           </div>
@@ -209,7 +209,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
               onChange={(e) => setCvv(e.target.value.replace(/\D/g, ''))}
               placeholder="123"
               maxLength={4}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red focus:border-red"
               disabled={isProcessing}
             />
           </div>
@@ -238,7 +238,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
           className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
             isProcessing
               ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-200'
+              : 'bg-red hover:bg-red focus:ring-4 focus:ring-red'
           }`}
         >
           {isProcessing ? (
@@ -255,7 +255,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       {/* QNB Bank logosu */}
       <div className="mt-6 text-center">
         <div className="text-xs text-gray-500">Güvenli ödeme sağlayıcısı:</div>
-        <div className="text-sm font-semibold text-blue-800 mt-1">QNB Finansbank</div>
+        <div className="text-sm font-semibold text-red-800 mt-1">QNB Finansbank</div>
         <div className="text-xs text-gray-400 mt-1">AZZ TUR - Üye İşyeri: 106600000017400</div>
       </div>
     </div>
