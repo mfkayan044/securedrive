@@ -98,8 +98,9 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       // Diğer gerekli alanlar eklenebilir
     };
     try {
-      // Sunucuya ödeme isteği gönder
-  const response = await fetch('/payment', {
+    // Sunucuya ödeme isteği gönder
+    const paymentApiUrl = import.meta.env.VITE_PAYMENT_API_URL || '/payment';
+    const response = await fetch(paymentApiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -133,7 +134,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
   <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6">
       <div className="flex items-center justify-center mb-6">
         <div className="flex items-center space-x-2">
-          <CreditCard className="w-6 h-6 text-red-600" />
+          <CreditCard className="w-6 h-6 text-red" />
           <h2 className="text-xl font-bold text-gray-800">QNB Bank Ödeme</h2>
           <Lock className="w-5 h-5 text-green-600" />
         </div>
@@ -142,7 +143,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       {/* Tutar gösterimi */}
       <div className="bg-gray-50 rounded-lg p-4 mb-6 text-center">
         <div className="text-sm text-gray-600 mb-1">Ödenecek Tutar</div>
-        <div className="text-2xl font-bold text-red-600">{amount.toFixed(2)} ₺</div>
+        <div className="text-2xl font-bold text-red">{amount.toFixed(2)} ₺</div>
         <div className="text-xs text-gray-500 mt-1">Sipariş No: {orderId}</div>
       </div>
 
@@ -255,7 +256,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       {/* QNB Bank logosu */}
       <div className="mt-6 text-center">
         <div className="text-xs text-gray-500">Güvenli ödeme sağlayıcısı:</div>
-        <div className="text-sm font-semibold text-red-800 mt-1">QNB Finansbank</div>
+        <div className="text-sm font-semibold text-red mt-1">QNB Finansbank</div>
         <div className="text-xs text-gray-400 mt-1">AZZ TUR - Üye İşyeri: 106600000017400</div>
       </div>
     </div>
