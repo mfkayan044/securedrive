@@ -27,7 +27,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
   const [cvv, setCvv] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
-  // QNB3DWindowExample ile yeni pencere açılacak, eski HTML render mantığı kaldırıldı.
+  const [paymentHtml, setPaymentHtml] = useState<string | null>(null);
 
   // Kart numarası formatı (4-4-4-4)
   const formatCardNumber = (value: string) => {
@@ -85,7 +85,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       setIsProcessing(false);
       return;
     }
-    // QNB3DWindowExample ile yeni pencerede açılacak ödeme datası
+    // QNB3DWindowExample ile yeni pencere açma akışı
     const paymentData = {
       mrcOrderId: orderId,
       amount,
@@ -97,15 +97,40 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       failUrl: 'https://securedrive.org/payment/fail',
       // Diğer gerekli alanlar eklenebilir
     };
-    // Yeni pencereyi aç
-    QNB3DWindowExample({ paymentData });
+    try {
+      // Sunucuya ödeme isteği gönder
+      const response = await fetch('/api/qnb3d', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(paymentData),
+      });
+      const result = await response.json();
+      if (result && result.html) {
+        // Yeni pencereyi aç
+        const win = window.open('', '_blank', 'width=600,height=700');
+        if (win) {
+          win.document.write(result.html);
+          win.document.close();
+        }
+        setPaymentHtml(result.html); // Komponent için
+        onPaymentSuccess(result);
+      } else {
+        setError('Ödeme başlatılamadı.');
+        onPaymentError('Ödeme başlatılamadı.');
+      }
+    } catch (err) {
+      setError('Sunucu hatası: ' + (err as Error).message);
+      onPaymentError('Sunucu hatası: ' + (err as Error).message);
+    }
     setIsProcessing(false);
   };
 
 
 
   return (
-    <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6">
+  <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-6">
       <div className="flex items-center justify-center mb-6">
         <div className="flex items-center space-x-2">
           <CreditCard className="w-6 h-6 text-blue-600" />
