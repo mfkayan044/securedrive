@@ -92,9 +92,8 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       setIsProcessing(false);
       return;
     }
-    // QNB3DWindowExample ile yeni pencere açma akışı
+    // QNB dokümana göre: orderId (veya mrcOrderId) backend'e iletilmeli
     const paymentData = {
-  // mrcOrderId ve orderId gönderilmiyor
       amount,
       pan: cardNumber.replace(/\s/g, ''),
       expiry: expiryDate.replace('/', ''),
@@ -105,7 +104,8 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       installmentCount: '0',
       txnType: 'Auth',
       currency: '949',
-      lang: 'TR'
+      lang: 'TR',
+      orderId // orderId backend'e iletiliyor (MrcOrderId olarak da kullanılacak)
     };
     try {
     // Sunucuya ödeme isteği gönder
