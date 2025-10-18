@@ -96,7 +96,10 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       cardHolderName: cardHolder.toUpperCase(),
       okUrl: 'https://securedrive.org/payment/success',
       failUrl: 'https://securedrive.org/payment/fail',
-      // Diğer gerekli alanlar eklenebilir
+      installmentCount: '0',
+      txnType: 'Auth',
+      currency: '949',
+      lang: 'TR'
     };
     try {
     // Sunucuya ödeme isteği gönder
