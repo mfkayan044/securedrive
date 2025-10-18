@@ -88,6 +88,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
     // QNB3DWindowExample ile yeni pencere açma akışı
     const paymentData = {
       mrcOrderId: orderId,
+      orderId: orderId,
       amount,
       pan: cardNumber.replace(/\s/g, ''),
       expiry: expiryDate.replace('/', ''),
