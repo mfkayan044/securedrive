@@ -94,8 +94,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
     }
     // QNB3DWindowExample ile yeni pencere açma akışı
     const paymentData = {
-      mrcOrderId: orderId,
-      orderId: orderId,
+  // mrcOrderId ve orderId gönderilmiyor
       amount,
       pan: cardNumber.replace(/\s/g, ''),
       expiry: expiryDate.replace('/', ''),
@@ -178,7 +177,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
   <form onSubmit={handleSubmit} className="space-y-4">
         {/* Kart Numarası */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="blocktext-sm font-medium text-gray-700 mb-1">
             Kart Numarası
           </label>
           <div className="relative">
@@ -267,7 +266,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
           className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
             isProcessing
               ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-red hover:bg-red focus:ring-4 focus:ring-red'
+              : 'bg-red  focus:ring-4 '
           }`}
         >
           {isProcessing ? (
