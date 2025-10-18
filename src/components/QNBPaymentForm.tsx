@@ -100,13 +100,34 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
     try {
     // Sunucuya ödeme isteği gönder
     const paymentApiUrl = import.meta.env.VITE_PAYMENT_API_URL || '/payment';
-    const response = await fetch(paymentApiUrl, {
+      const response = await fetch(paymentApiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(paymentData),
       });
+
+      const contentType = response.headers.get('content-type') || '';
+      // If server returned non-JSON (likely HTML error page), capture and show snippet
+      if (!response.ok) {
+        const text = await response.text();
+        console.error('Payment API returned non-2xx status', response.status, text);
+        setError(`Sunucu hatası: ${response.status} - ${text.slice(0, 200)}`);
+        onPaymentError(`Sunucu hatası: ${response.status}`);
+        setIsProcessing(false);
+        return;
+      }
+
+      if (!contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Payment API returned non-JSON response:', text);
+        setError('Sunucu HTML yanıtı alındı (detaylar konsolda).');
+        onPaymentError('Sunucu HTML yanıtı alındı.');
+        setIsProcessing(false);
+        return;
+      }
+
       const result = await response.json();
       if (result && result.html) {
         // Yeni pencereyi aç
@@ -118,7 +139,8 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
         setPaymentHtml(result.html); // Komponent için
         onPaymentSuccess(result);
       } else {
-        setError('Ödeme başlatılamadı.');
+        console.error('Payment API returned JSON without html:', result);
+        setError('Ödeme başlatılamadı. (Sunucu JSON yanıtı eksik)');
         onPaymentError('Ödeme başlatılamadı.');
       }
     } catch (err) {
