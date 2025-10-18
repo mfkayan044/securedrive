@@ -319,7 +319,8 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
         ...formData,
         passengerNames: [...passengerNames],
         selectedExtras: [...selectedExtras],
-        currentPrice
+        currentPrice,
+        orderId: `RES_${Date.now()}`
       });
       setShowPayment(true);
       return;
@@ -827,6 +828,7 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
         <PaymentModal
           isOpen={showPayment}
           totalPrice={currentPrice}
+          orderId={pendingReservation?.orderId || `RES_${Date.now()}`}
           onClose={() => setShowPayment(false)}
           onPaymentSuccess={handlePaymentSuccess}
         />
