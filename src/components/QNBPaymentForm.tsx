@@ -1,5 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { QNB3DWindowExample } from './QNB3DWindowExample';
+// QNB 3D ödeme HTML yanıtını yeni pencerede açan fonksiyon
+const openQNB3DWindow = (html: string) => {
+  const win = window.open('', '_blank', 'width=600,height=700');
+  if (win) {
+    win.document.write(html);
+    win.document.close();
+  }
+};
 import { CreditCard, Lock, AlertCircle } from 'lucide-react';
 
 interface QNBPaymentFormProps {
@@ -134,12 +141,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
 
       const result = await response.json();
       if (result && result.html) {
-        // Yeni pencereyi aç
-        const win = window.open('', '_blank', 'width=600,height=700');
-        if (win) {
-          win.document.write(result.html);
-          win.document.close();
-        }
+        openQNB3DWindow(result.html);
         setPaymentHtml(result.html); // Komponent için
         onPaymentSuccess(result);
       } else {
