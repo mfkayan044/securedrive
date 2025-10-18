@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import QNBPaymentForm from '../QNBPaymentForm';
@@ -5,11 +6,12 @@ import QNBPaymentForm from '../QNBPaymentForm';
 interface PaymentModalProps {
   isOpen: boolean;
   totalPrice: number;
+  orderId: string;
   onClose: () => void;
   onPaymentSuccess: (paymentInfo?: any, couponCode?: string) => void;
 }
 
-const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, totalPrice, onClose, onPaymentSuccess }) => {
+const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, totalPrice, orderId, onClose, onPaymentSuccess }) => {
   const [couponCode, setCouponCode] = useState('');
   const [error, setError] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
@@ -114,7 +116,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, totalPrice, onClose
         <div className="p-6">
           <QNBPaymentForm
             amount={finalAmount}
-            orderId={`RES_${Date.now()}`}
+            orderId={orderId}
             customerInfo={{
               name: 'Müşteri', // Bu bilgiyi rezervasyon formundan alabilirsin
               email: 'musteri@example.com',
