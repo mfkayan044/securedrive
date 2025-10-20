@@ -53,6 +53,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             <li style="padding: 4px 0;"><b>Tarih:</b> ${reservation.departure_date || '-'}</li>
             <li style="padding: 4px 0;"><b>Saat:</b> ${reservation.departure_time || '-'}</li>
             <li style="padding: 4px 0;"><b>Yolcu Sayısı:</b> ${reservation.passengers || '-'}</li>
+            ${reservation.passenger_names && reservation.passenger_names.length > 0 ? `
+            <li style="padding: 4px 0;"><b>Yolcu İsimleri:</b><br>
+              ${reservation.passenger_names.filter((name: string) => name && name.trim()).map((name: string, i: number) => `${i + 1}. ${name}`).join('<br>')}
+            </li>
+            ` : ''}
             <li style="padding: 4px 0;"><b>Toplam Fiyat:</b> <span style="color: #10b981; font-weight: bold;">${reservation.total_price || '-'} TL</span></li>
           </ul>
         </div>
