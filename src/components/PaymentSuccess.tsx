@@ -95,6 +95,29 @@ const PaymentSuccess: React.FC = () => {
 
       console.log('✅ Rezervasyon kaydedildi:', reservation.id);
 
+      // Location ve vehicle isimlerini al
+      const { data: fromLocation } = await supabase
+        .from('locations')
+        .select('name')
+        .eq('id', pendingReservation.fromLocation)
+        .single();
+      
+      const { data: toLocation } = await supabase
+        .from('locations')
+        .select('name')
+        .eq('id', pendingReservation.toLocation)
+        .single();
+
+      const { data: vehicleType } = await supabase
+        .from('vehicle_types')
+        .select('name')
+        .eq('id', pendingReservation.vehicleType)
+        .single();
+
+      const fromLocationName = fromLocation?.name || pendingReservation.fromLocation;
+      const toLocationName = toLocation?.name || pendingReservation.toLocation;
+      const vehicleName = vehicleType?.name || pendingReservation.vehicleType;
+
       // Ekstra hizmetleri kaydet
       if (pendingReservation.selectedExtras && pendingReservation.selectedExtras.length > 0) {
         const extrasInsert = pendingReservation.selectedExtras.map((extraId: string) => ({
@@ -115,8 +138,9 @@ const PaymentSuccess: React.FC = () => {
             name: pendingReservation.customerName,
             voucherCode: reservation.id,
             reservationDetails: JSON.stringify({
-              from: pendingReservation.fromLocation,
-              to: pendingReservation.toLocation,
+              from: fromLocationName,
+              to: toLocationName,
+              vehicle: vehicleName,
               date: pendingReservation.departureDate,
               time: pendingReservation.departureTime,
               passengers: pendingReservation.passengers,
@@ -139,10 +163,13 @@ const PaymentSuccess: React.FC = () => {
               customer_name: pendingReservation.customerName,
               customer_email: pendingReservation.customerEmail,
               customer_phone: pendingReservation.customerPhone,
-              from_location_name: pendingReservation.fromLocation,
-              to_location_name: pendingReservation.toLocation,
+              from_location_name: fromLocationName,
+              to_location_name: toLocationName,
+              vehicle_type_name: vehicleName,
               departure_date: pendingReservation.departureDate,
               departure_time: pendingReservation.departureTime,
+              passengers: pendingReservation.passengers,
+              total_price: pendingReservation.currentPrice,
               notes: pendingReservation.notes
             }
           })
