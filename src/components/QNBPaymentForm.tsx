@@ -105,7 +105,10 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       txnType: 'Auth',
       currency: '949',
       lang: 'TR',
-      orderId // orderId backend'e iletiliyor (MrcOrderId olarak da kullanılacak)
+      orderId, // orderId backend'e iletiliyor (MrcOrderId olarak da kullanılacak)
+      customerName: customerInfo.name, // Müşteri bilgileri mail için
+      customerEmail: customerInfo.email,
+      customerPhone: customerInfo.phone
     };
     try {
       // Sunucuya ödeme isteği gönder
