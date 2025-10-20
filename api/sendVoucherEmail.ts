@@ -31,19 +31,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       details = {};
     }
 
-    // Zoho SMTP ayarları
+    // Brevo SMTP ayarları (Zoho yerine)
     const transporter = nodemailer.createTransport({
-      host: 'smtp.zoho.com',
-      port: 465,
-      secure: true, // SSL
+      host: 'smtp-relay.brevo.com',
+      port: 587,
+      secure: false,
       auth: {
-        user: process.env.ZOHO_USER,
-        pass: process.env.ZOHO_PASS,
+        user: process.env.SIB_USER,
+        pass: process.env.SIB_PASS,
       },
     });
 
     const mailOptions = {
-      from: process.env.ZOHO_USER,
+      from: 'operasyon@securedrive.org',
       to,
       subject: '✅ Rezervasyonunuz Onaylandı - Secure Drive Transfer',
       html: `
