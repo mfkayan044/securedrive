@@ -129,20 +129,16 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
 
       // QNB'den HTML yanıtı bekliyoruz (3D Secure form)
       const htmlResponse = await response.text();
-      console.log('QNB HTML yanıtı alındı, yeni pencerede açılıyor...');
+      console.log('QNB HTML yanıtı alındı, 3D Secure sayfasına yönlendiriliyor...');
 
-      // HTML'i yeni pencerede aç (otomatik olarak BKM 3D Secure'e yönlenecek)
-      const paymentWindow = window.open('', '_blank', 'width=600,height=700,scrollbars=yes');
-      if (paymentWindow) {
-        paymentWindow.document.write(htmlResponse);
-        paymentWindow.document.close();
-        
-        setPaymentHtml(htmlResponse);
-        onPaymentSuccess({ message: '3D Secure sayfası açıldı', orderId });
-      } else {
-        setError('Pop-up engellendi. Lütfen tarayıcınızın pop-up engelleyicisini devre dışı bırakın.');
-        onPaymentError('Pop-up engellendi');
-      }
+      // HTML'i ana pencerede render et (BKM 3D Secure otomatik submit olacak)
+      // Bu sayede CORS ve 405 hataları engellenecek
+      document.open();
+      document.write(htmlResponse);
+      document.close();
+      
+      // Not: Bu noktadan sonra sayfa BKM'ye yönlenecek ve
+      // başarılı/başarısız durumda OkUrl/FailUrl'e geri dönecek
     } catch (err) {
       setError('Sunucu hatası: ' + (err as Error).message);
       onPaymentError('Sunucu hatası: ' + (err as Error).message);
