@@ -140,7 +140,14 @@ const PaymentFail: React.FC = () => {
         </div>
 
         {/* Butonlar */}
-        
+        <div className="space-y-3">
+          <button
+            onClick={handleRetry}
+            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+          >
+            <RefreshCw className="w-5 h-5" />
+            <span>Tekrar Dene</span>
+          </button>
 
           <button
             onClick={() => window.location.href = 'https://www.securedrive.org'}
