@@ -1,262 +1,138 @@
-  console.log('SIB_USER:', process.env.SIB_USER, 'SIB_PASS:', !!process.env.SIB_PASS);
 // /api/sendVoucherEmail.ts
-
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import nodemailer from 'nodemailer';
-import PDFDocument from 'pdfkit';
-import path from 'path';
-import { PassThrough } from 'stream';
-
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  console.log('sendVoucherEmail fonksiyonu çağrıldı');
   try {
     if (req.method !== 'POST') {
+      console.log('Geçersiz method:', req.method);
       return res.status(405).json({ error: 'Sadece POST isteği destekleniyor.' });
     }
 
-    const { to, name, voucherCode, reservationDetails, locations, vehicleTypes } = req.body;
-
-    // reservationDetails string gelirse parse et
-    let details = reservationDetails;
-    if (typeof details === 'string') {
-      try {
-        details = JSON.parse(details);
-      } catch {}
-    }
-    // Parse locations and vehicleTypes if stringified
-    let locs = locations;
-    let vtypes = vehicleTypes;
-    if (typeof locs === 'string') {
-      try { locs = JSON.parse(locs); } catch { locs = []; }
-    }
-    if (typeof vtypes === 'string') {
-      try { vtypes = JSON.parse(vtypes); } catch { vtypes = []; }
-    }
-    // Helper functions for mapping
-    const getLocationName = (id: string) => {
-      if (!id || !Array.isArray(locs)) return '';
-      const found = locs.find((loc: any) => loc.id === id);
-      return found ? found.name : '';
-    };
-    const getVehicleName = (id: string) => {
-      if (!id || !Array.isArray(vtypes)) return '';
-      const found = vtypes.find((v: any) => v.id === id);
-      return found ? found.name : '';
-    };
+    const { to, name, voucherCode, reservationDetails } = req.body;
+    console.log('Gelen body:', req.body);
 
     if (!to || !voucherCode) {
+      console.log('Eksik parametre:', { to, voucherCode });
       return res.status(400).json({ error: 'Eksik parametre: "to" ve "voucherCode" zorunludur.' });
     }
 
-    if (!process.env.SIB_USER || !process.env.SIB_PASS) {
-      return res.status(500).json({ error: 'Mail gönderim ayarları eksik.' });
+    if (!process.env.ZOHO_USER || !process.env.ZOHO_PASS) {
+      console.log('Environment değişkenleri eksik');
+      return res.status(500).json({ error: 'Mail gönderim ayarları eksik. Lütfen yöneticinize başvurun.' });
     }
 
+    // Rezervasyon detaylarını parse et
+    let details: any = {};
+    try {
+      details = typeof reservationDetails === 'string' ? JSON.parse(reservationDetails) : reservationDetails;
+    } catch (e) {
+      details = {};
+    }
+
+    // Zoho SMTP ayarları
     const transporter = nodemailer.createTransport({
-      host: 'smtp-relay.brevo.com',
-      port: 587,
-      secure: false, // TLS
+      host: 'smtp.zoho.com',
+      port: 465,
+      secure: true, // SSL
       auth: {
-        user: process.env.SIB_USER,
-        pass: process.env.SIB_PASS,
+        user: process.env.ZOHO_USER,
+        pass: process.env.ZOHO_PASS,
       },
     });
 
-
-    // PDF oluştur
-  // PDFKit'in tip hatalarını aşmak için doc'u any olarak tanımla
-  const doc: any = new PDFDocument({ size: 'A4', margin: 40 });
-  // Türkçe karakter desteği için Roboto fontlarını yükle
-  doc.registerFont('roboto', path.join(process.cwd(), 'public/fonts/Roboto-Regular.ttf'));
-  doc.registerFont('roboto-bold', path.join(process.cwd(), 'public/fonts/Roboto-Bold.ttf'));
-    const pdfStream = new PassThrough();
-    let pdfBuffer: Buffer | null = null;
-    const chunks: Buffer[] = [];
-
-
-
-    // Detay satırlarını PDF işlemlerinden önce tanımla (tüm alanlar, fallback'lı ve sıralı)
-    const detailRows = [
-      ['Ad Soyad', details?.customer_name?.toString().trim() || '-'],
-      ['E-posta', details?.customer_email?.toString().trim() || '-'],
-      ['Telefon', details?.customer_phone?.toString().trim() || '-'],
-      [
-        'Güzergah',
-        (getLocationName(details?.from_location_id) && getLocationName(details?.to_location_id))
-          ? `${getLocationName(details?.from_location_id)} → ${getLocationName(details?.to_location_id)}`
-          : (details?.from_location_name && details?.to_location_name)
-            ? `${details.from_location_name} → ${details.to_location_name}`
-            : (details?.route_name || details?.route || details?.guzergah || details?.guzergah_adi || details?.guzergah_name || details?.guzergahadi || details?.guzergahname || details?.from_location || details?.from || details?.pickup_location || '-') +
-              ' → ' +
-              (details?.to_location_name || details?.to_location || details?.to || details?.dropoff_location || details?.varis || details?.varis_nokta || details?.varis_adi || details?.varisadi || details?.varisname || '-')
-      ],
-      ['Transfer Türü', details?.trip_type === 'round-trip' ? 'Gidiş-Dönüş' : 'Tek Yön'],
-      ['Gidiş Tarihi', `${details?.departure_date || '-'} - ${details?.departure_time || '-'}`],
-      ['Dönüş Tarihi', `${details?.return_date || '-'} - ${details?.return_time || '-'}`],
-      ['Gidiş Uçuş Kodu', details?.departure_flight_code?.toString().trim() || '-'],
-      ['Dönüş Uçuş Kodu', details?.return_flight_code?.toString().trim() || '-'],
-      ['Yolcu Sayısı', details?.passengers?.toString().trim() || '-'],
-      ['Yolcu İsimleri', Array.isArray(details?.passenger_names) ? details.passenger_names.join(', ') : (details?.passenger_names?.toString().trim() || '-')],
-      [
-        'Araç Seçimi',
-        getVehicleName(details?.vehicle_type_id) ||
-        details?.vehicle_type_name?.toString().trim() || details?.vehicle_type?.toString().trim() || details?.vehicle?.toString().trim() || details?.vehicle_name?.toString().trim() || details?.vehicleType?.toString().trim() || details?.vehicle_selection?.toString().trim() || details?.arac || details?.arac_adi || details?.aracadi || details?.arac_name || '-'
-      ],
-      ['Ek Hizmetler', Array.isArray(details?.extra_services) ? details.extra_services.join(', ') : (details?.extra_services?.toString().trim() || '-')],
-      ['Ödeme Durumu', details?.payment_status?.toString().trim() || '-'],
-      ['Notlar', details?.notes?.toString().trim() || '-'],
-      ['Toplam Tutar', (details?.total_price ? details.total_price + ' ₺' : '-')],
-    ];
-    doc.pipe(pdfStream);
-
-
-
-
-    // LOGO sol üst köşe (küçük ve çakışmasız, path düzeltilmiş)
-    try {
-      const logoPath = path.join(process.cwd(), 'logo', 'logo.png');
-      const logoWidth = 130;
-      const logoHeight = 28;
-      doc.image(logoPath, 42, 28, { width: logoWidth, height: logoHeight });
-    } catch (e) {
-      // logo yoksa devam et
-    }
-
-    // Rezervasyon no kutusu sağ üstte, küçük font
-    const reservationNo = details?.reservation_number || details?.id || voucherCode;
-    doc
-      .rect(doc.page.width - 170, 28, 120, 28)
-      .fillAndStroke('#ffcdd2', '#b71c1c')
-      .fillColor('#b71c1c')
-      .font('roboto-bold')
-      .fontSize(10)
-      .text('Rezervasyon No:', doc.page.width - 162, 36, { width: 80, align: 'left' })
-      .fontSize(12)
-      .text(reservationNo, doc.page.width - 102, 34, { width: 60, align: 'right' });
-
-
-    // Başlık
-    doc
-      .font('roboto-bold')
-      .fontSize(18)
-      .fillColor('#b71c1c')
-      .text('VOUCHER', 0, 70, { align: 'center', width: doc.page.width });
-    doc.moveDown(0.2);
-
-
-
-    // Alt başlık kutusu
-    doc
-      .rect(40, 100, doc.page.width - 80, 22)
-      .fillAndStroke('#f5f5f5', '#bdbdbd')
-      .fillColor('#333')
-      .font('roboto-bold')
-      .fontSize(10)
-      .text(`Sayın ${name || ''}`, 0, 106, { align: 'center', width: doc.page.width - 80 });
-    doc.moveDown(0.1);
-
-
-
-
-    // Detay başlığı
-    doc
-      .font('roboto-bold')
-      .fontSize(11)
-      .fillColor('#b71c1c')
-      .text('Rezervasyon Detayları', 0, 125, { align: 'center', width: doc.page.width });
-    doc.moveDown(0.1);
-
-    // Detay kutuları: daha kompakt, tek sayfa için optimize, satır yüksekliği ve font boyutu azaltıldı
-    let y = 135;
-    const rowHeight = 14;
-    const labelWidth = 90;
-    const valueWidth = doc.page.width - 120 - labelWidth;
-    (detailRows as [string, string][]).forEach(([label, value]: [string, string]) => {
-      if (y > doc.page.height - 100) return; // Taşmayı engelle
-      doc
-        .rect(60, y, doc.page.width - 120, rowHeight)
-        .fillAndStroke('#f5f5f5', '#bdbdbd');
-      doc
-        .fillColor('#b71c1c')
-        .font('roboto-bold')
-        .fontSize(8)
-        .text(label + ':', 70, y + 2, { width: labelWidth - 10, align: 'left', continued: false });
-      doc
-        .fillColor('#222')
-        .font('roboto')
-        .fontSize(8)
-        .text(value, 70 + labelWidth, y + 2, { width: valueWidth - 20, align: 'left', continued: false });
-      y += rowHeight + 1;
-    });
-
-    // Alt gri kutu ve iletişim
-    doc
-      .rect(0, doc.page.height - 80, doc.page.width, 80)
-      .fill('#eeeeee');
-    doc
-      .fillColor('#b71c1c')
-      .font('roboto-bold')
-      .fontSize(12)
-      .text('İyi yolculuklar dileriz.', 0, doc.page.height - 60, { align: 'center', width: doc.page.width });
-    doc
-      .fillColor('#757575')
-      .font('roboto')
-      .fontSize(10)
-      .text('www.securedrive.org  |  operasyon@securedrive.org', 0, doc.page.height - 40, { align: 'center', width: doc.page.width });
-
-
-
-
-
-
-    doc.end();
-
-    // PDF stream to buffer (tek pipe, yukarıda)
-    await new Promise<void>((resolve, reject) => {
-      pdfStream.on('data', (chunk) => chunks.push(chunk));
-      pdfStream.on('end', () => {
-        pdfBuffer = Buffer.concat(chunks);
-        resolve();
-      });
-      pdfStream.on('error', reject);
-    });
-
-    if (!pdfBuffer) {
-      console.error('PDF oluşturulamadı, buffer null');
-      return res.status(500).json({ error: 'PDF oluşturulamadı' });
-    }
-
     const mailOptions = {
-      from: 'operasyon@securedrive.org',
+      from: process.env.ZOHO_USER,
       to,
-      subject: 'Voucher Bilgilendirmesi',
+      subject: '✅ Rezervasyonunuz Onaylandı - Secure Drive Transfer',
       html: `
-        <h2>Sayın ${name || ''},</h2>
-        <p>Rezervasyonunuz için voucher kodunuz: <b>${details?.reservation_number || details?.id || voucherCode}</b></p>
-        <h3>Rezervasyon Detayları:</h3>
-        <ul>
-          <li>Rezervasyon bilgileriniz ektedir.</li>
-        </ul>
-        <p>İyi yolculuklar dileriz.</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #10b981; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0; font-size: 24px;">Secure Drive Transfer</h1>
+          </div>
+
+          <div style="padding: 30px; background-color: #f9fafb;">
+            <h2 style="color: #10b981; margin-top: 0;">✓ Rezervasyonunuz Onaylandı!</h2>
+            <p>Sayın <strong>${name || 'Değerli Müşterimiz'}</strong>,</p>
+            <p>Transfer rezervasyonunuz başarıyla oluşturulmuştur.</p>
+
+            <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981;">
+              <h3 style="margin-top: 0; color: #374151;">Rezervasyon Bilgileri</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0;"><strong>Rezervasyon No:</strong></td>
+                  <td style="padding: 8px 0; color: #10b981; font-weight: bold;">${voucherCode}</td>
+                </tr>
+                ${details.from ? `
+                <tr>
+                  <td style="padding: 8px 0;"><strong>Nereden:</strong></td>
+                  <td style="padding: 8px 0;">${details.from}</td>
+                </tr>
+                ` : ''}
+                ${details.to ? `
+                <tr>
+                  <td style="padding: 8px 0;"><strong>Nereye:</strong></td>
+                  <td style="padding: 8px 0;">${details.to}</td>
+                </tr>
+                ` : ''}
+                ${details.vehicle ? `
+                <tr>
+                  <td style="padding: 8px 0;"><strong>Araç Tipi:</strong></td>
+                  <td style="padding: 8px 0;">${details.vehicle}</td>
+                </tr>
+                ` : ''}
+                ${details.date ? `
+                <tr>
+                  <td style="padding: 8px 0;"><strong>Tarih:</strong></td>
+                  <td style="padding: 8px 0;">${details.date}</td>
+                </tr>
+                ` : ''}
+                ${details.time ? `
+                <tr>
+                  <td style="padding: 8px 0;"><strong>Saat:</strong></td>
+                  <td style="padding: 8px 0;">${details.time}</td>
+                </tr>
+                ` : ''}
+                ${details.passengers ? `
+                <tr>
+                  <td style="padding: 8px 0;"><strong>Yolcu Sayısı:</strong></td>
+                  <td style="padding: 8px 0;">${details.passengers} kişi</td>
+                </tr>
+                ` : ''}
+                ${details.price ? `
+                <tr>
+                  <td style="padding: 8px 0;"><strong>Toplam Tutar:</strong></td>
+                  <td style="padding: 8px 0; color: #10b981; font-size: 18px; font-weight: bold;">${details.price} TL</td>
+                </tr>
+                ` : ''}
+              </table>
+            </div>
+
+            <div style="background-color: #eff6ff; padding: 15px; border-radius: 8px; margin: 20px 0;">
+              <p style="margin: 0; color: #1e40af;">
+                <strong>📞 İletişim:</strong> Transfer saatinden önce sizinle iletişime geçilecektir.<br>
+                <strong>✉️ Sorularınız için:</strong> operasyon@securedrive.org
+              </p>
+            </div>
+
+            <p>İyi yolculuklar dileriz!</p>
+          </div>
+
+          <div style="background-color: #374151; color: #9ca3af; padding: 20px; text-align: center; border-radius: 0 0 8px 8px;">
+            <p style="margin: 0; font-size: 12px;">Secure Drive Transfer</p>
+            <p style="margin: 5px 0 0 0; font-size: 12px;">www.securedrive.org</p>
+          </div>
+        </div>
       `,
-      attachments: [
-        {
-          filename: `voucher_${voucherCode}.pdf`,
-          content: pdfBuffer,
-          contentType: 'application/pdf',
-        },
-      ],
     };
 
-    try {
-      const info = await transporter.sendMail(mailOptions);
-      return res.status(200).json({ success: true, info });
-    } catch (mailError: any) {
-      console.error('Mail gönderilemedi:', mailError);
-      return res.status(500).json({ error: 'Mail gönderilemedi', detail: mailError?.message || String(mailError) });
-    }
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Mail gönderildi:', info);
+    return res.status(200).json({ success: true });
   } catch (error: any) {
-    console.error('Genel hata:', error);
+    console.error('Mail gönderme hatası:', error);
+    // Her durumda JSON dön
     return res.status(500).json({ error: 'Mail gönderilemedi', detail: error?.message || String(error) });
   }
 }
