@@ -140,21 +140,14 @@ const PaymentFail: React.FC = () => {
         </div>
 
         {/* Butonlar */}
-        <div className="space-y-3">
-          <button
-            onClick={handleRetry}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
-          >
-            <RefreshCw className="w-5 h-5" />
-            <span>Tekrar Dene</span>
-          </button>
+        
 
           <button
-            onClick={() => navigate('/user/dashboard')}
+            onClick={() => window.location.href = 'https://www.securedrive.org'}
             className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>Ana Sayfaya Dön</span>
+            <span>Anasayfaya Git</span>
           </button>
         </div>
 
@@ -162,7 +155,7 @@ const PaymentFail: React.FC = () => {
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">Yardıma mı ihtiyacınız var?</p>
           <a
-            href="mailto:destek@securedrive.org"
+            href="mailto:operasyon@securedrive.org"
             className="text-sm text-red-600 hover:text-red-700 font-semibold"
           >
             Müşteri Hizmetleri ile İletişime Geçin
