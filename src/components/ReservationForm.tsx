@@ -831,6 +831,12 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
           orderId={pendingReservation?.orderId || `RES_${Date.now()}`}
           onClose={() => setShowPayment(false)}
           onPaymentSuccess={handlePaymentSuccess}
+          customerInfo={{
+            name: pendingReservation?.customerName || formData.customerName,
+            email: pendingReservation?.customerEmail || formData.customerEmail,
+            phone: pendingReservation?.customerPhone || formData.customerPhone
+          }}
+          reservationData={pendingReservation}
         />
       )}
     {/* Bildirim Toast */}
