@@ -94,6 +94,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       setIsProcessing(false);
       return;
     }
+
     // QNB dokümana göre: orderId (veya mrcOrderId) backend'e iletilmeli
     const paymentData = {
       amount,
@@ -108,24 +109,11 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       currency: '949',
       lang: 'TR',
       orderId, // orderId backend'e iletiliyor (MrcOrderId olarak da kullanılacak)
-      customerName: customerInfo.name, // Müşteri bilgileri mail için
+      customerName: customerInfo.name, // Müşteri bilgileri
       customerEmail: customerInfo.email,
       customerPhone: customerInfo.phone,
-      // Rezervasyon bilgileri (backend'de Supabase'e kaydedilecek)
-      ...(reservationData && {
-        fromLocation: reservationData.fromLocation,
-        toLocation: reservationData.toLocation,
-        vehicleType: reservationData.vehicleType,
-        departureDate: reservationData.departureDate,
-        departureTime: reservationData.departureTime,
-        returnDate: reservationData.returnDate,
-        returnTime: reservationData.returnTime,
-        passengers: reservationData.passengers,
-        tripType: reservationData.tripType,
-        notes: reservationData.notes,
-        passengerNames: reservationData.passengerNames,
-        selectedExtras: reservationData.selectedExtras
-      })
+      // Rezervasyon bilgilerini backend'e gönder (cache'e kaydedilecek)
+      reservationData: reservationData
     };
     try {
       // Sunucuya ödeme isteği gönder
