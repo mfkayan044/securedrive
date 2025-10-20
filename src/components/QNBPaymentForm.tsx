@@ -109,7 +109,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
     };
     try {
       // Sunucuya ödeme isteği gönder
-      const paymentApiUrl = import.meta.env.VITE_PAYMENT_API_URL || 'http://localhost:3000/payment';
+      const paymentApiUrl = 'https://api.securedrive.org/payment'; // Canlı sunucu için hardcoded
       const response = await fetch(paymentApiUrl, {
         method: 'POST',
         headers: {
@@ -282,4 +282,3 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
 };
 
 export default QNBPaymentForm;
-
