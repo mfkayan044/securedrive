@@ -108,8 +108,8 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       orderId // orderId backend'e iletiliyor (MrcOrderId olarak da kullanılacak)
     };
     try {
-    // Sunucuya ödeme isteği gönder
-    const paymentApiUrl = import.meta.env.VITE_PAYMENT_API_URL || '/payment';
+      // Sunucuya ödeme isteği gönder
+      const paymentApiUrl = import.meta.env.VITE_PAYMENT_API_URL || 'http://localhost:3000/payment';
       const response = await fetch(paymentApiUrl, {
         method: 'POST',
         headers: {
@@ -118,35 +118,30 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
         body: JSON.stringify(paymentData),
       });
 
-      const contentType = response.headers.get('content-type') || '';
-      // If server returned non-JSON (likely HTML error page), capture and show snippet
       if (!response.ok) {
         const text = await response.text();
         console.error('Payment API returned non-2xx status', response.status, text);
-        setError(`Sunucu hatası: ${response.status} - ${text.slice(0, 200)}`);
+        setError(`Sunucu hatası: ${response.status}`);
         onPaymentError(`Sunucu hatası: ${response.status}`);
         setIsProcessing(false);
         return;
       }
 
-      if (!contentType.includes('application/json')) {
-        const text = await response.text();
-        console.error('Payment API returned non-JSON response:', text);
-        setError('Sunucu HTML yanıtı alındı (detaylar konsolda).');
-        onPaymentError('Sunucu HTML yanıtı alındı.');
-        setIsProcessing(false);
-        return;
-      }
+      // QNB'den HTML yanıtı bekliyoruz (3D Secure form)
+      const htmlResponse = await response.text();
+      console.log('QNB HTML yanıtı alındı, yeni pencerede açılıyor...');
 
-      const result = await response.json();
-      if (result && result.html) {
-        openQNB3DWindow(result.html);
-        setPaymentHtml(result.html); // Komponent için
-        onPaymentSuccess(result);
+      // HTML'i yeni pencerede aç (otomatik olarak BKM 3D Secure'e yönlenecek)
+      const paymentWindow = window.open('', '_blank', 'width=600,height=700,scrollbars=yes');
+      if (paymentWindow) {
+        paymentWindow.document.write(htmlResponse);
+        paymentWindow.document.close();
+        
+        setPaymentHtml(htmlResponse);
+        onPaymentSuccess({ message: '3D Secure sayfası açıldı', orderId });
       } else {
-        console.error('Payment API returned JSON without html:', result);
-        setError('Ödeme başlatılamadı. (Sunucu JSON yanıtı eksik)');
-        onPaymentError('Ödeme başlatılamadı.');
+        setError('Pop-up engellendi. Lütfen tarayıcınızın pop-up engelleyicisini devre dışı bırakın.');
+        onPaymentError('Pop-up engellendi');
       }
     } catch (err) {
       setError('Sunucu hatası: ' + (err as Error).message);
