@@ -19,6 +19,7 @@ interface QNBPaymentFormProps {
   };
   onPaymentSuccess: (result: any) => void;
   onPaymentError: (error: string) => void;
+  reservationData?: any; // Rezervasyon bilgileri
 }
 
 const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
@@ -26,7 +27,8 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
   orderId,
   customerInfo,
   onPaymentSuccess,
-  onPaymentError
+  onPaymentError,
+  reservationData
 }) => {
   const [cardNumber, setCardNumber] = useState('');
   const [cardHolder, setCardHolder] = useState('');
@@ -108,7 +110,22 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       orderId, // orderId backend'e iletiliyor (MrcOrderId olarak da kullanılacak)
       customerName: customerInfo.name, // Müşteri bilgileri mail için
       customerEmail: customerInfo.email,
-      customerPhone: customerInfo.phone
+      customerPhone: customerInfo.phone,
+      // Rezervasyon bilgileri (backend'de Supabase'e kaydedilecek)
+      ...(reservationData && {
+        fromLocation: reservationData.fromLocation,
+        toLocation: reservationData.toLocation,
+        vehicleType: reservationData.vehicleType,
+        departureDate: reservationData.departureDate,
+        departureTime: reservationData.departureTime,
+        returnDate: reservationData.returnDate,
+        returnTime: reservationData.returnTime,
+        passengers: reservationData.passengers,
+        tripType: reservationData.tripType,
+        notes: reservationData.notes,
+        passengerNames: reservationData.passengerNames,
+        selectedExtras: reservationData.selectedExtras
+      })
     };
     try {
       // Sunucuya ödeme isteği gönder
