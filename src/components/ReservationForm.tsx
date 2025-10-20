@@ -338,7 +338,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
 
   // Ödeme başarılı → Supabase'e kayıt + extras + conversation
   const handlePaymentSuccess = async () => {
-
     if (!pendingReservation) return;
 
     try {
@@ -354,30 +353,6 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
       }
 
       // 2) Rezervasyon kaydı
-
-      const newReservation = {
-        user_id: currentUser?.id || null,
-        customer_name: pendingReservation.customerName,
-        customer_email: pendingReservation.customerEmail,
-        customer_phone: pendingReservation.customerPhone,
-        trip_type: pendingReservation.tripType,
-        from_location_id: pendingReservation.fromLocation,
-        to_location_id: pendingReservation.toLocation,
-        vehicle_type_id: pendingReservation.vehicleType,
-        departure_date: pendingReservation.departureDate,
-        departure_time: pendingReservation.departureTime,
-        return_date: pendingReservation.returnDate || null,
-        return_time: pendingReservation.returnTime || null,
-        passengers: pendingReservation.passengers,
-        passenger_names: pendingReservation.passengerNames,
-        departure_flight_code: pendingReservation.departureFlightCode || null,
-        return_flight_code: pendingReservation.returnFlightCode || null,
-        total_price: pendingReservation.currentPrice,
-        notes: pendingReservation.notes || null,
-        status: reservationStatus,
-        payment_status: noPaymentMode ? 'pending' : 'paid'
-      };
-
       const { data: reservation, error } = await supabase
         .from('reservations')
         .insert({
@@ -401,15 +376,93 @@ const ReservationForm: React.FC<ReservationFormProps> = ({ onSuccess, forceEmpty
           notes: pendingReservation.notes || null,
           status: reservationStatus,
           payment_status: noPaymentMode ? 'pending' : 'paid'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Rezervasyon kayıt hatası:', error);
+        showNotification('Rezervasyon kaydedilemedi. Lütfen tekrar deneyin.');
+        return;
+      }
+
+      console.log('✅ Rezervasyon kaydedildi:', reservation.id);
+
+      // 3) Ekstra hizmetleri kaydet
+      if (pendingReservation.selectedExtras && pendingReservation.selectedExtras.length > 0) {
+        const extrasInsert = pendingReservation.selectedExtras.map((extraId: string) => ({
+          reservation_id: reservation.id,
+          extra_service_id: extraId
+        }));
+        const { error: extrasError } = await supabase
+          .from('reservation_extras')
+          .insert(extrasInsert);
+        
+        if (extrasError) {
+          console.error('Ekstra hizmetler kayıt hatası:', extrasError);
+        } else {
+          console.log('✅ Ekstra hizmetler kaydedildi');
+        }
+      }
+
+      // 4) Müşteriye voucher emaili gönder
+      try {
+        await fetch('/api/sendVoucherEmail', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: pendingReservation.customerEmail,
+            name: pendingReservation.customerName,
+            voucherCode: reservation.id,
+            reservationDetails: JSON.stringify({
+              from: fromLocationName,
+              to: toLocationName,
+              date: pendingReservation.departureDate,
+              time: pendingReservation.departureTime,
+              passengers: pendingReservation.passengers,
+              vehicle: vehicleName,
+              price: pendingReservation.currentPrice
+            }, null, 2)
+          })
         });
-  setPassengerNames(['']);
-  setSelectedExtras([]);
-  setPendingReservation(null);
-  setShowPayment(false);
-  setShowSuccessModal(true);
+        console.log('✅ Müşteri email gönderildi');
+      } catch (emailError) {
+        console.error('Müşteri email hatası:', emailError);
+      }
+
+      // 5) Admin'e bildirim gönder
+      try {
+        await fetch('/api/notifyAdminOnReservation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reservation: {
+              customer_name: pendingReservation.customerName,
+              customer_email: pendingReservation.customerEmail,
+              customer_phone: pendingReservation.customerPhone,
+              from_location_name: fromLocationName,
+              to_location_name: toLocationName,
+              departure_date: pendingReservation.departureDate,
+              departure_time: pendingReservation.departureTime,
+              notes: pendingReservation.notes
+            }
+          })
+        });
+        console.log('✅ Admin email gönderildi');
+      } catch (adminEmailError) {
+        console.error('Admin email hatası:', adminEmailError);
+      }
+
+      // 6) Formu temizle ve başarı göster
+      setPassengerNames(['']);
+      setSelectedExtras([]);
+      setPendingReservation(null);
+      setShowPayment(false);
+      setShowSuccessModal(true);
+      
     } catch (err) {
       console.error('Error:', err);
-  showNotification('Bir hata oluştu. Lütfen tekrar deneyin.');
+      showNotification('Bir hata oluştu. Lütfen tekrar deneyin.');
     }
   };
 
