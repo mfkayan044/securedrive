@@ -23,12 +23,8 @@ const PaymentSuccess: React.FC = () => {
   }, [searchParams]);
 
   const handleContinue = () => {
-    // Rezervasyon detay sayfasına yönlendir
-    if (paymentData?.MrcOrderId) {
-      navigate(`/user/reservations/${paymentData.MrcOrderId}`);
-    } else {
-      navigate('/user/dashboard');
-    }
+    // Anasayfaya yönlendir
+    window.location.href = 'https://www.securedrive.org';
   };
 
   return (
@@ -110,7 +106,7 @@ const PaymentSuccess: React.FC = () => {
             onClick={handleContinue}
             className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
           >
-            <span>Rezervasyonlarıma Git</span>
+            <span>Anasayfaya Git</span>
             <ArrowRight className="w-5 h-5" />
           </button>
 
