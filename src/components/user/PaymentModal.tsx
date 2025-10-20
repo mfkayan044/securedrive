@@ -9,9 +9,23 @@ interface PaymentModalProps {
   orderId: string;
   onClose: () => void;
   onPaymentSuccess: (paymentInfo?: any, couponCode?: string) => void;
+  customerInfo?: {
+    name: string;
+    email: string;
+    phone: string;
+  };
+  reservationData?: any; // Rezervasyon bilgileri
 }
 
-const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, totalPrice, orderId, onClose, onPaymentSuccess }) => {
+const PaymentModal: React.FC<PaymentModalProps> = ({ 
+  isOpen, 
+  totalPrice, 
+  orderId, 
+  onClose, 
+  onPaymentSuccess,
+  customerInfo,
+  reservationData
+}) => {
   const [couponCode, setCouponCode] = useState('');
   const [error, setError] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
@@ -117,11 +131,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, totalPrice, orderId
           <QNBPaymentForm
             amount={finalAmount}
             orderId={orderId}
-            customerInfo={{
-              name: 'Müşteri', // Bu bilgiyi rezervasyon formundan alabilirsin
+            customerInfo={customerInfo || {
+              name: 'Müşteri',
               email: 'musteri@example.com',
               phone: '5551234567'
             }}
+            reservationData={reservationData}
             onPaymentSuccess={handleQNBPaymentSuccess}
             onPaymentError={handleQNBPaymentError}
           />
