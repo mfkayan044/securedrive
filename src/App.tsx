@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { Plane, Phone, Mail, MapPin, Clock, Shield, Award, Star, Settings, User, LogOut, MessageCircle } from 'lucide-react';
 import ReservationForm from './components/ReservationForm';
 import AdminPanel from './components/admin/AdminPanel';
 import DriverPanel from './components/driver/DriverPanel';
 import PaymentPage from './components/PaymentPage';
-import BlogPage from './components/BlogPage';
-import FAQPage from './components/FAQPage';
+import PaymentSuccess from './components/PaymentSuccess';
+import PaymentFail from './components/PaymentFail';
 import { AdminProvider, useAdmin } from './contexts/AdminContext';
 import { DriverProvider } from './contexts/DriverContext';
 import { UserProvider, useUser } from './contexts/UserContext';
@@ -19,12 +18,6 @@ import DatabaseStatus from './components/DatabaseStatus';
 import { supabase } from './lib/supabase';
 
 const HomePage: React.FC = () => {
-  // ReservationWizard tamamlandığında çağrılacak fonksiyon
-  const handleReservationExtracted = (data: any) => {
-    setAiFormData(data);
-  };
-  // AI ile doldurulacak form state'i
-  const [aiFormData, setAiFormData] = useState<any | null>(null);
   const { currentUser, isAuthenticated, logout } = useUser();
   const { logout: adminLogout } = useAdmin();
   const [showAuthModal, setShowAuthModal] = React.useState(false);
@@ -34,7 +27,7 @@ const HomePage: React.FC = () => {
 
   useEffect(() => {
     // Admin olarak müşteri arayüzüne erişim engelleniyor
-    if (currentUser && currentUser.email === "operasyon@securedrive.org") {
+    if (currentUser && currentUser.email === "admin@istanbultransfer.com") {
       logout();
       window.location.href = "/admin";
     }
@@ -79,103 +72,30 @@ const HomePage: React.FC = () => {
   if (!settings) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-cyan-50">
-        <span className="text-gray-400 text-lg animate-pulse">Ayrıcalıklı ulaşım herkesin hakkı!...</span>
+        <span className="text-gray-400 text-lg animate-pulse">Yükleniyor...</span>
       </div>
     );
   }
   return (
-    <div className="min-h-screen bg-white">
-      <Helmet>
-        <title>{settings.site_name || 'Secure Drive'} | {settings.site_description || 'Havalimanı Transfer Hizmeti'}</title>
-        <meta name="description" content={settings.homepage_hero_desc || 'Havalimanından şehre, şehirden havalimanına 7/24 profesyonel transfer hizmeti. Konforlu araçlar, deneyimli şoförler, uygun fiyatlar.'} />
-        <meta property="og:title" content={settings.site_name || 'Secure Drive'} />
-        <meta property="og:description" content={settings.homepage_hero_desc || 'Havalimanından şehre, şehirden havalimanına 7/24 profesyonel transfer hizmeti. Konforlu araçlar, deneyimli şoförler, uygun fiyatlar.'} />
-        <meta property="og:image" content={settings.logo_url || '/logo/logo.png'} />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content={typeof window !== 'undefined' ? window.location.href : ''} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={settings.site_name || 'Secure Drive'} />
-        <meta name="twitter:description" content={settings.homepage_hero_desc || 'Havalimanından şehre, şehirden havalimanına 7/24 profesyonel transfer hizmeti. Konforlu araçlar, deneyimli şoförler, uygun fiyatlar.'} />
-        <meta name="twitter:image" content={settings.logo_url || '/logo/logo.png'} />
-        {/* Organization JSON-LD */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'Organization',
-            'name': settings.site_name || 'Secure Drive',
-            'url': typeof window !== 'undefined' ? window.location.origin : '',
-            'logo': settings.logo_url || '/logo/logo.png',
-            'contactPoint': [
-              {
-                '@type': 'ContactPoint',
-                'telephone': settings.contact_phone || '+90 (212) 535 3434',
-                'contactType': 'customer service',
-                'email': settings.contact_email || 'info@istanbultransfer.com',
-                'areaServed': 'TR',
-                'availableLanguage': ['Turkish','English']
-              }
-            ],
-            'address': {
-              '@type': 'PostalAddress',
-              'addressLocality': 'İstanbul',
-              'addressCountry': 'TR'
-            }
-          })}
-        </script>
-        {/* LocalBusiness JSON-LD */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'LocalBusiness',
-            'name': settings.site_name || 'Secure Drive',
-            'image': settings.logo_url || '/logo/logo.png',
-            'telephone': settings.contact_phone || '+90 (212) 555 0123',
-            'email': settings.contact_email || 'info@istanbultransfer.com',
-            'address': {
-              '@type': 'PostalAddress',
-              'addressLocality': 'İstanbul',
-              'addressCountry': 'TR'
-            },
-            'url': typeof window !== 'undefined' ? window.location.origin : '',
-            'openingHours': [
-              'Mo-Su 00:00-23:59'
-            ],
-            'priceRange': '₺₺',
-            'servesCuisine': 'Transfer, Ulaşım, VIP Araç',
-            'areaServed': 'İstanbul'
-          })}
-        </script>
-        {/* WebSite JSON-LD */}
-        <script type="application/ld+json">
-          {JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'WebSite',
-            'name': settings.site_name || 'Secure Drive',
-            'url': typeof window !== 'undefined' ? window.location.origin : '',
-            'potentialAction': {
-              '@type': 'SearchAction',
-              'target': (typeof window !== 'undefined' ? window.location.origin : '') + '/?s={search_term_string}',
-              'query-input': 'required name=search_term_string'
-            }
-          })}
-        </script>
-      </Helmet>
+  <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white/90 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b-2 border-primary/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <header className="bg-white/90 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b-2 border-primary/30">
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             <Link to="/" className="flex flex-col items-center p-0 m-0" style={{gap: 0}}>
-              {settings.logo_url ? (
-                <img src={settings.logo_url} alt="Site Logosu" className="h-10 w-40 object-contain rounded-xl bg-transparent p-0 m-0" style={{background: 'none', padding: 0, margin: 0}} />
-              ) : (
-                <div className="bg-primary p-2 rounded-xl">
-                  <Plane className="w-8 h-8 text-white" />
-                </div>
-              )}
-              <h1 className="text-2xl font-bold text-primary p-0 m-0" style={{margin: 0, padding: 0}}>
-                {settings.site_name || ''}
-              </h1>
-              <p className="text-sm text-secondary p-0 m-0" style={{margin: 0, padding: 0}}>{settings.site_description || ''}</p>
+              <div className="flex flex-col items-center p-0 m-0" style={{gap: 0}}>
+                {settings.logo_url ? (
+                  <img src={settings.logo_url} alt="Site Logosu" className="h-10 w-40 object-contain rounded-xl bg-transparent p-0 m-0" style={{background: 'none', padding: 0, margin: 0}} />
+                ) : (
+                  <div className="bg-primary p-2 rounded-xl">
+                    <Plane className="w-8 h-8 text-white" />
+                  </div>
+                )}
+                <h1 className="text-2xl font-bold text-primary p-0 m-0" style={{margin: 0, padding: 0}}>
+                  {settings.site_name || ''}
+                </h1>
+                <p className="text-sm text-secondary p-0 m-0" style={{margin: 0, padding: 0}}>{settings.site_description || ''}</p>
+              </div>
             </Link>
             <div className="hidden md:flex items-center space-x-6">
               <div className="flex items-center space-x-2 text-gray-600">
@@ -250,10 +170,10 @@ const HomePage: React.FC = () => {
             </div>
           </div>
         </div>
-  </header>
+      </header>
 
-    {/* Hero Section with Reservation Form */}
-    <section className="py-12 lg:py-20">
+      {/* Hero Section with Reservation Form */}
+  <section className="py-12 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Database Status */}
           <div className="mb-8">
@@ -279,70 +199,66 @@ const HomePage: React.FC = () => {
           </div>
 
           {/* Reservation Form */}
-          <ReservationForm {...(aiFormData ? {
-            forceEmptyCustomer: false,
-            noPaymentMode: false,
-            onSuccess: () => setAiFormData(null),
-            ...aiFormData
-          } : {})} />
+          <ReservationForm />
         </div>
-  </section>
+      </section>
 
-    {/* Features Section */}
-    <section className="py-16 bg-white">
+      {/* Features Section */}
+  <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold text-primary mb-4">{settings.why_us_title || 'Neden Bizi Seçmelisiniz?'}</h3>
             <p className="text-lg text-secondary">{settings.why_us_desc || 'İstanbul\'da transfer hizmetinde öncü olmamızın sebepleri'}</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {settings.why_us_items
-                ? settings.why_us_items.split('\n').map((item, i) => (
-                    <div key={i} className="text-center group">
-                      <div className="bg-primary w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                        {/* Sembol ikonları örnek, istersen ikonları da ayarlayabilirsin */}
-                        {[<Clock />, <Shield />, <Award />, <MapPin />][i % 4]}
-                      </div>
-                      <h4 className="text-xl font-semibold text-gray-900 mb-2">{item}</h4>
+            {settings.why_us_items
+              ? settings.why_us_items.split('\n').map((item, i) => (
+                  <div key={i} className="text-center group">
+                    <div className="bg-primary w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                      {/* Sembol ikonları örnek, istersen ikonları da ayarlayabilirsin */}
+                      {[<Clock />, <Shield />, <Award />, <MapPin />][i % 4]}
                     </div>
-                  ))
-                : [
-                    <div className="text-center group" key="why1">
-                      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                        <Clock className="w-8 h-8" />
-                      </div>
-                      <h4 className="text-xl font-semibold text-gray-900 mb-2">7/24 Hizmet</h4>
-                      <p className="text-gray-600">Gece gündüz kesintisiz transfer hizmeti sunuyoruz</p>
-                    </div>,
-                    <div className="text-center group" key="why2">
-                      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                        <Shield className="w-8 h-8" />
-                      </div>
-                      <h4 className="text-xl font-semibold text-gray-900 mb-2">Güvenli Araçlar</h4>
-                      <p className="text-gray-600">Düzenli bakımlı, sigortalı ve temiz araç filosu</p>
-                    </div>,
-                    <div className="text-center group" key="why3">
-                      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                        <Award className="w-8 h-8" />
-                      </div>
-                      <h4 className="text-xl font-semibold text-gray-900 mb-2">Profesyonel Şoförler</h4>
-                      <p className="text-gray-600">Deneyimli, güvenilir ve nazik şoför kadromuz</p>
-                    </div>,
-                    <div className="text-center group" key="why4">
-                      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
-                        <MapPin className="w-8 h-8" />
-                      </div>
-                      <h4 className="text-xl font-semibold text-gray-900 mb-2">Tüm İstanbul</h4>
-                      <p className="text-gray-600">İstanbul'un her noktasına transfer hizmeti</p>
+                    <h4 className="text-xl font-semibold text-gray-900 mb-2">{item}</h4>
+                  </div>
+                ))
+              : (
+                <>
+                  <div className="text-center group">
+                    <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                      <Clock className="w-8 h-8" />
                     </div>
-                  ]
-              }
+                    <h4 className="text-xl font-semibold text-gray-900 mb-2">7/24 Hizmet</h4>
+                    <p className="text-gray-600">Gece gündüz kesintisiz transfer hizmeti sunuyoruz</p>
+                  </div>
+                  <div className="text-center group">
+                    <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                      <Shield className="w-8 h-8" />
+                    </div>
+                    <h4 className="text-xl font-semibold text-gray-900 mb-2">Güvenli Araçlar</h4>
+                    <p className="text-gray-600">Düzenli bakımlı, sigortalı ve temiz araç filosu</p>
+                  </div>
+                  <div className="text-center group">
+                    <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                      <Award className="w-8 h-8" />
+                    </div>
+                    <h4 className="text-xl font-semibold text-gray-900 mb-2">Profesyonel Şoförler</h4>
+                    <p className="text-gray-600">Deneyimli, güvenilir ve nazik şoför kadromuz</p>
+                  </div>
+                  <div className="text-center group">
+                    <div className="bg-gradient-to-r from-blue-600 to-cyan-600 w-16 h-16 rounded-2xl flex items-center justify-center text-white mx-auto mb-4 group-hover:scale-110 transition-transform duration-200">
+                      <MapPin className="w-8 h-8" />
+                    </div>
+                    <h4 className="text-xl font-semibold text-gray-900 mb-2">Tüm İstanbul</h4>
+                    <p className="text-gray-600">İstanbul'un her noktasına transfer hizmeti</p>
+                  </div>
+                </>
+              )}
           </div>
         </div>
-  </section>
+      </section>
 
-    {/* Service Areas */}
-    <section className="py-16 bg-secondary/10">
+      {/* Service Areas */}
+  <section className="py-16 bg-secondary/10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold text-primary mb-4">{settings.regions_title || 'Hizmet Verdiğimiz Bölgeler'}</h3>
@@ -415,10 +331,10 @@ const HomePage: React.FC = () => {
               )}
           </div>
         </div>
-  </section>
+      </section>
 
-    {/* Contact Section */}
-    <section className="py-16 bg-primary text-white">
+      {/* Contact Section */}
+  <section className="py-16 bg-primary text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h3 className="text-3xl font-bold mb-4">7/24 İletişim</h3>
@@ -496,10 +412,10 @@ const HomePage: React.FC = () => {
             </div>
           </div>
         </div>
-  </section>
+      </section>
 
-    {/* Footer */}
-    <footer className="bg-secondary text-white py-12">
+      {/* Footer */}
+  <footer className="bg-secondary text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div className="md:col-span-2">
@@ -508,7 +424,7 @@ const HomePage: React.FC = () => {
                   <Plane className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">{settings.site_name || 'Secure Drive'}</h3>
+                  <h3 className="text-xl font-bold text-white">{settings.site_name || 'İstanbul Transfer'}</h3>
                   <p className="text-white text-sm">{settings.site_description || 'Premium Havalimanı Transfer Hizmeti'}</p>
                 </div>
               </div>
@@ -538,17 +454,6 @@ const HomePage: React.FC = () => {
                   </div>
                 </div>
               )}
-              {/* Footer navigation links */}
-              <div className="mt-6">
-                <ul className="flex flex-wrap gap-6 text-sm text-white">
-                  <li>
-                    <Link to="/blog" className="hover:underline">Blog</Link>
-                  </li>
-                  <li>
-                    <Link to="/faq" className="hover:underline">Sıkça Sorulan Sorular</Link>
-                  </li>
-                </ul>
-              </div>
             </div>
             <div>
               <h4 className="font-semibold mb-4 text-white">Hizmetler</h4>
@@ -581,10 +486,10 @@ const HomePage: React.FC = () => {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-white">
-            <p>{settings.footer_text || '© 2025 Secure Drive. Tüm hakları saklıdır.'}</p>
+            <p>{settings.footer_text || '© 2025 İstanbul Transfer. Tüm hakları saklıdır.'}</p>
           </div>
         </div>
-  </footer>
+      </footer>
       
       {/* Modals */}
       <UserAuthModal
@@ -592,11 +497,11 @@ const HomePage: React.FC = () => {
         onClose={() => setShowAuthModal(false)}
         initialMode={authMode}
       />
-
+      
       {showProfile && (
         <UserProfile onClose={() => setShowProfile(false)} />
       )}
-
+      
       {/* Messaging Panel */}
       {showMessaging && isAuthenticated && currentUser && (
         <MessagingPanel
@@ -612,26 +517,24 @@ const HomePage: React.FC = () => {
 
 function App() {
   return (
-    <HelmetProvider>
-      <UserProvider>
-        <DriverProvider>
-          <AdminProvider>
-            <MessagingProvider>
-              <Router>
-                <Routes>
-                  <Route path="/admin/*" element={<AdminPanel />} />
-                  <Route path="/driver" element={<DriverPanel />} />
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/payment/:reservationId" element={<PaymentPage />} />
-                  <Route path="/blog" element={<BlogPage />} />
-                  <Route path="/faq" element={<FAQPage />} />
-                </Routes>
-              </Router>
-            </MessagingProvider>
-          </AdminProvider>
-        </DriverProvider>
-      </UserProvider>
-    </HelmetProvider>
+    <UserProvider>
+      <DriverProvider>
+        <AdminProvider>
+          <MessagingProvider>
+            <Router>
+              <Routes>
+                <Route path="/admin/*" element={<AdminPanel />} />
+                <Route path="/driver" element={<DriverPanel />} />
+                <Route path="/" element={<HomePage />} />
+                <Route path="/payment/:reservationId" element={<PaymentPage />} />
+                <Route path="/payment/success" element={<PaymentSuccess />} />
+                <Route path="/payment/fail" element={<PaymentFail />} />
+              </Routes>
+            </Router>
+          </MessagingProvider>
+        </AdminProvider>
+      </DriverProvider>
+    </UserProvider>
   );
 }
 
