@@ -98,7 +98,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
       pan: cardNumber.replace(/\s/g, ''),
       expiry: expiryDate.replace('/', ''),
       cvv2: cvv,
-      cardHolderName: cardHolder.toUpperCase(),
+      cardHolderName: cardHolder.toLocaleUpperCase('tr-TR'),
       okUrl: 'https://api.securedrive.org/payment/success',
       failUrl: 'https://api.securedrive.org/payment/fail',
       installmentCount: '0',
@@ -168,7 +168,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
   <form onSubmit={handleSubmit} className="space-y-4">
         {/* Kart Numarası */}
         <div>
-          <label className="blocktext-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Kart Numarası
           </label>
           <div className="relative">
@@ -195,7 +195,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
           <input
             type="text"
             value={cardHolder}
-            onChange={(e) => setCardHolder(e.target.value.toUpperCase())}
+            onChange={(e) => setCardHolder(e.target.value.toLocaleUpperCase('tr-TR'))}
             placeholder="KART SAHİBİNİN ADI"
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red focus:border-red"
             disabled={isProcessing}
