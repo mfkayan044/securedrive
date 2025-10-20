@@ -169,6 +169,7 @@ const PaymentSuccess: React.FC = () => {
               departure_date: pendingReservation.departureDate,
               departure_time: pendingReservation.departureTime,
               passengers: pendingReservation.passengers,
+              passenger_names: pendingReservation.passengerNames || [],
               total_price: pendingReservation.currentPrice,
               notes: pendingReservation.notes
             }
