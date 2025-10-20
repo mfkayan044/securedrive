@@ -82,8 +82,7 @@ const PaymentSuccess: React.FC = () => {
           notes: pendingReservation.notes || null,
           status: reservationStatus,
           payment_status: 'paid',
-          payment_method: 'QNB Bank',
-          payment_transaction_id: paymentInfo.AuthCode || paymentInfo.OrderId
+          payment_method: 'QNB Bank'
         })
         .select()
         .single();
