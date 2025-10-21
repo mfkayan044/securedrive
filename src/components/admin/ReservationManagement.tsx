@@ -517,13 +517,18 @@ const downloadVoucherPdf = async (reservation: any) => {
                               onClick={async () => {
                                 setVoucherSendingId(reservation.id);
                                 try {
-                                  const response = await fetch('/api/send-payment-link', {
+                                  const response = await fetch('https://api.securedrive.org/api/send-payment-link', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
                                     body: JSON.stringify({ reservationId: reservation.id })
                                   });
-                                  if (!response.ok) throw new Error('API hatası');
-                                  alert('Ödeme linki başarıyla gönderildi!');
+                                  const data = await response.json();
+                                  if (!response.ok || !data.paymentLink) throw new Error('API hatası');
+                                  setNotification('Ödeme linki başarıyla gönderildi!');
+                                  // Linki ekranda göster (toast veya alert)
+                                  setTimeout(() => {
+                                    alert('Ödeme Linki: ' + data.paymentLink);
+                                  }, 500);
                                 } catch (err) {
                                   alert('Ödeme linki gönderilemedi: ' + (err?.message || err));
                                 } finally {
