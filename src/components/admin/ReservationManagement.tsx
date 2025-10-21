@@ -29,16 +29,27 @@ const sendVoucherEmail = async (reservation: any) => {
   setVoucherSendingId(reservation.id);
 
   try {
+    // Lokasyon ve araç isimlerini al
+    const fromLocationName = getLocationName(reservation.from_location_id);
+    const toLocationName = getLocationName(reservation.to_location_id);
+    const vehicleName = getVehicleName(reservation.vehicle_type_id);
+
     const response = await fetch('/api/sendVoucherEmail', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         to: reservation.customer_email,
         name: reservation.customer_name,
-        voucherCode,
-        reservationDetails: JSON.stringify(reservation, null, 2),
-        locations,
-        vehicleTypes
+        voucherCode: reservation.reservation_number || voucherCode,
+        reservationDetails: JSON.stringify({
+          from: fromLocationName,
+          to: toLocationName,
+          vehicle: vehicleName,
+          date: reservation.departure_date,
+          time: reservation.departure_time,
+          passengers: reservation.passengers,
+          price: reservation.total_price
+        }, null, 2)
       }),
     });
 
