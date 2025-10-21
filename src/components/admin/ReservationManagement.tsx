@@ -508,17 +508,31 @@ const downloadVoucherPdf = async (reservation: any) => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {/* Ödeme Linki Gönder butonu */}
+                          {/* Ödeme Linki Gönder butonu (API ile) */}
                           {reservation.payment_status === 'pending' && (
-                            <a
-                              href={`/payment/${reservation.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
                               className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs font-semibold transition-colors"
                               title="Ödeme Linki Gönder"
+                              disabled={voucherSendingId === reservation.id}
+                              onClick={async () => {
+                                setVoucherSendingId(reservation.id);
+                                try {
+                                  const response = await fetch('/api/send-payment-link', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ reservationId: reservation.id })
+                                  });
+                                  if (!response.ok) throw new Error('API hatası');
+                                  alert('Ödeme linki başarıyla gönderildi!');
+                                } catch (err) {
+                                  alert('Ödeme linki gönderilemedi: ' + (err?.message || err));
+                                } finally {
+                                  setVoucherSendingId(null);
+                                }
+                              }}
                             >
-                              Ödeme Linki
-                            </a>
+                              {voucherSendingId === reservation.id ? 'Gönderiliyor...' : 'Ödeme Linki Gönder'}
+                            </button>
                           )}
                           {reservation.status === 'pending' && (
                             <>
@@ -1091,4 +1105,4 @@ const downloadVoucherPdf = async (reservation: any) => {
   );
 };
 
-export default ReservationManagement;
+export default ReservationManagement; 
