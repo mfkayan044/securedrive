@@ -136,7 +136,7 @@ const PaymentSuccess: React.FC = () => {
           body: JSON.stringify({
             to: pendingReservation.customerEmail,
             name: pendingReservation.customerName,
-            voucherCode: reservation.id,
+            voucherCode: reservation.reservation_number || reservation.id,
             reservationDetails: JSON.stringify({
               from: fromLocationName,
               to: toLocationName,
