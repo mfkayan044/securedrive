@@ -182,12 +182,15 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
           <div className="relative">
             <input
               type="text"
+              inputMode="numeric"
+              autoComplete="cc-number"
               value={cardNumber}
               onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
               placeholder="1234 5678 9012 3456"
               maxLength={19}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red focus:border-red"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
               disabled={isProcessing}
+              required
             />
             <div className="absolute right-3 top-3 text-xs text-gray-500">
               {cardNumber && getCardType(cardNumber)}
@@ -202,11 +205,13 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
           </label>
           <input
             type="text"
+            autoComplete="cc-name"
             value={cardHolder}
             onChange={(e) => setCardHolder(e.target.value.toLocaleUpperCase('tr-TR'))}
             placeholder="KART SAHİBİNİN ADI"
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red focus:border-red"
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
             disabled={isProcessing}
+            required
           />
         </div>
 
@@ -218,12 +223,15 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
             </label>
             <input
               type="text"
+              inputMode="numeric"
+              autoComplete="cc-exp"
               value={expiryDate}
               onChange={(e) => setExpiryDate(formatExpiryDate(e.target.value))}
               placeholder="MM/YY"
               maxLength={5}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red focus:border-red"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
               disabled={isProcessing}
+              required
             />
           </div>
           <div>
@@ -232,12 +240,15 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
             </label>
             <input
               type="text"
+              inputMode="numeric"
+              autoComplete="cc-csc"
               value={cvv}
               onChange={(e) => setCvv(e.target.value.replace(/\D/g, ''))}
               placeholder="123"
               maxLength={4}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red focus:border-red"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
               disabled={isProcessing}
+              required
             />
           </div>
         </div>
@@ -265,7 +276,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
           className={`w-full py-3 px-4 rounded-lg font-semibold text-white transition-colors ${
             isProcessing
               ? 'bg-gray-400 cursor-not-allowed'
-              : 'bg-red  focus:ring-4 '
+              : 'bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300'
           }`}
         >
           {isProcessing ? (
