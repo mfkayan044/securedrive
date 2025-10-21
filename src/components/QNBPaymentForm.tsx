@@ -40,6 +40,7 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
 
   // Kart numarası formatı (4-4-4-4)
   const formatCardNumber = (value: string) => {
+    console.log('formatCardNumber çağrıldı, input:', value);
     const cleaned = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
     const matches = cleaned.match(/\d{4,16}/g);
     const match = matches && matches[0] || '';
@@ -185,7 +186,12 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
               inputMode="numeric"
               autoComplete="cc-number"
               value={cardNumber}
-              onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+              onChange={(e) => {
+                console.log('Input değişti:', e.target.value);
+                const formatted = formatCardNumber(e.target.value);
+                console.log('Formatlanmış değer:', formatted);
+                setCardNumber(formatted);
+              }}
               placeholder="1234 5678 9012 3456"
               maxLength={19}
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
