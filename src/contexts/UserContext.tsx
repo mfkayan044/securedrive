@@ -307,6 +307,22 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           await loadUserProfile(data.user.id);
           
+          // Hoşgeldin emaili gönder
+          try {
+            await fetch('/api/sendVoucherEmail', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: 'welcome',
+                to: userData.email,
+                name: userData.name
+              })
+            });
+          } catch (emailError) {
+            console.warn('Welcome email gönderilemedi:', emailError);
+            // Email hatası kayıt işlemini engellemesin
+          }
+          
           return { success: true, message: 'Kayıt başarılı! Hoş geldiniz!' };
         }
       }
