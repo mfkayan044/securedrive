@@ -169,8 +169,11 @@ const CustomerManagement: React.FC = () => {
                       onClick={async () => {
                         if (window.confirm('Bu kaydı silmek istediğinize emin misiniz?')) {
                           try {
-                            if (customer.permissions) {
-                              // Admin kullanıcı
+                            // Kullanıcının gerçekten admin olup olmadığını kontrol et
+                            const isAdmin = customer.role === 'admin' || customer.role === 'super_admin' || customer.permissions;
+                            
+                            if (isAdmin) {
+                              // Admin kullanıcı - admin API'sini kullan
                               const response = await fetch(`/api/deleteadmin?id=${customer.id}`);
                               if (!response.ok) {
                                 const data = await response.json().catch(() => ({}));
