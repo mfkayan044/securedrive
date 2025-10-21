@@ -181,23 +181,12 @@ const CustomerManagement: React.FC = () => {
                                 return;
                               }
                             } else {
-                              // Normal kullanıcı - users tablosundan sil
-                              const { error: tableError } = await supabase
-                                .from('users')
-                                .delete()
-                                .eq('id', customer.id);
-                              
-                              if (tableError) {
-                                alert('Silme işlemi başarısız: ' + tableError.message);
+                              // Normal kullanıcı - backend API kullan (SERVICE_ROLE_KEY gerekli)
+                              const response = await fetch(`/api/deleteUser?id=${customer.id}`);
+                              if (!response.ok) {
+                                const data = await response.json().catch(() => ({}));
+                                alert('Silme işlemi başarısız: ' + (data.error || response.statusText));
                                 return;
-                              }
-
-                              // Auth'dan da sil (admin yetkisi gerekir)
-                              const { error: authError } = await supabase.auth.admin.deleteUser(customer.id);
-                              
-                              if (authError) {
-                                console.warn('Auth silme hatası (normal olabilir):', authError);
-                                // Auth silme başarısız olsa bile devam et, çünkü tablo silindi
                               }
                             }
                             alert('Kullanıcı başarıyla silindi!');
