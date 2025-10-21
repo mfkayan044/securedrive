@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Users, Search, Eye, Edit, Trash2, Mail, Phone, Calendar, Award, MapPin } from 'lucide-react';
 import { useAdminData } from '../../hooks/useAdminData';
+import { supabase } from '../../lib/supabase';
 import type { Database } from '../../lib/supabase';
 
 type UserType = Database['public']['Tables']['users']['Row'];
@@ -167,17 +168,31 @@ const CustomerManagement: React.FC = () => {
                     <button
                       onClick={async () => {
                         if (window.confirm('Bu kaydı silmek istediğinize emin misiniz?')) {
-                          let response;
-                          if (customer.permissions) {
-                            response = await fetch(`/api/deleteadmin?id=${customer.id}`);
-                          } else {
-                            response = await fetch(`/api/deleteUser?id=${customer.id}`);
-                          }
-                          if (!response.ok) {
-                            const data = await response.json().catch(() => ({}));
-                            alert('Silme işlemi başarısız: ' + (data.error || response.statusText));
-                          } else {
+                          try {
+                            if (customer.permissions) {
+                              // Admin kullanıcı
+                              const response = await fetch(`/api/deleteadmin?id=${customer.id}`);
+                              if (!response.ok) {
+                                const data = await response.json().catch(() => ({}));
+                                alert('Silme işlemi başarısız: ' + (data.error || response.statusText));
+                                return;
+                              }
+                            } else {
+                              // Normal kullanıcı - Supabase'den sil
+                              const { error } = await supabase
+                                .from('users')
+                                .delete()
+                                .eq('id', customer.id);
+                              
+                              if (error) {
+                                alert('Silme işlemi başarısız: ' + error.message);
+                                return;
+                              }
+                            }
+                            alert('Kullanıcı başarıyla silindi!');
                             refetch();
+                          } catch (err: any) {
+                            alert('Silme işlemi başarısız: ' + (err.message || 'Bilinmeyen hata'));
                           }
                         }
                       }}
