@@ -37,6 +37,17 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
   if (!isOpen) return null;
 
+  // Eğer kupon ile tutar 0 TL'ye düştüyse, direkt başarılı olarak işle
+  const handleFreePurchase = () => {
+    console.log('Free purchase with coupon, finalAmount:', finalAmount);
+    onPaymentSuccess({ 
+      paymentMethod: 'Kupon (%100 İndirim)',
+      transactionId: 'FREE_' + Date.now(),
+      amount: 0,
+      couponApplied: true
+    }, couponCode);
+  };
+
   const handleQNBPaymentSuccess = (result: any) => {
     console.log('QNB Payment Success:', result);
     // Başarılı ödeme sonrası işlemler
@@ -126,20 +137,50 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           {error && <div className="text-red-600 text-sm mt-2">{error}</div>}
         </div>
 
-        {/* QNB Payment Form */}
+        {/* QNB Payment Form veya Ücretsiz Rezervasyon */}
         <div className="p-6">
-          <QNBPaymentForm
-            amount={finalAmount}
-            orderId={orderId}
-            customerInfo={customerInfo || {
-              name: 'Müşteri',
-              email: 'musteri@example.com',
-              phone: '5551234567'
-            }}
-            reservationData={reservationData}
-            onPaymentSuccess={handleQNBPaymentSuccess}
-            onPaymentError={handleQNBPaymentError}
-          />
+          {finalAmount <= 0 ? (
+            // Tutar 0 TL veya negatifse, ödeme formu gösterme
+            <div className="text-center py-8">
+              <div className="mb-6">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">Kupon Uygulandı!</h3>
+                <p className="text-gray-600 mb-4">
+                  Kupon kodunuz sayesinde rezervasyonunuz tamamen ücretsiz.
+                </p>
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                  <div className="text-sm text-gray-600">Toplam Tutar</div>
+                  <div className="text-3xl font-bold text-green-600">{totalPrice.toFixed(2)} ₺</div>
+                  <div className="text-sm text-gray-600 mt-1">İndirim: -{discount.toFixed(2)} ₺</div>
+                  <div className="text-xl font-bold text-green-600 mt-2">Ödenecek: 0.00 ₺</div>
+                </div>
+              </div>
+              <button
+                onClick={handleFreePurchase}
+                className="w-full bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors"
+              >
+                Ücretsiz Rezervasyonu Tamamla
+              </button>
+            </div>
+          ) : (
+            // Normal ödeme akışı
+            <QNBPaymentForm
+              amount={finalAmount}
+              orderId={orderId}
+              customerInfo={customerInfo || {
+                name: 'Müşteri',
+                email: 'musteri@example.com',
+                phone: '5551234567'
+              }}
+              reservationData={reservationData}
+              onPaymentSuccess={handleQNBPaymentSuccess}
+              onPaymentError={handleQNBPaymentError}
+            />
+          )}
         </div>
 
         {/* Kapatma Butonu */}
