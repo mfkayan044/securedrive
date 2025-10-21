@@ -172,9 +172,18 @@ const CustomerManagement: React.FC = () => {
                             // Kullanıcının gerçekten admin olup olmadığını kontrol et
                             const isAdmin = customer.role === 'admin' || customer.role === 'super_admin' || customer.permissions;
                             
+                            console.log('Silme işlemi başlıyor:', { 
+                              id: customer.id, 
+                              name: customer.name, 
+                              role: customer.role, 
+                              isAdmin 
+                            });
+                            
                             if (isAdmin) {
                               // Admin kullanıcı - admin API'sini kullan
+                              console.log('Admin silme API çağrılıyor...');
                               const response = await fetch(`/api/deleteadmin?id=${customer.id}`);
+                              console.log('Admin API yanıtı:', response.status, response.statusText);
                               if (!response.ok) {
                                 const data = await response.json().catch(() => ({}));
                                 alert('Silme işlemi başarısız: ' + (data.error || response.statusText));
@@ -182,16 +191,22 @@ const CustomerManagement: React.FC = () => {
                               }
                             } else {
                               // Normal kullanıcı - backend API kullan (SERVICE_ROLE_KEY gerekli)
+                              console.log('Normal kullanıcı silme API çağrılıyor...');
                               const response = await fetch(`/api/deleteUser?id=${customer.id}`);
+                              console.log('User API yanıtı:', response.status, response.statusText);
+                              const responseData = await response.json().catch(() => ({}));
+                              console.log('API yanıt verisi:', responseData);
+                              
                               if (!response.ok) {
-                                const data = await response.json().catch(() => ({}));
-                                alert('Silme işlemi başarısız: ' + (data.error || response.statusText));
+                                alert('Silme işlemi başarısız: ' + (responseData.error || response.statusText));
                                 return;
                               }
                             }
+                            console.log('Silme başarılı, sayfa yenileniyor...');
                             alert('Kullanıcı başarıyla silindi!');
                             refetch();
                           } catch (err: any) {
+                            console.error('Silme hatası:', err);
                             alert('Silme işlemi başarısız: ' + (err.message || 'Bilinmeyen hata'));
                           }
                         }
