@@ -5,7 +5,8 @@ import { supabase } from '../lib/supabase';
 const PaymentPage: React.FC = () => {
   // Route parametresi hem reservationId hem id olabilir, ikisini de kontrol et
   const params = useParams<{ reservationId?: string; id?: string }>();
-  const reservationId = params.reservationId || params.id;
+  const reservationId = params.reservationId || params.id || '';
+  const [paramError, setParamError] = useState<string | null>(null);
   const [reservation, setReservation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,11 +23,17 @@ const PaymentPage: React.FC = () => {
       else setReservation(data);
       setLoading(false);
     };
-    if (reservationId) fetchReservation();
+    if (!reservationId) {
+      setParamError('Ödeme sayfası için rezervasyon ID bulunamadı. Linki kontrol edin.');
+      setLoading(false);
+      return;
+    }
+    fetchReservation();
   }, [reservationId]);
 
   if (loading) return <div className="p-8 text-center">Yükleniyor...</div>;
-  if (error || !reservation) return <div className="p-8 text-center text-red-600">{error}</div>;
+  if (paramError) return <div className="p-8 text-center text-red-600">{paramError}</div>;
+  if (error || !reservation) return <div className="p-8 text-center text-red-600">{error || 'Rezervasyon bulunamadı.'}</div>;
 
   // Kart bilgileri için state
   const [cardNumber, setCardNumber] = useState('');
