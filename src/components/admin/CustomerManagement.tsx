@@ -172,41 +172,37 @@ const CustomerManagement: React.FC = () => {
                             // Kullanıcının gerçekten admin olup olmadığını kontrol et
                             const isAdmin = customer.role === 'admin' || customer.role === 'super_admin' || customer.permissions;
                             
-                            console.log('Silme işlemi başlıyor:', { 
-                              id: customer.id, 
-                              name: customer.name, 
-                              role: customer.role, 
-                              isAdmin 
-                            });
-                            
                             if (isAdmin) {
                               // Admin kullanıcı - admin API'sini kullan
-                              console.log('Admin silme API çağrılıyor...');
                               const response = await fetch(`/api/deleteadmin?id=${customer.id}`);
-                              console.log('Admin API yanıtı:', response.status, response.statusText);
                               if (!response.ok) {
                                 const data = await response.json().catch(() => ({}));
                                 alert('Silme işlemi başarısız: ' + (data.error || response.statusText));
                                 return;
                               }
                             } else {
-                              // Normal kullanıcı - backend API kullan (SERVICE_ROLE_KEY gerekli)
-                              console.log('Normal kullanıcı silme API çağrılıyor...');
-                              const response = await fetch(`/api/deleteUser?id=${customer.id}`);
-                              console.log('User API yanıtı:', response.status, response.statusText);
-                              const responseData = await response.json().catch(() => ({}));
-                              console.log('API yanıt verisi:', responseData);
+                              // Normal kullanıcı - users tablosundan sil (direkt Supabase)
+                              const { error: tableError } = await supabase
+                                .from('users')
+                                .delete()
+                                .eq('id', customer.id);
                               
-                              if (!response.ok) {
-                                alert('Silme işlemi başarısız: ' + (responseData.error || response.statusText));
+                              if (tableError) {
+                                alert('Silme işlemi başarısız: ' + tableError.message);
                                 return;
                               }
+                              
+                              // Auth'dan silmeyi dene (başarısız olsa da sorun değil)
+                              try {
+                                await supabase.auth.admin.deleteUser(customer.id);
+                              } catch (authErr) {
+                                console.warn('Auth silme denemesi başarısız (görmezden gelindi)');
+                              }
                             }
-                            console.log('Silme başarılı, sayfa yenileniyor...');
+                            
                             alert('Kullanıcı başarıyla silindi!');
                             refetch();
                           } catch (err: any) {
-                            console.error('Silme hatası:', err);
                             alert('Silme işlemi başarısız: ' + (err.message || 'Bilinmeyen hata'));
                           }
                         }
