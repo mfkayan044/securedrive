@@ -18,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Eksik parametre: "to" ve "voucherCode" zorunludur.' });
     }
 
-    if (!process.env.ZOHO_USER || !process.env.ZOHO_PASS) {
+    if (!process.env.SIB_USER || !process.env.SIB_PASS) {
       console.log('Environment değişkenleri eksik');
       return res.status(500).json({ error: 'Mail gönderim ayarları eksik. Lütfen yöneticinize başvurun.' });
     }
