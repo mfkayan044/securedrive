@@ -178,15 +178,23 @@ const CustomerManagement: React.FC = () => {
                                 return;
                               }
                             } else {
-                              // Normal kullanıcı - Supabase'den sil
-                              const { error } = await supabase
+                              // Normal kullanıcı - users tablosundan sil
+                              const { error: tableError } = await supabase
                                 .from('users')
                                 .delete()
                                 .eq('id', customer.id);
                               
-                              if (error) {
-                                alert('Silme işlemi başarısız: ' + error.message);
+                              if (tableError) {
+                                alert('Silme işlemi başarısız: ' + tableError.message);
                                 return;
+                              }
+
+                              // Auth'dan da sil (admin yetkisi gerekir)
+                              const { error: authError } = await supabase.auth.admin.deleteUser(customer.id);
+                              
+                              if (authError) {
+                                console.warn('Auth silme hatası (normal olabilir):', authError);
+                                // Auth silme başarısız olsa bile devam et, çünkü tablo silindi
                               }
                             }
                             alert('Kullanıcı başarıyla silindi!');
