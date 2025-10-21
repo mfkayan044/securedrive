@@ -130,7 +130,7 @@ const PaymentSuccess: React.FC = () => {
 
       // Müşteriye voucher emaili gönder
       try {
-        await fetch('/api/sendVoucherEmail', {
+        const customerEmailResponse = await fetch('/api/sendVoucherEmail', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -148,7 +148,13 @@ const PaymentSuccess: React.FC = () => {
             }, null, 2)
           })
         });
-        console.log('✅ Müşteri email gönderildi');
+        
+        if (!customerEmailResponse.ok) {
+          const errorData = await customerEmailResponse.json();
+          console.error('❌ Müşteri email hatası:', errorData);
+        } else {
+          console.log('✅ Müşteri email gönderildi');
+        }
       } catch (emailError) {
         console.error('❌ Müşteri email hatası:', emailError);
       }
