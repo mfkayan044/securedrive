@@ -3,7 +3,9 @@ import { useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
 const PaymentPage: React.FC = () => {
-  const { reservationId } = useParams<{ reservationId: string }>();
+  // Route parametresi hem reservationId hem id olabilir, ikisini de kontrol et
+  const params = useParams<{ reservationId?: string; id?: string }>();
+  const reservationId = params.reservationId || params.id;
   const [reservation, setReservation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
