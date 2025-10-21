@@ -41,18 +41,19 @@ const QNBPaymentForm: React.FC<QNBPaymentFormProps> = ({
   // Kart numarası formatı (4-4-4-4)
   const formatCardNumber = (value: string) => {
     console.log('formatCardNumber çağrıldı, input:', value);
-    const cleaned = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = cleaned.match(/\d{4,16}/g);
-    const match = matches && matches[0] || '';
+    // Sadece rakamları al
+    const cleaned = value.replace(/\D/g, '');
+    console.log('Temizlenmiş:', cleaned);
+    
+    // 4'lü gruplara ayır
     const parts = [];
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
+    for (let i = 0; i < cleaned.length; i += 4) {
+      parts.push(cleaned.substring(i, i + 4));
     }
-    if (parts.length) {
-      return parts.join(' ');
-    } else {
-      return match;
-    }
+    
+    const result = parts.join(' ').substring(0, 19); // Max 19 karakter (16 rakam + 3 boşluk)
+    console.log('Sonuç:', result);
+    return result;
   };
 
   // Son kullanma tarihi formatı (MM/YY)
