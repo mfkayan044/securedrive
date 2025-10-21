@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+  import React, { useState, useEffect } from 'react';
   import { Calendar, Clock, User, MapPin, Car, Phone, Mail, Eye, Edit, Check, X, Search, Users } from 'lucide-react';
   import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 
@@ -89,7 +89,7 @@ const downloadVoucherPdf = async (reservation: any) => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-  a.download = `voucher_${reservation.reservation_number || reservation.id}.pdf`;
+    a.download = `voucher_${reservation.reservation_number || reservation.id}.pdf`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -490,12 +490,12 @@ const downloadVoucherPdf = async (reservation: any) => {
                         <div className="text-sm font-bold text-gray-900">
                           {reservation.total_price} ₺
                         </div>
-                        <div className={text-xs px-2 py-1 rounded-full inline-block ${getPaymentStatusColor(reservation.payment_status)}}>
+                        <div className={`text-xs px-2 py-1 rounded-full inline-block ${getPaymentStatusColor(reservation.payment_status)}`}>
                           {getPaymentStatusLabel(reservation.payment_status)}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(reservation.status)}}>
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(reservation.status)}`}>
                           {getStatusLabel(reservation.status)}
                         </span>
                       </td>
@@ -508,17 +508,31 @@ const downloadVoucherPdf = async (reservation: any) => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          {/* Ödeme Linki Gönder butonu */}
+                          {/* Ödeme Linki Gönder butonu (API ile) */}
                           {reservation.payment_status === 'pending' && (
-                            <a
-                              href={/payment/${reservation.id}}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
                               className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs font-semibold transition-colors"
                               title="Ödeme Linki Gönder"
+                              disabled={voucherSendingId === reservation.id}
+                              onClick={async () => {
+                                setVoucherSendingId(reservation.id);
+                                try {
+                                  const response = await fetch('/api/send-payment-link', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ reservationId: reservation.id })
+                                  });
+                                  if (!response.ok) throw new Error('API hatası');
+                                  alert('Ödeme linki başarıyla gönderildi!');
+                                } catch (err) {
+                                  alert('Ödeme linki gönderilemedi: ' + (err?.message || err));
+                                } finally {
+                                  setVoucherSendingId(null);
+                                }
+                              }}
                             >
-                              Ödeme Linki
-                            </a>
+                              {voucherSendingId === reservation.id ? 'Gönderiliyor...' : 'Ödeme Linki Gönder'}
+                            </button>
                           )}
                           {reservation.status === 'pending' && (
                             <>
@@ -542,7 +556,7 @@ const downloadVoucherPdf = async (reservation: any) => {
                           {/* Voucher Gönder butonu: her rezervasyon için */}
                           <button
                             onClick={() => sendVoucherEmail(reservation)}
-                            className={text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-xs font-semibold transition-colors flex items-center space-x-1 ${voucherSendingId === reservation.id ? 'opacity-50 cursor-not-allowed' : ''}}
+                            className={`text-white bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-xs font-semibold transition-colors flex items-center space-x-1 ${voucherSendingId === reservation.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                             title="Voucher Gönder"
                             disabled={voucherSendingId === reservation.id}
                           >
@@ -863,7 +877,7 @@ const downloadVoucherPdf = async (reservation: any) => {
                         <label className="text-sm text-gray-600">Alış Tarihi</label>
                         <p className="font-medium">
                           {selectedReservation.departure_date && !isNaN(Date.parse(selectedReservation.departure_date))
-                            ? ${new Date(selectedReservation.departure_date).toLocaleDateString('tr-TR')} - ${selectedReservation.departure_time || ''}
+                            ? `${new Date(selectedReservation.departure_date).toLocaleDateString('tr-TR')} - ${selectedReservation.departure_time || ''}`
                             : '-'}
                         </p>
                       </div>
@@ -872,7 +886,7 @@ const downloadVoucherPdf = async (reservation: any) => {
                           <label className="text-sm text-gray-600">Dönüş Tarihi</label>
                           <p className="font-medium">
                             {selectedReservation.return_date && !isNaN(Date.parse(selectedReservation.return_date))
-                              ? ${new Date(selectedReservation.return_date).toLocaleDateString('tr-TR')} - ${selectedReservation.return_time || ''}
+                              ? `${new Date(selectedReservation.return_date).toLocaleDateString('tr-TR')} - ${selectedReservation.return_time || ''}`
                               : '-'}
                           </p>
                         </div>
@@ -935,7 +949,7 @@ const downloadVoucherPdf = async (reservation: any) => {
                       </div>
                       <div className="mt-2">
                         <label className="text-sm text-gray-600">Ödeme Durumu</label>
-                        <div className={inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${getPaymentStatusColor(selectedReservation.payment_status)}}>
+                        <div className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${getPaymentStatusColor(selectedReservation.payment_status)}`}>
                           {getPaymentStatusLabel(selectedReservation.payment_status)}
                         </div>
                       </div>
@@ -1011,7 +1025,7 @@ const downloadVoucherPdf = async (reservation: any) => {
                   </div>
                   {/* Status & Actions */}
                   <div className="flex items-center justify-between mt-6">
-                    <div className={px-3 py-2 rounded-full text-sm font-medium ${getStatusColor(selectedReservation.status)}}>{getStatusLabel(selectedReservation.status)}
+                    <div className={`px-3 py-2 rounded-full text-sm font-medium ${getStatusColor(selectedReservation.status)}`}>{getStatusLabel(selectedReservation.status)}
                       {selectedReservation.status === 'confirmed' && (
                         <span className="ml-2 text-green-600 font-semibold">(Sürücü tarafından onaylandı)</span>
                       )}
@@ -1091,4 +1105,4 @@ const downloadVoucherPdf = async (reservation: any) => {
   );
 };
 
-export default ReservationManagement;
+export default ReservationManagement; 
