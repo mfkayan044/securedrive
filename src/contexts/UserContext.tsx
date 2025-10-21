@@ -274,7 +274,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
           password: userData.password
         });
 
-        if (!error && data.user) {
+        console.log('Supabase signup response:', { data, error });
+
+        if (error) {
+          console.error('Supabase signup error:', error);
+          return { success: false, message: error.message || 'Kayıt olurken bir hata oluştu.' };
+        }
+
+        if (data.user) {
           // Create user profile in our users table
           const { error: profileError } = await supabase
             .from('users')
@@ -286,39 +293,29 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
               preferred_language: 'tr'
             });
 
-          if (!profileError) {
-            // Önce eski rezervasyonları yeni kullanıcıya bağla
-            await supabase
-              .from('reservations')
-              .update({ user_id: data.user.id })
-              .eq('customer_email', userData.email)
-              .is('user_id', null);
-
-            await loadUserProfile(data.user.id);
-            // Kullanıcıyı otomatik giriş yapmış kabul et
-            setCurrentUser({
-              id: data.user.id,
-              name: userData.name,
-              email: userData.email,
-              phone: userData.phone,
-              loyaltyPoints: 0,
-              totalReservations: 0,
-              preferredLanguage: 'tr',
-              isEmailVerified: false,
-              isPhoneVerified: false,
-              createdAt: new Date().toISOString(),
-              lastLoginAt: new Date().toISOString()
-            });
-            return { success: true, message: 'Kayıt başarılı! Hoş geldiniz!' };
+          if (profileError) {
+            console.error('Profile creation error:', profileError);
+            return { success: false, message: 'Profil oluşturulamadı: ' + profileError.message };
           }
+
+          // Önce eski rezervasyonları yeni kullanıcıya bağla
+          await supabase
+            .from('reservations')
+            .update({ user_id: data.user.id })
+            .eq('customer_email', userData.email)
+            .is('user_id', null);
+
+          await loadUserProfile(data.user.id);
+          
+          return { success: true, message: 'Kayıt başarılı! Hoş geldiniz!' };
         }
       }
       
       // For demo purposes, show success message even without Supabase
-      return { success: true, message: 'Demo kayıt başarılı! Supabase bağlantısı için "Connect to Supabase" butonuna tıklayın.' };
-    } catch (error) {
+      return { success: false, message: 'Kayıt işlemi tamamlanamadı.' };
+    } catch (error: any) {
       console.error('Registration error:', error);
-      return { success: false, message: 'Kayıt olurken bir hata oluştu.' };
+      return { success: false, message: error.message || 'Kayıt olurken bir hata oluştu.' };
     }
   };
 
