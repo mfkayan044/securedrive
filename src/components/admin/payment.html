@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Rezervasyon Ödeme</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; background: #f3f4f6; }
+    .container { max-width: 400px; margin: 40px auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 8px #0001; padding: 32px; }
+    h1 { text-align: center; margin-bottom: 24px; }
+    label { display: block; margin-top: 16px; }
+    input { width: 100%; padding: 8px; margin-top: 4px; border-radius: 6px; border: 1px solid #ccc; }
+    button { width: 100%; background: #2563eb; color: #fff; padding: 12px; border: none; border-radius: 8px; font-size: 16px; margin-top: 24px; cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+    .error { color: #dc2626; margin-top: 12px; text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Rezervasyon Ödeme</h1>
+    <form id="paymentForm">
+      <label>Kart Numarası
+        <input type="text" id="cardNumber" maxlength="19" required />
+      </label>
+      <label>Son Kullanma (AA/YY)
+        <input type="text" id="cardExpiry" maxlength="5" required />
+      </label>
+      <label>CVV
+        <input type="text" id="cardCvv" maxlength="4" required />
+      </label>
+      <label>Kart Sahibi Adı
+        <input type="text" id="cardHolder" required />
+      </label>
+      <button type="submit">Ödemeyi Tamamla</button>
+      <div id="errorMsg" class="error"></div>
+    </form>
+  </div>
+  <script>
+    document.getElementById('paymentForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      document.getElementById('errorMsg').textContent = '';
+      const cardNumber = document.getElementById('cardNumber').value;
+      const cardExpiry = document.getElementById('cardExpiry').value;
+      const cardCvv = document.getElementById('cardCvv').value;
+      const cardHolder = document.getElementById('cardHolder').value;
+      // Burada rezervasyonId'yi URL'den al
+      const urlParams = new URLSearchParams(window.location.search);
+      const reservationId = urlParams.get('reservationId');
+      if (!reservationId) {
+        document.getElementById('errorMsg').textContent = 'Rezervasyon ID bulunamadı.';
+        return;
+      }
+      // Ödeme isteği gönder
+      try {
+        const response = await fetch('/payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reservationId,
+            cardNumber,
+            cardExpiry,
+            cardCvv,
+            cardHolder
+          })
+        });
+        const html = await response.text();
+        const win = window.open('', '_blank');
+        if (win) {
+          win.document.open();
+          win.document.write(html);
+          win.document.close();
+        } else {
+          document.getElementById('errorMsg').textContent = 'Ödeme sayfası açılamadı.';
+        }
+      } catch (err) {
+        document.getElementById('errorMsg').textContent = 'Ödeme başlatılamadı.';
+      }
+    });
+  </script>
+</body>
+</html>
