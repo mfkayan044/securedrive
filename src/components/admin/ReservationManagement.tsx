@@ -511,7 +511,7 @@ const downloadVoucherPdf = async (reservation: any) => {
                           {/* Ödeme Linki Gönder butonu */}
                           {reservation.payment_status === 'pending' && (
                             <a
-                              href={`/payment.html?reservationId=${reservation.id}`}
+                              href={`/payment/${reservation.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs font-semibold transition-colors"
